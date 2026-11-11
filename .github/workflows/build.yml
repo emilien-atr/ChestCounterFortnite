@@ -1,4 +1,4 @@
-name: Build ChestCounter.exe
+name: Build ChestCounterFortnite.exe
 on:
   push:
     branches: ['**']
@@ -18,11 +18,11 @@ jobs:
         run: dotnet publish src/ChestCounter/ChestCounter.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o dist
       - uses: actions/upload-artifact@v4
         with:
-          name: ChestCounter
-          path: dist/ChestCounter.exe
+          name: ChestCounterFortnite
+          path: dist/ChestCounterFortnite.exe
       - name: Attach to the release (tags only)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/ChestCounter.exe
+          files: dist/ChestCounterFortnite.exe
           body_path: RELEASE_NOTES.md
