@@ -1,0 +1,28 @@
+name: Bug report / Signaler un bug
+description: Something does not work (unreadable replay, wrong count…) / Quelque chose ne marche pas (replay illisible, mauvais compte…)
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened? / Que s'est-il passé ?
+      description: What you did, what you expected, what you got. / Ce que tu as fait, ce que tu attendais, ce que tu as obtenu.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: ChestCounterFortnite version / Version du compteur
+      description: Shown in the window title, e.g. 1.0.0. / Affichée dans le titre de la fenêtre, par ex. 1.0.0.
+    validations:
+      required: true
+  - type: input
+    id: season
+    attributes:
+      label: Fortnite season or update / Saison ou mise à jour de Fortnite
+  - type: textarea
+    id: log
+    attributes:
+      label: errors.log
+      description: Paste the content of %APPDATA%\ChestCounterFortnite\errors.log (or attach the file). / Colle le contenu de %APPDATA%\ChestCounterFortnite\errors.log (ou joins le fichier).
+      render: text

@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>ChestCounterFortnite</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#05030a;overflow:hidden}
+body{font-family:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;color:#f2eef8;-webkit-font-smoothing:antialiased;user-select:none;cursor:default}
+button,input,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid #f6b73c;outline-offset:2px}
+.defs{position:absolute;width:0;height:0;overflow:hidden}
+#stage{position:absolute;width:1524px;height:1026px;transform-origin:top left}
+.window{position:relative;width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;border-radius:18px;background:linear-gradient(180deg,#0b0716,#080510 60%,#0b0718);border:1px solid rgba(124,77,255,.35);box-shadow:inset 0 0 0 1px rgba(255,255,255,.03),0 0 46px rgba(124,77,255,.13)}
+.window::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(700px 320px at 8% 0%,rgba(124,77,255,.16),transparent 65%),radial-gradient(620px 420px at 100% 100%,rgba(124,77,255,.12),transparent 60%),radial-gradient(420px 260px at 50% 46%,rgba(246,183,60,.035),transparent 70%)}
+.titlebar{position:relative;z-index:4;height:54px;flex:none;display:flex;align-items:center;gap:12px;padding:0 44px 0 76px;background:linear-gradient(180deg,rgba(9,5,17,.97),rgba(9,5,17,.72));border-bottom:1px solid rgba(255,255,255,.04)}
+.tb-chest{width:24px;height:24px;filter:drop-shadow(0 0 6px rgba(246,183,60,.35))}
+.tb-title{font-size:17px;font-weight:600;letter-spacing:.1px;color:#efe9fa}
+.tb-actions{margin-left:auto;display:flex;gap:6px}
+.tb-btn{width:34px;height:30px;border-radius:8px;display:grid;place-items:center;color:#a49ab8;transition:.15s}
+.tb-btn:hover{background:rgba(255,255,255,.07);color:#fff}
+.tb-btn.close:hover{background:#e5484d;color:#fff}
+.tb-btn .ico{width:16px;height:16px}
+.main{position:relative;z-index:2;flex:1;min-height:0;padding:16px 76px 0;display:flex;flex-direction:column;overflow:hidden}
+.brand{position:relative;height:86px;flex:none;display:flex;align-items:center;gap:18px}
+.brand::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,rgba(246,183,60,.75) 12%,#ffd166 50%,rgba(246,183,60,.75) 88%,transparent);box-shadow:0 0 18px rgba(246,183,60,.35)}
+.brand-logo{width:76px;height:76px;flex:none;filter:drop-shadow(0 8px 18px rgba(0,0,0,.45)) drop-shadow(0 0 22px rgba(246,183,60,.18))}
+.brand-logo svg{width:100%;height:100%}
+h1{margin:0;font-size:35px;font-weight:700;letter-spacing:-.6px;color:#f7f3ff;line-height:1}
+.version{height:30px;padding:0 13px;border-radius:15px;display:inline-flex;align-items:center;background:linear-gradient(180deg,#7c3aed,#5b21b6);border:1px solid rgba(196,181,253,.45);color:#f5efff;font-size:14.5px;font-weight:600;box-shadow:0 4px 16px rgba(91,33,182,.35),inset 0 1px 0 rgba(255,255,255,.2);margin-top:2px}
+.tabs{height:46px;margin-top:14px;flex:none;display:flex;align-items:center;gap:8px}
+.tab{height:42px;padding:0 22px;border-radius:22px;display:flex;align-items:center;gap:10px;color:#a79dbd;font-size:16.5px;font-weight:600;white-space:nowrap;transition:.18s}
+.tab .ico{width:19px;height:19px;opacity:.95}
+.tab:hover{color:#f2ecff;background:rgba(255,255,255,.04)}
+.tab.active{background:linear-gradient(180deg,#ffd166,#f2b335);color:#241505;box-shadow:0 6px 22px rgba(246,183,60,.28),inset 0 1px 0 rgba(255,255,255,.5)}
+.nav-sep{width:1px;height:22px;background:rgba(255,255,255,.12);margin:0 10px}
+.page{display:none;min-height:0}
+.page.active{display:block;animation:pageIn .22s ease}
+@keyframes pageIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.stats{height:96px;margin-top:20px;display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.stat{position:relative;display:flex;align-items:center;gap:16px;padding:0 20px 0 34px;border-radius:12px;background:linear-gradient(180deg,rgba(24,18,38,.92),rgba(16,12,28,.92));border:1px solid rgba(255,255,255,.07);box-shadow:inset 0 1px 0 rgba(255,255,255,.03);overflow:hidden}
+.stat::before{content:"";position:absolute;left:16px;top:50%;transform:translateY(-50%);width:4px;height:48px;border-radius:6px;background:var(--accent);box-shadow:0 0 16px var(--glow)}
+.stat .ico{width:28px;height:28px;color:var(--accent);filter:drop-shadow(0 0 9px var(--glow));flex:none}
+.stat .num{font-size:34px;font-weight:700;line-height:1;letter-spacing:-.5px;font-variant-numeric:tabular-nums;color:#f8f5ff}
+.stat .cap{margin-top:7px;font-size:13px;font-weight:600;letter-spacing:1.6px;color:#91879f;text-transform:uppercase}
+.profile{position:relative;height:164px;margin-top:16px;display:flex;align-items:center;gap:26px;padding:14px 26px;border-radius:15px;background:linear-gradient(135deg,rgba(24,17,38,.94),rgba(13,9,23,.94));border:1px solid rgba(246,183,60,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 18px 44px rgba(0,0,0,.28)}
+.profile::after{content:"";position:absolute;inset:0;border-radius:15px;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(124,77,255,.08)}
+.shield{width:108px;height:126px;flex:none;filter:drop-shadow(0 0 22px rgba(80,190,255,.25))}
+.profile-info{flex:1;min-width:0;padding-right:330px;display:flex;flex-direction:column;gap:9px}
+.prow{display:grid;grid-template-columns:96px 1fr;align-items:center;gap:10px;font-size:16.5px;line-height:1.35}
+.plabel{color:#a49ab7}
+.pval{color:#f5f1fb;font-weight:600;display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0}
+.pval .dot{width:9px;height:9px;flex:none}
+.statusline{display:flex;align-items:center;gap:9px}
+.start-part{font-weight:700}
+.start-dot{color:#6d6380;font-weight:400}
+.track-pill{position:absolute;right:26px;top:42px;height:36px;padding:0 16px;border-radius:10px;display:flex;align-items:center;gap:9px;background:rgba(28,20,45,.9);border:1px solid rgba(255,255,255,.1);color:#c0b6d2;font-size:13.5px;transition:.16s}
+.track-pill:hover{border-color:rgba(246,183,60,.35);color:#f0e7ff}
+.track-pill .ico{width:16px;height:16px}
+.dot{width:9px;height:9px;border-radius:50%;background:#4ade80;box-shadow:0 0 10px rgba(74,222,128,.8);display:inline-block}
+.dot.live{background:#ff5a5f;box-shadow:0 0 10px rgba(255,90,95,.8)}
+.dot.counting{background:#5ad1e6;box-shadow:0 0 10px rgba(90,209,230,.8)}
+.news{position:relative;height:188px;margin-top:16px;display:flex;gap:24px;padding:20px 28px;border-radius:16px;background:linear-gradient(120deg,rgba(14,26,19,.92),rgba(9,16,13,.94));border:1px solid rgba(74,222,128,.5);box-shadow:0 0 25px rgba(74,222,128,.13),inset 0 0 42px rgba(74,222,128,.05);overflow:hidden}
+.news::before{content:"";position:absolute;left:-60px;top:-60px;width:260px;height:260px;background:radial-gradient(circle,rgba(74,222,128,.12),transparent 70%);pointer-events:none}
+.gift{width:94px;height:94px;flex:none;margin-top:4px;filter:drop-shadow(0 0 16px rgba(74,222,128,.35))}
+.news-body{flex:1;min-width:0}
+.news-head{display:flex;align-items:center;gap:12px}
+.news-head .ico{width:20px;height:20px;color:#6ef59b}
+.news-title{font-size:23px;font-weight:700;color:#74f29f;letter-spacing:-.2px}
+.news-badge{font-size:12px;font-weight:600;color:#a9f7c4;border:1px solid rgba(110,245,155,.35);background:rgba(74,222,128,.08);border-radius:7px;padding:4px 9px}
+.news-list{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.news-list li{position:relative;padding-left:20px;font-size:15.5px;line-height:1.45;color:#cfdcd4}
+.news-list li::before{content:"";position:absolute;left:2px;top:8px;width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px rgba(74,222,128,.7)}
+.actions{height:200px;margin-top:16px;border-radius:13px;overflow:hidden;background:rgba(13,9,22,.9);box-shadow:0 0 0 1px rgba(255,255,255,.06) inset}
+.action{width:100%;height:40px;display:flex;align-items:center;gap:14px;padding:0 20px;font-size:15.5px;font-weight:500;color:#e6e0f0;background:rgba(17,12,28,.88);border-top:1px solid rgba(255,255,255,.05);text-align:left;transition:.14s}
+.action:first-child{border-top:0}
+.action .ico{width:19px;height:19px;flex:none;color:#b4a9c7}
+.action .chev{margin-left:auto;width:18px;height:18px;color:#8b7fa3}
+.action:hover{background:#1b1329;color:#fff}
+.action.primary{background:linear-gradient(180deg,#f8c14e,#e9a72b);color:#241603;font-weight:600;box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}
+.action.primary .ico{color:#3a2505}
+.action.primary .chev{color:#4a3209}
+.action.primary:hover{background:linear-gradient(180deg,#ffd166,#f2b335)}
+.statusbar{position:relative;z-index:2;height:46px;flex:none;display:flex;align-items:center;gap:12px;padding:0 76px;border-top:1px solid rgba(255,255,255,.05);background:rgba(8,5,14,.6);overflow:hidden}
+.statusbar .label{font-size:14.5px;font-weight:600;color:#a69bb9}
+.statusbar .activity{font-size:13.5px;color:#7f7592;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:980px}
+.stripes{position:absolute;right:-30px;bottom:-16px;width:240px;height:64px;transform:skewX(-32deg);background:repeating-linear-gradient(90deg,rgba(124,77,255,.65) 0 12px,transparent 12px 24px);opacity:.45;pointer-events:none;mask-image:linear-gradient(90deg,transparent,#000 40%)}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;height:58px;margin-top:8px}
+.kicker{font-size:11.5px;font-weight:700;letter-spacing:2.6px;color:#f0b94f;text-transform:uppercase}
+.page-head h2{margin:4px 0 0;font-size:29px;letter-spacing:-.4px;font-weight:700}
+.head-note{font-size:12.5px;color:#7f7592;padding-bottom:6px}
+.settings-grid{margin-top:12px;display:grid;grid-template-columns:1.16fr .84fr;gap:16px;align-items:start}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{padding:16px 20px 17px;border-radius:14px;background:linear-gradient(180deg,rgba(22,16,36,.94),rgba(14,10,24,.94));border:1px solid rgba(255,255,255,.065);box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+.card h3{display:flex;align-items:center;gap:9px;margin:0 0 3px;font-size:11.5px;font-weight:700;letter-spacing:1.9px;color:#cfb06b;text-transform:uppercase}
+.card h3 .ico{width:15px;height:15px;color:#f0b94f}
+.card .desc{margin:0 0 11px;font-size:12.5px;color:#837a95;line-height:1.45}
+.seg{display:flex;gap:6px;background:#0d0918;border:1px solid rgba(255,255,255,.06);padding:4px;border-radius:10px}
+.lang-btn{flex:1;height:32px;border-radius:7px;color:#a99fbd;font-size:13px;font-weight:600;transition:.15s}
+.lang-btn:hover{color:#fff;background:rgba(255,255,255,.04)}
+.lang-btn.active{background:linear-gradient(180deg,#ffd166,#f0b235);color:#241505;box-shadow:0 4px 14px rgba(246,183,60,.22)}
+.switch{width:44px;height:25px;border-radius:13px;background:#2a2340;position:relative;transition:.18s;flex:none;border:1px solid rgba(255,255,255,.08)}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:#8f85a6;transition:.18s}
+.switch.on{background:linear-gradient(180deg,#ffd166,#e9a72b);border-color:transparent;box-shadow:0 0 14px rgba(246,183,60,.25)}
+.switch.on::after{left:21px;background:#241505}
+.switch-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:7px 0 10px;cursor:pointer}
+.switch-row b{display:block;font-size:14.5px;font-weight:600}
+.switch-row small{display:block;margin-top:2px;font-size:12px;color:#7f7592}
+.trow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 0;border-top:1px solid rgba(255,255,255,.05);cursor:pointer}
+.trow b{font-size:14px;font-weight:600}
+.trow small{display:block;margin-top:2px;font-size:11.5px;color:#7f7592}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:11px 14px;margin-top:6px}
+.fields.disabled{opacity:.42;pointer-events:none}
+.field{min-width:0}
+.field.full{grid-column:1/-1}
+.field label{display:block;margin-bottom:5px;font-size:11px;font-weight:600;letter-spacing:1.1px;color:#8d83a2;text-transform:uppercase}
+select,input[type=text],input[type=number]{width:100%;height:34px;border-radius:8px;background:#0d0918;border:1px solid rgba(255,255,255,.09);padding:0 10px;font-size:13px;color:#eee8f8;outline:none}
+select:focus,input:focus{border-color:rgba(246,183,60,.55);box-shadow:0 0 0 2px rgba(246,183,60,.12)}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#8d83a2 50%),linear-gradient(135deg,#8d83a2 50%,transparent 50%);background-position:calc(100% - 15px) 14px,calc(100% - 10px) 14px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:26px}
+input[type=range]{width:100%;height:4px;appearance:none;background:linear-gradient(90deg,#f0b94f var(--p,50%),#2a2340 var(--p,50%));border-radius:3px;outline:none;padding:0;border:0}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:15px;height:15px;border-radius:50%;background:#ffd166;border:2px solid #6b4a08;box-shadow:0 0 10px rgba(246,183,60,.5);cursor:pointer}
+.val{display:inline-block;min-width:46px;text-align:center;font-size:12px;font-weight:600;color:#f3c765;background:#1b142b;border:1px solid rgba(246,183,60,.2);border-radius:6px;padding:4px 6px;flex:none}
+.slider-row{display:flex;align-items:center;gap:10px}
+.hint{margin-top:9px;font-size:11.5px;line-height:1.45;color:#726981}
+.hint b{color:#a99fbd;font-weight:600}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper input{width:78px;text-align:center;font-variant-numeric:tabular-nums;height:31px}
+.stepper button{width:28px;height:31px;border-radius:7px;background:#221a35;color:#d9cfe9;border:1px solid rgba(255,255,255,.07);font-size:16px;line-height:1}
+.stepper button:hover{background:#302447;color:#fff}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.trow-fields{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:7px 0}
+.trow-fields span{font-size:13.5px;color:#c9c0d8}
+.folder{display:flex;gap:8px}
+.folder input{flex:1;min-width:0;height:36px}
+.btn{height:36px;padding:0 14px;border-radius:8px;font-size:13px;font-weight:600;background:#251d38;color:#e7dff2;border:1px solid rgba(255,255,255,.09);display:inline-flex;align-items:center;gap:8px;justify-content:center;transition:.15s;white-space:nowrap}
+.btn:hover{background:#322548;border-color:rgba(255,255,255,.16)}
+.btn.gold{background:linear-gradient(180deg,#ffd166,#edb032);color:#241505;border:0;box-shadow:0 6px 20px rgba(246,183,60,.2)}
+.btn.gold:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.12);color:#c9c0d8}
+.settings-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:14px;height:40px}
+.settings-actions .hint{margin-right:auto;margin-top:0}
+.account-row{display:flex;align-items:center;gap:12px}
+.account-avatar{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(160deg,#2a2050,#171129);border:1px solid rgba(124,77,255,.3);color:#c4b5fd;flex:none}
+.account-avatar .ico{width:19px;height:19px}
+.account-name{font-size:14.5px;font-weight:600}
+.account-meta{font-size:11.5px;color:#81778f;margin-top:3px}
+.account-row select{width:170px;height:32px;font-size:12px}
+.help-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+.help-card{padding:20px 22px;border-radius:14px;background:linear-gradient(180deg,rgba(22,16,36,.94),rgba(14,10,24,.94));border:1px solid rgba(255,255,255,.065)}
+.help-card h3{display:flex;gap:10px;align-items:center;margin:0 0 8px;font-size:15px;color:#f2ecfa}
+.help-card h3 .ico{color:#f0b94f;width:18px;height:18px}
+.help-card p{margin:0;font-size:13px;line-height:1.55;color:#a79db9}
+.kbd{display:inline-block;padding:2px 7px;border-radius:5px;background:#1d162d;border:1px solid rgba(255,255,255,.1);font-size:11.5px;color:#d9cfe9;font-family:inherit}
+.toast{position:absolute;z-index:20;top:70px;left:50%;transform:translate(-50%,-10px);opacity:0;pointer-events:none;display:flex;align-items:center;gap:10px;padding:11px 18px;border-radius:10px;background:rgba(20,15,32,.98);border:1px solid rgba(74,222,128,.4);color:#dcfce7;font-size:13.5px;box-shadow:0 14px 40px rgba(0,0,0,.5);transition:.22s;max-width:760px}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.error{border-color:rgba(255,90,95,.5);color:#ffd9da}
+.toast .ico{width:17px;height:17px;flex:none}
+::-webkit-scrollbar{width:0;height:0}
+.ico{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+</style>
+</head>
+<body>
+<svg class="defs" aria-hidden="true">
+  <defs>
+    <linearGradient id="chestLid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset=".45" stop-color="#f6b73c"/><stop offset="1" stop-color="#c47a12"/></linearGradient>
+    <linearGradient id="chestBody" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a9651c"/><stop offset=".6" stop-color="#7a3f0e"/><stop offset="1" stop-color="#5a2a07"/></linearGradient>
+    <linearGradient id="chestBand" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a78bfa"/><stop offset=".5" stop-color="#7c3aed"/><stop offset="1" stop-color="#4c1d95"/></linearGradient>
+    <linearGradient id="shieldFill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#16305e"/><stop offset="1" stop-color="#0b1733"/></linearGradient>
+    <linearGradient id="shieldEdge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#79e8ff"/><stop offset=".55" stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient>
+    <linearGradient id="giftG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#86efac"/><stop offset="1" stop-color="#22c55e"/></linearGradient>
+  </defs>
+  <symbol id="chestArt" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="107" rx="42" ry="7" fill="#000" opacity=".45"/>
+    <path d="M16 52V44c0-14 11-24 26-24h36c15 0 26 10 26 24v8Z" fill="url(#chestLid)" stroke="#5b2e08" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M16 44c0-14 11-24 26-24h36c15 0 26 10 26 24" fill="none" stroke="#ffe6a3" stroke-width="2" opacity=".55"/>
+    <rect x="16" y="52" width="88" height="50" rx="7" fill="url(#chestBody)" stroke="#5b2e08" stroke-width="3"/>
+    <rect x="16" y="50" width="88" height="11" rx="4" fill="url(#chestBand)" stroke="#3a1a6e" stroke-width="2"/>
+    <rect x="54" y="46" width="12" height="56" fill="url(#chestBand)" stroke="#3a1a6e" stroke-width="2"/>
+    <rect x="48" y="65" width="24" height="22" rx="4" fill="#ffd166" stroke="#8a5a10" stroke-width="2.5"/>
+    <circle cx="60" cy="74" r="3.2" fill="#6b3b08"/>
+    <rect x="58.6" y="74" width="2.8" height="7" rx="1.4" fill="#6b3b08"/>
+    <ellipse cx="75" cy="47" rx="10" ry="4" fill="#ffd166" stroke="#b77b14" stroke-width="2"/>
+    <ellipse cx="83" cy="42" rx="8" ry="3.4" fill="#ffe08a" stroke="#b77b14" stroke-width="2"/>
+    <path d="M96 18l1.6 4.4L102 24l-4.4 1.6L96 30l-1.6-4.4L90 24l4.4-1.6z" fill="#ffe08a" opacity=".9"/>
+    <path d="M18 24l1.2 3.2L22 28.4l-2.8 1.2L18 33l-1.2-3.4L14 28.4l2.8-1.2z" fill="#c4b5fd" opacity=".8"/>
+  </symbol>
+  <symbol id="shieldArt" viewBox="0 0 120 140">
+    <path d="M60 6 108 24v44c0 30-20 50-48 64C32 118 12 98 12 68V24Z" fill="url(#shieldFill)" stroke="url(#shieldEdge)" stroke-width="4"/>
+    <path d="M60 17 98 31v37c0 24-16 41-38 53-22-12-38-29-38-53V31Z" fill="none" stroke="#7fe7ff" stroke-width="1.5" opacity=".45"/>
+    <path d="M34 34 42 15l9 12 9-15 9 15 9-12 8 19Z" fill="#f6b73c" stroke="#a86a10" stroke-width="2" stroke-linejoin="round"/>
+    <text x="60" y="94" text-anchor="middle" font-family="Segoe UI Black,Segoe UI,sans-serif" font-size="58" font-weight="900" fill="#f4f7ff">F</text>
+    <path d="M60 108l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#7fe7ff" opacity=".7"/>
+  </symbol>
+  <symbol id="giftArt" viewBox="0 0 100 100">
+    <g fill="none" stroke="url(#giftG)" stroke-width="3.4" stroke-linejoin="round">
+      <rect x="18" y="42" width="64" height="46" rx="4"/>
+      <path d="M14 30h72v14H14z"/>
+      <path d="M50 30v58"/>
+      <path d="M50 30C42 30 30 26 28 17c-1-6 5-9 11-6 7 4 10 11 11 19Z"/>
+      <path d="M50 30c8 0 20-4 22-13 1-6-5-9-11-6-7 4-10 11-11 19Z"/>
+    </g>
+    <g fill="#86efac"><path d="M24 18l1.4 3.6L29 23l-3.6 1.4L24 28l-1.4-3.6L19 23l3.6-1.4z"/><path d="M84 68l1.2 3L88 72l-2.8 1.2L84 76l-1.2-2.8L80 72l2.8-1z"/></g>
+  </symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8v.3"/><circle cx="12" cy="17.2" r=".9" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-bars" viewBox="0 0 24 24"><rect x="4" y="13" width="4" height="7" rx="1" fill="currentColor" stroke="none"/><rect x="10" y="9" width="4" height="11" rx="1" fill="currentColor" stroke="none"/><rect x="16" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.2v13.6L19 12z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3"/><path d="M12 13v4M9 20h6M10 17h4"/></symbol>
+  <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M14 4c3 1 5 3 6 6l-4 4-6-6z"/><path d="M10 8 6 9l-2 5 5-1"/><path d="M14 12l-1 5-5 2 1-6"/><circle cx="15.5" cy="8.5" r="1.4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 1 1-2.5-6"/><path d="M21 4v5h-5"/><path d="M12 8v4l3 2"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.7 1.2 6.6-5.9-3.1-5.9 3.1 1.2-6.6L2.5 9.4l6.6-.9z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 6.1A10.8 10.8 0 0 1 12 6c6.5 0 10 6 10 6a18 18 0 0 1-3 3.7"/><path d="M6.2 6.2C3.6 7.9 2 12 2 12s3.5 6 10 6a11 11 0 0 0 4.2-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10" width="15" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15" r="1.2" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-unlock" viewBox="0 0 24 24"><rect x="4.5" y="10" width="15" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 7.5-2"/><circle cx="12" cy="15" r="1.2" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5L20 7"/></symbol>
+  <symbol id="i-exit" viewBox="0 0 24 24"><path d="M14 4h5v16h-5"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h9"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-min" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h7M15 6h5M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="13" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v6h7V4M8 20v-6h8v6"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.2"/></symbol>
+</svg>
+
+<div id="stage">
+  <div class="window">
+    <header class="titlebar" id="titlebar">
+      <svg class="tb-chest" viewBox="0 0 120 120" aria-hidden="true"><use href="#chestArt"/></svg>
+      <span class="tb-title" id="tb-title">ChestCounterFortnite 1.0</span>
+      <div class="tb-actions">
+        <button class="tb-btn" data-action="minimize" aria-label="Réduire" title="Réduire"><svg class="ico"><use href="#i-min"/></svg></button>
+        <button class="tb-btn close" data-action="close" aria-label="Fermer" title="Fermer"><svg class="ico"><use href="#i-x"/></svg></button>
+      </div>
+    </header>
+
+    <main class="main" id="main">
+      <div class="brand">
+        <div class="brand-logo"><svg viewBox="0 0 120 120" aria-hidden="true"><use href="#chestArt"/></svg></div>
+        <h1>ChestCounterFortnite</h1>
+        <span class="version" id="brand-version">v1.0</span>
+      </div>
+
+      <nav class="tabs" role="tablist" aria-label="Navigation">
+        <button class="tab active" data-tab="home" role="tab" aria-selected="true"><svg class="ico"><use href="#i-home"/></svg><span data-i18n="nav.home">Accueil</span></button>
+        <button class="tab" data-tab="settings" role="tab" aria-selected="false"><svg class="ico"><use href="#i-gear"/></svg><span data-i18n="nav.settings">Réglages</span></button>
+        <div class="nav-sep"></div>
+        <button class="tab" data-tab="help" role="tab" aria-selected="false"><svg class="ico"><use href="#i-help"/></svg><span data-i18n="nav.help">Aide</span></button>
+      </nav>
+
+      <div class="page active" id="page-home" role="tabpanel">
+        <section class="stats">
+          <div class="stat" style="--accent:#a78bfa;--glow:rgba(167,139,250,.45)">
+            <svg class="ico"><use href="#i-bars"/></svg>
+            <div><div class="num" id="v-total">832</div><div class="cap" data-i18n="stats.total">Total</div></div>
+          </div>
+          <div class="stat" style="--accent:#4ade80;--glow:rgba(74,222,128,.45)">
+            <svg class="ico"><use href="#i-play"/></svg>
+            <div><div class="num" id="v-session">0</div><div class="cap" data-i18n="stats.session">Session</div></div>
+          </div>
+          <div class="stat" style="--accent:#e7e2f0;--glow:rgba(231,226,240,.3)">
+            <svg class="ico"><use href="#i-trophy"/></svg>
+            <div><div class="num" id="v-last">8</div><div class="cap" data-i18n="stats.last">Dernière</div></div>
+          </div>
+          <div class="stat" style="--accent:#f6b73c;--glow:rgba(246,183,60,.45)">
+            <svg class="ico"><use href="#i-rocket"/></svg>
+            <div><div class="num" id="v-head">798</div><div class="cap" data-i18n="stats.start">Départ</div></div>
+          </div>
+        </section>
+
+        <section class="profile">
+          <svg class="shield" viewBox="0 0 120 140" aria-hidden="true"><use href="#shieldArt"/></svg>
+          <div class="profile-info">
+            <div class="prow"><span class="plabel" data-i18n="label.profile">Profil</span><span class="pval" id="v-profile">Matrix Kwemi</span></div>
+            <div class="prow"><span class="plabel" data-i18n="label.state">État</span><span class="pval statusline"><span class="dot" id="status-dot"></span><span id="status-text">En attente d'une partie</span></span></div>
+            <div class="prow"><span class="plabel" data-i18n="label.start">Départ</span><span class="pval" id="start-parts"></span></div>
+            <div class="prow"><span class="plabel" data-i18n="label.last">Dernière</span><span class="pval" id="last-line">16/07 23:23 · Classée - Duo · 3e / 91</span></div>
+          </div>
+          <button class="track-pill" data-action="settings" id="track-pill"><svg class="ico"><use href="#i-clock"/></svg><span data-i18n="beforeTracking">avant le suivi (Réglages)</span></button>
+        </section>
+
+        <section class="news" id="news-card">
+          <svg class="gift" viewBox="0 0 100 100" aria-hidden="true"><use href="#giftArt"/></svg>
+          <div class="news-body">
+            <div class="news-head">
+              <svg class="ico"><use href="#i-star"/></svg>
+              <span class="news-title" id="news-title">Nouveautés de la 1.0</span>
+              <span class="news-badge" data-i18n="news.installed">mise à jour installée</span>
+            </div>
+            <ul class="news-list" id="news-list">
+              <li>Nouveau design du rapport : tableau de bord sombre, chiffres plus lisibles, détail par partie</li>
+              <li>Nouveau nom et nouveau logo : ChestCounterFortnite, à tes couleurs</li>
+              <li>Coffres déjà ouverts : règle ton total de la saison pour les classiques, rares et esprits (Réglages)</li>
+              <li>Plus de mises à jour en ligne : cette version est la tienne, rien ne la remplace</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="actions">
+          <button class="action primary" data-action="report"><svg class="ico"><use href="#i-bars"/></svg><span data-i18n="action.report">Ouvrir le rapport (statistiques détaillées)</span><svg class="ico chev"><use href="#i-chev"/></svg></button>
+          <button class="action" data-action="overlay"><svg class="ico" id="action-overlay-icon"><use href="#i-eyeoff"/></svg><span id="action-overlay-text">Masquer l'overlay</span><svg class="ico chev"><use href="#i-chev"/></svg></button>
+          <button class="action" data-action="lock" id="action-lock"><svg class="ico" id="action-lock-icon"><use href="#i-unlock"/></svg><span id="action-lock-text">Déverrouiller l'overlay (pour le déplacer)</span><svg class="ico chev"><use href="#i-chev"/></svg></button>
+          <button class="action" data-action="news" id="action-news"><svg class="ico"><use href="#i-check"/></svg><span data-i18n="action.news">OK, masquer les nouveautés</span><svg class="ico chev"><use href="#i-chev"/></svg></button>
+          <button class="action" data-action="quit"><svg class="ico"><use href="#i-exit"/></svg><span data-i18n="action.quit">Quitter</span><svg class="ico chev"><use href="#i-chev"/></svg></button>
+        </section>
+      </div>
+
+      <div class="page" id="page-settings" role="tabpanel">
+        <div class="page-head">
+          <div><div class="kicker" data-i18n="settings.kicker">Personnalise ton compteur</div><h2 data-i18n="settings.title">Réglages</h2></div>
+          <div class="head-note" id="settings-note">ChestCounterFortnite v1.0</div>
+        </div>
+        <div class="settings-grid">
+          <div class="col">
+            <section class="card">
+              <h3><svg class="ico"><use href="#i-globe"/></svg><span data-i18n="settings.language">Langue</span></h3>
+              <p class="desc" data-i18n="settings.languageDesc">La langue de la fenêtre, du rapport et de l'overlay.</p>
+              <div class="seg" id="lang-seg">
+                <button class="lang-btn active" data-lang="fr">Français</button>
+                <button class="lang-btn" data-lang="en">English</button>
+                <button class="lang-btn" data-lang="es">Español</button>
+              </div>
+            </section>
+
+            <section class="card">
+              <h3><svg class="ico"><use href="#i-monitor"/></svg><span data-i18n="settings.overlay">Overlay en jeu</span></h3>
+              <div class="switch-row" data-switch-row="showOverlay">
+                <div><b data-i18n="settings.showOverlay">Afficher l'overlay en jeu</b><small data-i18n="settings.showOverlayDesc">Un petit HUD avec le total et la partie en cours.</small></div>
+                <button class="switch on" data-key="showOverlay" role="switch" aria-checked="true" aria-label="Afficher l'overlay"></button>
+              </div>
+              <div class="fields" id="overlay-fields">
+                <div class="field full">
+                  <label data-i18n="settings.style">Style</label>
+                  <select id="set-style">
+                    <option value="classic" data-i18n="settings.styleClassic">Classique (carte sombre)</option>
+                    <option value="hud" data-i18n="settings.styleHud">HUD (intégré au jeu)</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label data-i18n="settings.size">Taille</label>
+                  <div class="slider-row"><input type="range" id="set-size" min="70" max="175" step="5" value="70"><span class="val" id="size-val">70 %</span></div>
+                </div>
+                <div class="field">
+                  <label data-i18n="settings.opacity">Opacité</label>
+                  <div class="slider-row"><input type="range" id="set-opacity" min="30" max="100" step="10" value="100"><span class="val" id="opacity-val">100 %</span></div>
+                </div>
+              </div>
+              <p class="hint" data-i18n="settings.overlayHint">En jeu : Ctrl+Maj+O pour l'afficher ou le masquer, Ctrl+Maj+L pour le verrouiller.</p>
+            </section>
+
+            <section class="card">
+              <h3><svg class="ico"><use href="#i-sliders"/></svg><span data-i18n="settings.behavior">Comportement</span></h3>
+              <div class="trow" data-switch-row="tray">
+                <div><b data-i18n="settings.tray">Réduire dans la zone de notification</b><small data-i18n="settings.trayDesc">Le compteur continue de tourner, loin de la barre des tâches.</small></div>
+                <button class="switch on" data-key="tray" role="switch" aria-checked="true" aria-label="Réduire dans la zone de notification"></button>
+              </div>
+              <div class="trow" data-switch-row="openReport">
+                <div><b data-i18n="settings.reportStart">Ouvrir le rapport au démarrage</b><small data-i18n="settings.reportStartDesc">Le tableau de bord s'ouvre dans le navigateur.</small></div>
+                <button class="switch on" data-key="openReport" role="switch" aria-checked="true" aria-label="Ouvrir le rapport au démarrage"></button>
+              </div>
+              <div class="trow" data-switch-row="withFortnite">
+                <div><b data-i18n="settings.withFortnite">Ouvrir avec Fortnite</b><small data-i18n="settings.withFortniteDesc">Une veille discrète démarre le compteur avec le jeu.</small></div>
+                <button class="switch on" data-key="withFortnite" role="switch" aria-checked="true" aria-label="Ouvrir avec Fortnite"></button>
+              </div>
+            </section>
+          </div>
+
+          <div class="col">
+            <section class="card">
+              <h3><svg class="ico"><use href="#i-trophy"/></svg><span data-i18n="settings.totals">Totaux de saison</span></h3>
+              <p class="desc" data-i18n="settings.totalsDesc">Les coffres ouverts avant le début du suivi.</p>
+              <div class="trow-fields"><span data-i18n="settings.classic">Coffres classiques</span><div class="stepper"><button data-step="-1" aria-label="Moins">−</button><input type="number" id="set-classic" min="0" max="999999" value="765"><button data-step="1" aria-label="Plus">+</button></div></div>
+              <div class="trow-fields"><span data-i18n="settings.rare">Coffres rares</span><div class="stepper"><button data-step="-1" aria-label="Moins">−</button><input type="number" id="set-rare" min="0" max="999999" value="40"><button data-step="1" aria-label="Plus">+</button></div></div>
+              <div class="trow-fields"><span data-i18n="settings.sprite">Coffres d'esprit</span><div class="stepper"><button data-step="-1" aria-label="Moins">−</button><input type="number" id="set-sprite" min="0" max="999999" value="24"><button data-step="1" aria-label="Plus">+</button></div></div>
+              <p class="hint" data-i18n="settings.totalsHint">Total de la saison, parties déjà comptées comprises : les prochaines s'ajoutent par-dessus.</p>
+            </section>
+
+            <section class="card">
+              <h3><svg class="ico"><use href="#i-folder"/></svg><span data-i18n="settings.replays">Dossier des replays</span></h3>
+              <p class="desc" data-i18n="settings.replaysDesc">Là où Fortnite enregistre ses rediffusions.</p>
+              <div class="folder"><input type="text" id="set-demos" spellcheck="false" value=""><button class="btn" data-action="browse" data-i18n="settings.browse">Parcourir…</button></div>
+            </section>
+
+            <section class="card">
+              <h3><svg class="ico"><use href="#i-user"/></svg><span data-i18n="settings.account">Compte</span></h3>
+              <div class="account-row">
+                <div class="account-avatar"><svg class="ico"><use href="#i-user"/></svg></div>
+                <div style="flex:1;min-width:0"><div class="account-name" id="account-name">Matrix Kwemi</div><div class="account-meta" id="account-meta">31 parties · 832 coffres</div></div>
+                <select id="set-profile" hidden aria-label="Profil"></select>
+              </div>
+            </section>
+          </div>
+        </div>
+        <div class="settings-actions">
+          <span class="hint" data-i18n="settings.localHint">Tout est enregistré sur ce PC, dans ton dossier de données.</span>
+          <button class="btn ghost" data-action="cancel" data-i18n="settings.cancel">Annuler</button>
+          <button class="btn gold" data-action="save"><svg class="ico" style="width:15px;height:15px"><use href="#i-save"/></svg><span data-i18n="settings.save">Enregistrer</span></button>
+        </div>
+      </div>
+
+      <div class="page" id="page-help" role="tabpanel">
+        <div class="page-head">
+          <div><div class="kicker" data-i18n="help.kicker">Tout savoir en deux minutes</div><h2 data-i18n="help.title">Aide</h2></div>
+          <div class="head-note" id="help-note">ChestCounterFortnite v1.0</div>
+        </div>
+        <div class="help-grid">
+          <section class="help-card">
+            <h3><svg class="ico"><use href="#i-info"/></svg><span data-i18n="help.howTitle">Comment ça marche</span></h3>
+            <p data-i18n="help.howText">Le compteur lit les replays que Fortnite enregistre et compte tes coffres quelques secondes après la fin de chaque partie. Garde la fenêtre ouverte pendant que tu joues : elle peut rester dans la zone de notification.</p>
+          </section>
+          <section class="help-card">
+            <h3><svg class="ico"><use href="#i-folder"/></svg><span data-i18n="help.replayTitle">Rien n'est compté ?</span></h3>
+            <p data-i18n="help.replayText">Dans Fortnite, active Paramètres → Jeu → Rediffusions → Enregistrer les rediffusions. Les coffres apparaissent ensuite tout seuls.</p>
+          </section>
+          <section class="help-card">
+            <h3><svg class="ico"><use href="#i-monitor"/></svg><span data-i18n="help.overlayTitle">L'overlay</span></h3>
+            <p><span data-i18n="help.overlayText">Affiche ou masque-le avec</span> <span class="kbd">Ctrl+Maj+O</span> <span data-i18n="help.overlayText2">et verrouille-le avec</span> <span class="kbd">Ctrl+Maj+L</span>. <span data-i18n="help.overlayText3">Déverrouillé, maintiens le clic gauche pour le déplacer. En jeu, choisis « Plein écran fenêtré ».</span></p>
+          </section>
+          <section class="help-card">
+            <h3><svg class="ico"><use href="#i-check"/></svg><span data-i18n="help.dataTitle">Tes données</span></h3>
+            <p data-i18n="help.dataText">Tout reste sur ce PC, dans %APPDATA%\ChestCounterFortnite : historique, réglages et rapport. Aucune mise à jour en ligne ne remplace cette version.</p>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="statusbar">
+      <span class="dot"></span>
+      <span class="label" data-i18n="footer.activity">Activité</span>
+      <span class="activity" id="activity-text">Prêt : les coffres sont comptés quelques secondes après chaque partie.</span>
+      <div class="stripes"></div>
+    </footer>
+  </div>
+  <div class="toast" id="toast"><svg class="ico"><use href="#i-check"/></svg><span id="toast-text"></span></div>
+</div>
+
+<script>
+"use strict";
+const I18N = {
+  fr: {
+    "nav.home":"Accueil","nav.settings":"Réglages","nav.help":"Aide",
+    "stats.total":"Total","stats.session":"Session","stats.last":"Dernière","stats.start":"Départ",
+    "label.profile":"Profil","label.state":"État","label.start":"Départ","label.last":"Dernière",
+    "beforeTracking":"avant le suivi (Réglages)",
+    "noProfile":"aucun profil pour l'instant","noLast":"Aucune partie comptée pour l'instant : lance une partie, les coffres arrivent quelques secondes après.","noStart":"Aucun coffre de départ",
+    "status.waiting":"En attente d'une partie","status.live":"Partie en cours","status.counting":"Comptage…",
+    "news.title":"Nouveautés de la {v}","news.installed":"mise à jour installée",
+    "news.bullets":["Nouveau design du rapport : tableau de bord sombre, chiffres plus lisibles, détail par partie","Nouveau nom et nouveau logo : ChestCounterFortnite, à tes couleurs","Coffres déjà ouverts : règle ton total de la saison pour les classiques, rares et esprits (Réglages)","Plus de mises à jour en ligne : cette version est la tienne, rien ne la remplace"],
+    "action.report":"Ouvrir le rapport (statistiques détaillées)","action.overlayHide":"Masquer l'overlay","action.overlayShow":"Afficher l'overlay","action.overlayOff":"Overlay désactivé — ouvrir les Réglages","action.overlayUnlock":"Déverrouiller l'overlay (pour le déplacer)","action.overlayLock":"Verrouiller l'overlay (pour jouer sans le bouger)","action.news":"OK, masquer les nouveautés","action.quit":"Quitter",
+    "footer.activity":"Activité","ready":"Prêt : les coffres sont comptés quelques secondes après chaque partie.",
+    "settings.kicker":"Personnalise ton compteur","settings.title":"Réglages","settings.language":"Langue","settings.languageDesc":"La langue de la fenêtre, du rapport et de l'overlay.","settings.overlay":"Overlay en jeu","settings.showOverlay":"Afficher l'overlay en jeu","settings.showOverlayDesc":"Un petit HUD avec le total et la partie en cours.","settings.style":"Style","settings.styleClassic":"Classique (carte sombre)","settings.styleHud":"HUD (intégré au jeu)","settings.size":"Taille","settings.opacity":"Opacité","settings.overlayHint":"En jeu : Ctrl+Maj+O pour l'afficher ou le masquer, Ctrl+Maj+L pour le verrouiller.","settings.behavior":"Comportement","settings.tray":"Réduire dans la zone de notification","settings.trayDesc":"Le compteur continue de tourner, loin de la barre des tâches.","settings.reportStart":"Ouvrir le rapport au démarrage","settings.reportStartDesc":"Le tableau de bord s'ouvre dans le navigateur.","settings.withFortnite":"Ouvrir avec Fortnite","settings.withFortniteDesc":"Une veille discrète démarre le compteur avec le jeu.","settings.totals":"Totaux de saison","settings.totalsDesc":"Les coffres ouverts avant le début du suivi.","settings.classic":"Coffres classiques","settings.rare":"Coffres rares","settings.sprite":"Coffres d'esprit","settings.totalsHint":"Total de la saison, parties déjà comptées comprises : les prochaines s'ajoutent par-dessus.","settings.replays":"Dossier des replays","settings.replaysDesc":"Là où Fortnite enregistre ses rediffusions.","settings.browse":"Parcourir…","settings.account":"Compte","settings.localHint":"Tout est enregistré sur ce PC, dans ton dossier de données.","settings.cancel":"Annuler","settings.save":"Enregistrer","settings.saved":"Réglages enregistrés.","settings.saveError":"Impossible d'enregistrer les réglages.","settings.withFortniteError":"Ouvrir avec Fortnite : impossible ici, lance le compteur depuis ChestCounterFortnite.exe.",
+    "help.kicker":"Tout savoir en deux minutes","help.title":"Aide","help.howTitle":"Comment ça marche","help.howText":"Le compteur lit les replays que Fortnite enregistre et compte tes coffres quelques secondes après la fin de chaque partie. Garde la fenêtre ouverte pendant que tu joues : elle peut rester dans la zone de notification.","help.replayTitle":"Rien n'est compté ?","help.replayText":"Dans Fortnite, active Paramètres → Jeu → Rediffusions → Enregistrer les rediffusions. Les coffres apparaissent ensuite tout seuls.","help.overlayTitle":"L'overlay","help.overlayText":"Affiche ou masque-le avec","help.overlayText2":"et verrouille-le avec","help.overlayText3":"Déverrouillé, maintiens le clic gauche pour le déplacer. En jeu, choisis « Plein écran fenêtré ».","help.dataTitle":"Tes données","help.dataText":"Tout reste sur ce PC, dans %APPDATA%\\ChestCounterFortnite : historique, réglages et rapport. Aucune mise à jour en ligne ne remplace cette version.",
+    "matchesShort":"parties","chestsShort":"coffres"
+  },
+  en: {
+    "nav.home":"Home","nav.settings":"Settings","nav.help":"Help",
+    "stats.total":"Total","stats.session":"Session","stats.last":"Last","stats.start":"Start",
+    "label.profile":"Profile","label.state":"Status","label.start":"Start","label.last":"Last",
+    "beforeTracking":"before tracking (Settings)",
+    "noProfile":"no profile yet","noLast":"No match counted yet: play a match, the chests arrive a few seconds later.","noStart":"No starting chests",
+    "status.waiting":"Waiting for a match","status.live":"Match in progress","status.counting":"Counting…",
+    "news.title":"What's new in {v}","news.installed":"update installed",
+    "news.bullets":["New report design: dark dashboard, clearer figures, per-match details","New name and new logo: ChestCounterFortnite, in your colours","Chests opened before tracking: set your season total for classic, rare and sprite chests (Settings)","No more online updates: this version is yours, nothing replaces it"],
+    "action.report":"Open the report (detailed statistics)","action.overlayHide":"Hide the overlay","action.overlayShow":"Show the overlay","action.overlayOff":"Overlay off — open Settings","action.overlayUnlock":"Unlock the overlay (to move it)","action.overlayLock":"Lock the overlay (to play without moving it)","action.news":"OK, hide what's new","action.quit":"Quit",
+    "footer.activity":"Activity","ready":"Ready: chests are counted a few seconds after each match.",
+    "settings.kicker":"Make it yours","settings.title":"Settings","settings.language":"Language","settings.languageDesc":"The language of the window, the report and the overlay.","settings.overlay":"In-game overlay","settings.showOverlay":"Show the in-game overlay","settings.showOverlayDesc":"A small HUD with the total and the current match.","settings.style":"Style","settings.styleClassic":"Classic (dark card)","settings.styleHud":"HUD (blends into the game)","settings.size":"Size","settings.opacity":"Opacity","settings.overlayHint":"In game: Ctrl+Shift+O to show or hide it, Ctrl+Shift+L to lock it.","settings.behavior":"Behaviour","settings.tray":"Minimize to the notification area","settings.trayDesc":"The counter keeps running, out of the taskbar.","settings.reportStart":"Open the report at startup","settings.reportStartDesc":"The dashboard opens in your browser.","settings.withFortnite":"Open with Fortnite","settings.withFortniteDesc":"A quiet watcher starts the counter with the game.","settings.totals":"Season totals","settings.totalsDesc":"Chests opened before tracking began.","settings.classic":"Classic chests","settings.rare":"Rare chests","settings.sprite":"Sprite chests","settings.totalsHint":"Season total, including matches already counted: new ones add on top.","settings.replays":"Replays folder","settings.replaysDesc":"Where Fortnite saves its replays.","settings.browse":"Browse…","settings.account":"Account","settings.localHint":"Everything is saved on this PC, in your data folder.","settings.cancel":"Cancel","settings.save":"Save","settings.saved":"Settings saved.","settings.saveError":"Could not save the settings.","settings.withFortniteError":"Open with Fortnite: not possible here, run the counter from ChestCounterFortnite.exe.",
+    "help.kicker":"Everything in two minutes","help.title":"Help","help.howTitle":"How it works","help.howText":"The counter reads the replays Fortnite saves and counts your chests a few seconds after each match ends. Keep the window open while you play: it can stay in the notification area.","help.replayTitle":"Nothing counted?","help.replayText":"In Fortnite, turn on Settings → Game → Replays → Record Replays. Chests then appear on their own.","help.overlayTitle":"The overlay","help.overlayText":"Show or hide it with","help.overlayText2":"and lock it with","help.overlayText3":"Unlocked, hold the left button to move it. In game, choose Windowed Fullscreen.","help.dataTitle":"Your data","help.dataText":"Everything stays on this PC, in %APPDATA%\\ChestCounterFortnite: history, settings and report. No online update replaces this version.",
+    "matchesShort":"matches","chestsShort":"chests"
+  },
+  es: {
+    "nav.home":"Inicio","nav.settings":"Ajustes","nav.help":"Ayuda",
+    "stats.total":"Total","stats.session":"Sesión","stats.last":"Última","stats.start":"Inicio",
+    "label.profile":"Perfil","label.state":"Estado","label.start":"Inicio","label.last":"Última",
+    "beforeTracking":"antes del seguimiento (Ajustes)",
+    "noProfile":"aún no hay perfil","noLast":"Aún no hay partidas contadas: juega una y los cofres llegan unos segundos después.","noStart":"Sin cofres de inicio",
+    "status.waiting":"Esperando una partida","status.live":"Partida en curso","status.counting":"Contando…",
+    "news.title":"Novedades de la {v}","news.installed":"actualización instalada",
+    "news.bullets":["Nuevo diseño del informe: panel oscuro, cifras más claras, detalle por partida","Nuevo nombre y nuevo logo: ChestCounterFortnite, a tus colores","Cofres ya abiertos: ajusta tu total de temporada para clásicos, raros y espíritus (Ajustes)","Sin más actualizaciones en línea: esta versión es tuya, nada la reemplaza"],
+    "action.report":"Abrir el informe (estadísticas detalladas)","action.overlayHide":"Ocultar el overlay","action.overlayShow":"Mostrar el overlay","action.overlayOff":"Overlay desactivado — abrir Ajustes","action.overlayUnlock":"Desbloquear el overlay (para moverlo)","action.overlayLock":"Bloquear el overlay (para jugar sin moverlo)","action.news":"OK, ocultar las novedades","action.quit":"Salir",
+    "footer.activity":"Actividad","ready":"Listo: los cofres se cuentan unos segundos después de cada partida.",
+    "settings.kicker":"Personaliza tu contador","settings.title":"Ajustes","settings.language":"Idioma","settings.languageDesc":"El idioma de la ventana, el informe y el overlay.","settings.overlay":"Overlay en el juego","settings.showOverlay":"Mostrar el overlay en el juego","settings.showOverlayDesc":"Un pequeño HUD con el total y la partida actual.","settings.style":"Estilo","settings.styleClassic":"Clásico (tarjeta oscura)","settings.styleHud":"HUD (integrado en el juego)","settings.size":"Tamaño","settings.opacity":"Opacidad","settings.overlayHint":"En el juego: Ctrl+Mayús+O para mostrarlo u ocultarlo, Ctrl+Mayús+L para bloquearlo.","settings.behavior":"Comportamiento","settings.tray":"Minimizar al área de notificación","settings.trayDesc":"El contador sigue funcionando, fuera de la barra de tareas.","settings.reportStart":"Abrir el informe al iniciar","settings.reportStartDesc":"El panel se abre en tu navegador.","settings.withFortnite":"Abrir con Fortnite","settings.withFortniteDesc":"Una vigilia discreta inicia el contador con el juego.","settings.totals":"Totales de temporada","settings.totalsDesc":"Cofres abiertos antes de empezar el seguimiento.","settings.classic":"Cofres clásicos","settings.rare":"Cofres raros","settings.sprite":"Cofres de espíritu","settings.totalsHint":"Total de la temporada, partidas ya contadas incluidas: las nuevas se suman encima.","settings.replays":"Carpeta de repeticiones","settings.replaysDesc":"Donde Fortnite guarda sus repeticiones.","settings.browse":"Examinar…","settings.account":"Cuenta","settings.localHint":"Todo se guarda en este PC, en tu carpeta de datos.","settings.cancel":"Cancelar","settings.save":"Guardar","settings.saved":"Ajustes guardados.","settings.saveError":"No se pudieron guardar los ajustes.","settings.withFortniteError":"Abrir con Fortnite: no es posible aquí, abre el contador desde ChestCounterFortnite.exe.",
+    "help.kicker":"Todo en dos minutos","help.title":"Ayuda","help.howTitle":"Cómo funciona","help.howText":"El contador lee las repeticiones que guarda Fortnite y cuenta tus cofres unos segundos después de cada partida. Deja la ventana abierta mientras juegas: puede quedarse en el área de notificación.","help.replayTitle":"¿No se cuenta nada?","help.replayText":"En Fortnite, activa Ajustes → Juego → Repeticiones → Grabar repeticiones. Los cofres aparecen solos.","help.overlayTitle":"El overlay","help.overlayText":"Muéstralo u ocúltalo con","help.overlayText2":"y bloquéalo con","help.overlayText3":"Desbloqueado, mantén el clic izquierdo para moverlo. En el juego, elige «Pantalla completa en ventana».","help.dataTitle":"Tus datos","help.dataText":"Todo se queda en este PC, en %APPDATA%\\ChestCounterFortnite: historial, ajustes e informe. Ninguna actualización en línea reemplaza esta versión.",
+    "matchesShort":"partidas","chestsShort":"cofres"
+  }
+};
+
+const S = { state:null, lang:"fr", tab:"home", dirty:false };
+const byId = id => document.getElementById(id);
+
+function post(message) {
+  try { if (window.chrome && window.chrome.webview) window.chrome.webview.postMessage(message); } catch (e) {}
+}
+function t(key) {
+  const lang = S.lang || "fr";
+  const value = (I18N[lang] && I18N[lang][key] !== undefined) ? I18N[lang][key] : I18N.fr[key];
+  return value !== undefined ? value : key;
+}
+function setText(id, value) { const el = byId(id); if (el) el.textContent = value == null ? "" : String(value); }
+function setUse(id, href) { const el = byId(id); if (el) { const u = el.querySelector("use"); if (u) u.setAttribute("href", href); } }
+function setSwitch(key, on) {
+  const sw = document.querySelector('.switch[data-key="' + key + '"]');
+  if (!sw) return;
+  sw.classList.toggle("on", !!on);
+  sw.setAttribute("aria-checked", on ? "true" : "false");
+}
+function switchOn(key) {
+  const sw = document.querySelector('.switch[data-key="' + key + '"]');
+  return !!sw && sw.classList.contains("on");
+}
+function renderStatic() {
+  document.documentElement.lang = S.lang;
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
+  const v = S.state ? S.state.version : "1.0";
+  setText("news-title", t("news.title").replace("{v}", v));
+  const list = byId("news-list");
+  if (list) {
+    const bullets = t("news.bullets");
+    list.replaceChildren();
+    (Array.isArray(bullets) ? bullets : []).forEach(text => {
+      const li = document.createElement("li");
+      li.textContent = text;
+      list.appendChild(li);
+    });
+  }
+}
+function renderStats(s) {
+  setText("v-total", s.stats.total);
+  setText("v-session", s.stats.session);
+  setText("v-last", s.stats.last);
+  setText("v-head", s.stats.head);
+  setText("v-profile", s.hasProfile ? s.profile.name : t("noProfile"));
+  setText("status-text", t("status." + s.status));
+  byId("status-dot").className = "dot" + (s.status === "live" ? " live" : s.status === "counting" ? " counting" : "");
+  const parts = byId("start-parts");
+  parts.replaceChildren();
+  if (s.startParts && s.startParts.length) {
+    s.startParts.forEach((p, i) => {
+      if (i) { const dot = document.createElement("span"); dot.className = "start-dot"; dot.textContent = "·"; parts.appendChild(dot); }
+      const span = document.createElement("span");
+      span.className = "start-part " + (p.cls || "gold");
+      span.textContent = p.text;
+      parts.appendChild(span);
+    });
+  } else {
+    const span = document.createElement("span");
+    span.className = "muted";
+    span.textContent = t("noStart");
+    parts.appendChild(span);
+  }
+  byId("track-pill").hidden = !(s.startParts && s.startParts.length);
+  setText("last-line", s.hasLast ? s.lastLine : t("noLast"));
+  const o = s.overlay || {};
+  const hide = o.show && o.visible;
+  setText("action-overlay-text", !o.show ? t("action.overlayOff") : hide ? t("action.overlayHide") : t("action.overlayShow"));
+  setUse("action-overlay-icon", !o.show || !o.visible ? "#i-eye" : "#i-eyeoff");
+  byId("action-lock").hidden = !o.show;
+  setText("action-lock-text", o.locked ? t("action.overlayUnlock") : t("action.overlayLock"));
+  setUse("action-lock-icon", o.locked ? "#i-unlock" : "#i-lock");
+  byId("news-card").hidden = !s.news;
+  byId("action-news").hidden = !s.news;
+  setText("activity-text", s.activity || t("ready"));
+  setText("tb-title", "ChestCounterFortnite " + s.version);
+  setText("brand-version", "v" + s.version);
+  setText("settings-note", "ChestCounterFortnite v" + s.version);
+  setText("help-note", "ChestCounterFortnite v" + s.version);
+}
+function renderSettings(force) {
+  if (!S.state || (!force && S.dirty)) return;
+  const c = S.state.settings;
+  document.querySelectorAll(".lang-btn").forEach(b => b.classList.toggle("active", b.dataset.lang === c.lang));
+  setSwitch("showOverlay", c.showOverlay);
+  setSwitch("tray", c.tray);
+  setSwitch("openReport", c.openReport);
+  setSwitch("withFortnite", c.withFortnite);
+  byId("set-style").value = c.style === "hud" ? "hud" : "classic";
+  const size = byId("set-size");
+  size.value = c.size;
+  setText("size-val", c.size + " %");
+  paintRange(size);
+  const opacity = byId("set-opacity");
+  opacity.value = c.opacity;
+  setText("opacity-val", c.opacity + " %");
+  paintRange(opacity);
+  byId("set-classic").value = c.classic;
+  byId("set-rare").value = c.rare;
+  byId("set-sprite").value = c.sprite;
+  byId("set-demos").value = c.demos || "";
+  const profile = S.state.profile || {};
+  setText("account-name", S.state.hasProfile ? profile.name : t("noProfile"));
+  setText("account-meta", S.state.hasProfile ? profile.matches + " " + t("matchesShort") + " · " + profile.chests + " " + t("chestsShort") : "");
+  const select = byId("set-profile");
+  const list = profile.list || [];
+  if (list.length > 1) {
+    select.replaceChildren();
+    list.forEach(p => {
+      const option = document.createElement("option");
+      option.value = p.key;
+      option.textContent = p.name + " · " + p.chests;
+      option.selected = p.key === profile.key;
+      select.appendChild(option);
+    });
+    select.hidden = false;
+  } else {
+    select.hidden = true;
+  }
+  updateOverlayFields();
+}
+function paintRange(el) {
+  const min = Number(el.min || 0), max = Number(el.max || 100), value = Number(el.value || 0);
+  const pct = max > min ? ((value - min) / (max - min)) * 100 : 0;
+  el.style.setProperty("--p", pct + "%");
+}
+function updateOverlayFields() {
+  const fields = byId("overlay-fields");
+  const on = switchOn("showOverlay");
+  fields.classList.toggle("disabled", !on);
+  fields.querySelectorAll("input,select").forEach(el => { el.disabled = !on; });
+}
+function render() {
+  if (!S.state) return;
+  renderStatic();
+  renderStats(S.state);
+  renderSettings(false);
+}
+function applyState(state) {
+  if (!state || state.type !== "state") return;
+  S.state = state;
+  S.lang = state.lang || "fr";
+  render();
+}
+function setTab(tab) {
+  S.tab = tab;
+  document.querySelectorAll(".page").forEach(p => p.classList.toggle("active", p.id === "page-" + tab));
+  document.querySelectorAll(".tab").forEach(b => {
+    const on = b.dataset.tab === tab;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-selected", on ? "true" : "false");
+  });
+  if (tab === "settings") { S.dirty = false; renderSettings(true); }
+  byId("main").scrollTop = 0;
+}
+function collectSettings() {
+  const lang = document.querySelector(".lang-btn.active");
+  const num = id => { const v = parseInt(byId(id).value, 10); return Number.isFinite(v) ? Math.max(0, v) : 0; };
+  return {
+    lang: lang ? lang.dataset.lang : "fr",
+    showOverlay: switchOn("showOverlay"),
+    style: byId("set-style").value,
+    size: Number(byId("set-size").value),
+    opacity: Number(byId("set-opacity").value),
+    tray: switchOn("tray"),
+    openReport: switchOn("openReport"),
+    withFortnite: switchOn("withFortnite"),
+    classic: num("set-classic"),
+    rare: num("set-rare"),
+    sprite: num("set-sprite"),
+    demos: byId("set-demos").value.trim(),
+    profile: byId("set-profile").hidden ? null : byId("set-profile").value
+  };
+}
+let toastTimer = 0;
+function showToast(message, kind) {
+  if (!message) return;
+  const toast = byId("toast");
+  setText("toast-text", message);
+  toast.classList.toggle("error", kind === "error");
+  setUse(toast.querySelector("svg"), kind === "error" ? "#i-info" : "#i-check");
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), kind === "error" ? 6000 : 3200);
+}
+function handle(message) {
+  if (!message || typeof message !== "object") return;
+  if (message.type === "state") applyState(message);
+  else if (message.type === "toast") showToast(message.message, message.kind);
+  else if (message.type === "tab") setTab(message.tab);
+  else if (message.type === "saved") { S.dirty = false; renderSettings(true); }
+  else if (message.type === "folder") { byId("set-demos").value = message.path || ""; S.dirty = true; }
+}
+function fitStage() {
+  const scale = Math.min(window.innerWidth / 1524, window.innerHeight / 1026);
+  const stage = byId("stage");
+  stage.style.transform = "scale(" + scale + ")";
+  stage.style.left = Math.max(0, (window.innerWidth - 1524 * scale) / 2) + "px";
+  stage.style.top = Math.max(0, (window.innerHeight - 1026 * scale) / 2) + "px";
+}
+function bind() {
+  window.addEventListener("resize", fitStage);
+  if (window.chrome && window.chrome.webview) window.chrome.webview.addEventListener("message", e => handle(e.data));
+
+  byId("titlebar").addEventListener("mousedown", e => {
+    if (e.button === 0 && !e.target.closest("button")) post({ type: "drag" });
+  });
+
+  document.addEventListener("click", e => {
+    const tab = e.target.closest("[data-tab]");
+    if (tab) { setTab(tab.dataset.tab); return; }
+
+    const sw = e.target.closest(".switch");
+    if (sw) {
+      sw.classList.toggle("on");
+      const on = sw.classList.contains("on");
+      sw.setAttribute("aria-checked", on ? "true" : "false");
+      if (sw.dataset.key === "showOverlay") updateOverlayFields();
+      S.dirty = true;
+      return;
+    }
+
+    const lang = e.target.closest(".lang-btn");
+    if (lang) {
+      document.querySelectorAll(".lang-btn").forEach(b => b.classList.remove("active"));
+      lang.classList.add("active");
+      S.dirty = true;
+      return;
+    }
+
+    const step = e.target.closest("[data-step]");
+    if (step) {
+      const input = step.closest(".stepper").querySelector("input");
+      const value = Math.max(0, (parseInt(input.value, 10) || 0) + parseInt(step.dataset.step, 10));
+      input.value = value;
+      S.dirty = true;
+      return;
+    }
+
+    const row = e.target.closest("[data-switch-row]");
+    if (row) {
+      const button = row.querySelector(".switch");
+      if (button) {
+        button.classList.toggle("on");
+        const on = button.classList.contains("on");
+        button.setAttribute("aria-checked", on ? "true" : "false");
+        if (button.dataset.key === "showOverlay") updateOverlayFields();
+        S.dirty = true;
+      }
+      return;
+    }
+
+    const action = e.target.closest("[data-action]");
+    if (!action) return;
+    switch (action.dataset.action) {
+      case "minimize": post({ type: "minimize" }); break;
+      case "close": post({ type: "close" }); break;
+      case "settings": setTab("settings"); break;
+      case "report": post({ type: "report" }); break;
+      case "overlay": post({ type: "overlay" }); break;
+      case "lock": post({ type: "lock" }); break;
+      case "news": post({ type: "news" }); break;
+      case "quit": post({ type: "quit" }); break;
+      case "browse": post({ type: "browse" }); break;
+      case "cancel": S.dirty = false; renderSettings(true); setTab("home"); break;
+      case "save": post({ type: "save", settings: collectSettings() }); break;
+    }
+  });
+
+  byId("page-settings").addEventListener("input", e => {
+    S.dirty = true;
+    if (e.target.id === "set-size") { setText("size-val", e.target.value + " %"); paintRange(e.target); }
+    if (e.target.id === "set-opacity") { setText("opacity-val", e.target.value + " %"); paintRange(e.target); }
+  });
+  byId("page-settings").addEventListener("change", () => { S.dirty = true; });
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && S.tab !== "home") setTab("home");
+  });
+}
+document.addEventListener("DOMContentLoaded", () => {
+  fitStage();
+  bind();
+  // Static preview values for the Accueil tab (replaced by the app state).
+  const parts = byId("start-parts");
+  if (parts && !parts.childElementCount) {
+    [["734 classiques", "gold"], ["40 rares", "gold2"], ["24 esprits", "purple"]].forEach((p, i) => {
+      if (i) { const dot = document.createElement("span"); dot.className = "start-dot"; dot.textContent = "·"; parts.appendChild(dot); }
+      const span = document.createElement("span"); span.className = "start-part " + p[1]; span.textContent = p[0]; parts.appendChild(span);
+    });
+  }
+  const range = byId("set-size"); if (range) paintRange(range);
+  const opacity = byId("set-opacity"); if (opacity) paintRange(opacity);
+  post({ type: "ready" });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Windows app: the standby process has no window; the tool opens its own console (NativeConsole). -->
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>ChestCounterFortnite</AssemblyName>
+    <RootNamespace>ChestCounter</RootNamespace>
+    <Version>1.0.0</Version>
+    <Product>ChestCounterFortnite</Product>
+    <AssemblyTitle>ChestCounterFortnite</AssemblyTitle>
+    <Company>Emilien</Company>
+    <Authors>Emilien</Authors>
+    <Copyright>© Emilien</Copyright>
+    <Description>Compteur de coffres Fortnite — version personnelle d'Emilien.</Description>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <!-- Single-file publish: the parser discovers its types by reflection, so no trimming. -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <!-- Small idle footprint: workstation, non-concurrent GC (no background GC thread) and a GC that gives memory back. -->
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+    <TieredPGO>true</TieredPGO>
+    <!-- The gold chest logo, as the icon of the exe, its console window and the tray. -->
+    <ApplicationIcon>Assets\ChestCounterFortnite.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\lib\FortniteReplayReader\FortniteReplayReader.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Report headings font (SIL Open Font License, see Assets/PirataOne-OFL.txt), embedded in the page: no download. -->
+    <EmbeddedResource Include="Assets\PirataOne-latin.woff2" LogicalName="PirataOne.woff2" />
+    <!-- What's new of this version, shown once after the update. -->
+    <EmbeddedResource Include="..\..\RELEASE_NOTES.md" LogicalName="ReleaseNotes.md" />
+    <!-- Window design (HTML/CSS drawn by the embedded WebView2 runtime). -->
+    <EmbeddedResource Include="Ui\app.html" LogicalName="app.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
+  </ItemGroup>
+</Project>

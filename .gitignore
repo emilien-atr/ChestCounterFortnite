@@ -5,3 +5,5 @@ dist-*/
 *.user
 .vs/
 *.replay
+report-current.html
+.local-server.*

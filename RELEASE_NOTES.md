@@ -1,48 +1,33 @@
-**English** · Download **`ChestCounter.exe`** below, run it, follow the short setup. Nothing to install. Already using it? Press **U** in the counter: your history and settings are kept.
+**English** · **ChestCounterFortnite** is a personal build by Emilien: the counter, your history and your settings stay on your PC. Nothing to install.
 
-> **Turn on replays in Fortnite first**: *Settings → Game → Replays → Record Replays: On*. The tool only reads these replay files: no game modification, no access to the game's memory. Its only network access is the check for a new version on GitHub (can be turned off).
-
-**What's new in 1.4.0**
-- **New default overlay**, nicer and transparent. The old one is still there: *Settings → Overlay style → classic*
-- **Chest count fixed**: it was wrong in some cases. The replays still on your PC are analyzed again and your counters adjusted
-- **New console**, simpler and more intuitive to use
-- **New report design**
-- **Team treasures**: can be shown or hidden in the report (an estimate, sometimes wrong)
-- **The overlay can be turned off** entirely in the settings
-- Thanks to koiseka for their contribution (#6)
+**What's new in 1.0.0**
+- **New report design**: dark dashboard, clearer figures, chest breakdown and treasures
+- **New name and logo**: ChestCounterFortnite, in your own colours
+- **Chests already opened**: set your season total for classic, rare and sprite chests, even if replays were off at the start
+- **No more online updates**: this build is yours, nothing replaces it
 
 Windows may show *"Windows protected your PC"* (unsigned exe): *More info → Run anyway*.
 
 ---
 
-**Français** · Télécharge **`ChestCounter.exe`** ci-dessous, lance-le et suis la courte installation. Rien à installer. Tu l'utilises déjà ? Appuie sur **U** dans le compteur : ton historique et tes réglages sont conservés.
+**Français** · **ChestCounterFortnite** est une version personnelle d'Emilien : le compteur, ton historique et tes réglages restent sur ton PC. Rien à installer.
 
-> **Active d'abord les rediffusions dans Fortnite** : *Paramètres → Jeu → Rediffusions → Enregistrer les rediffusions : Activé*. L'outil lit uniquement ces fichiers replay : aucune modification du jeu, aucun accès à la mémoire du jeu. Son seul accès réseau est la vérification d'une nouvelle version sur GitHub (désactivable).
-
-**Nouveautés de la 1.4.0**
-- **Nouvel overlay par défaut**, plus beau et transparent. L'ancien reste disponible : *Réglages → Style de l'overlay → classique*
-- **Comptage des coffres corrigé** : il était faux dans certains cas. Les replays encore sur ton PC sont réanalysés et tes compteurs réajustés
-- **Nouvelle console**, plus simple et plus intuitive à utiliser
-- **Nouveau design du rapport**
-- **Trésors de l'équipe** : affichables ou non dans le rapport (une estimation, parfois inexacte)
-- **L'overlay peut être désactivé** complètement dans les réglages
-- Merci à koiseka pour sa contribution (#6)
+**Nouveautés de la 1.0.0**
+- **Nouveau design du rapport** : tableau de bord sombre, chiffres plus lisibles, détail par type de coffre et trésors
+- **Nouveau nom et nouveau logo** : ChestCounterFortnite, à tes couleurs
+- **Coffres déjà ouverts** : règle ton total de la saison pour les coffres classiques, rares et d'esprit, même si les rediffusions étaient coupées au début
+- **Plus de mises à jour en ligne** : cette version est la tienne, rien ne la remplace
 
 Windows peut afficher « Windows a protégé votre ordinateur » (exe non signé) : *Informations complémentaires → Exécuter quand même*.
 
 ---
 
-**Español** · Descarga **`ChestCounter.exe`** aquí abajo, ejecútalo y sigue la breve configuración. No hay nada que instalar. ¿Ya lo usas? Pulsa **U** en el contador: tu historial y tus ajustes se conservan.
+**Español** · **ChestCounterFortnite** es una versión personal de Emilien: el contador, tu historial y tus ajustes se quedan en tu PC. Nada que instalar.
 
-> **Activa primero las repeticiones en Fortnite**: *Ajustes → Juego → Repeticiones → Grabar repeticiones: Activado*. La herramienta solo lee esos archivos de repetición: ninguna modificación del juego, ningún acceso a la memoria del juego. Su único acceso a la red es la comprobación de una nueva versión en GitHub (se puede desactivar).
-
-**Novedades de la 1.4.0**
-- **Nuevo overlay por defecto**, más bonito y transparente. El anterior sigue disponible: *Ajustes → Estilo del overlay → clásico*
-- **Recuento de cofres corregido**: era incorrecto en algunos casos. Las repeticiones que siguen en tu PC se analizan de nuevo y tus contadores se ajustan
-- **Nueva consola**, más sencilla e intuitiva de usar
-- **Nuevo diseño del informe**
-- **Tesoros del equipo**: se pueden mostrar u ocultar en el informe (una estimación, a veces inexacta)
-- **El overlay se puede desactivar** por completo en los ajustes
-- Gracias a koiseka por su contribución (#6)
+**Novedades de la 1.0.0**
+- **Nuevo diseño del informe**: panel oscuro, cifras más claras, desglose por tipo de cofre y tesoros
+- **Nuevo nombre y nuevo logo**: ChestCounterFortnite, con tus colores
+- **Cofres ya abiertos**: ajusta tu total de la temporada para cofres clásicos, raros y de espíritu, aunque las repeticiones estuvieran desactivadas al principio
+- **Sin actualizaciones en línea**: esta versión es tuya, nada la sustituye
 
 Windows puede mostrar «Windows protegió tu PC» (exe sin firmar): *Más información → Ejecutar de todas formas*.
