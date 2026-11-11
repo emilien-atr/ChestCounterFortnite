@@ -398,21 +398,24 @@ public static class ReportSite
             <linearGradient id="ccfGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset=".45" stop-color="#f6b73c"/><stop offset="1" stop-color="#b45309"/></linearGradient>
             <linearGradient id="ccfBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#93c5fd"/><stop offset="1" stop-color="#2563eb"/></linearGradient>
             <symbol id="ccf-chest" viewBox="0 0 64 64">
-              <ellipse cx="32" cy="56" rx="24" ry="4" fill="#000" opacity=".35"/>
-              <path d="M8 31c0-10 7-16 17-16h14c10 0 17 6 17 16v4H8z" fill="url(#ccfGold)" stroke="#6b2e05" stroke-width="2"/>
-              <rect x="8" y="33" width="48" height="21" rx="4" fill="#8a4b12" stroke="#6b2e05" stroke-width="2"/>
-              <rect x="8" y="31" width="48" height="7" fill="url(#ccfBlue)"/>
-              <rect x="28" y="29" width="8" height="27" fill="url(#ccfBlue)"/>
-              <rect x="25" y="38" width="14" height="11" rx="2" fill="#ffd166" stroke="#8a5a10" stroke-width="1.5"/>
-              <circle cx="32" cy="42" r="1.6" fill="#5b2e08"/>
-              <path d="M48 13l1 3 3 1-3 1-1 3-1-3-3-1 3-1z" fill="#ffe08a"/>
-              <path d="M18 27c2-5 7-7 12-7" fill="none" stroke="#fff3c4" stroke-width="2" stroke-linecap="round" opacity=".55"/>
+              <path d="M7 31V24c0-8 6-14 15-14h20c9 0 15 6 15 14v7Z" fill="url(#ccfGold)" stroke="#3a1e08" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M12 25c2-6 6-9 11-10" fill="none" stroke="#fff3c4" stroke-width="2" stroke-linecap="round" opacity=".55"/>
+              <rect x="7" y="30" width="50" height="26" rx="5" fill="url(#ccfGold)" stroke="#3a1e08" stroke-width="2.5"/>
+              <rect x="7" y="29" width="50" height="6" rx="3" fill="#7a4516"/>
+              <rect x="18" y="31" width="6" height="25" fill="#5c3310"/>
+              <rect x="40" y="31" width="6" height="25" fill="#5c3310"/>
+              <rect x="25" y="33" width="14" height="12" rx="2.5" fill="#ffefc4" stroke="#5c3310" stroke-width="1.5"/>
+              <circle cx="32" cy="38" r="1.8" fill="#3a1e08"/>
+              <path d="M32 40v4" stroke="#3a1e08" stroke-width="1.8" stroke-linecap="round"/>
             </symbol>
             <symbol id="ccf-mini" viewBox="0 0 32 32">
-              <path d="M4 14c0-5 4-8 9-8h6c5 0 9 3 9 8v2H4z" fill="currentColor" opacity=".55"/>
-              <rect x="4" y="16" width="24" height="12" rx="3" fill="currentColor"/>
-              <rect x="13" y="15" width="6" height="13" fill="#000" opacity=".22"/>
-              <rect x="13.5" y="19" width="5" height="5" rx="1" fill="#000" opacity=".24"/>
+              <path d="M4 15v-3c0-4 3-7 8-7h8c5 0 8 3 8 7v3Z" fill="currentColor" stroke="#3a1e08" stroke-width="1.2" stroke-linejoin="round"/>
+              <rect x="4" y="14" width="24" height="13" rx="3" fill="currentColor" stroke="#3a1e08" stroke-width="1.2"/>
+              <rect x="9" y="14" width="3" height="13" fill="#5c3310"/>
+              <rect x="20" y="14" width="3" height="13" fill="#5c3310"/>
+              <rect x="13" y="16" width="6" height="6" rx="1" fill="#ffefc4"/>
+              <circle cx="16" cy="18" r=".8" fill="#3a1e08"/>
+              <path d="M16 19v1.6" stroke="#3a1e08" stroke-width=".9" stroke-linecap="round"/>
             </symbol>
             <symbol id="ic-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/><path d="M10 21v-6h4v6"/></symbol>
             <symbol id="ic-chart" viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-7"/></symbol>
