@@ -1,0 +1,52 @@
+name: Apply 1.1.0 update
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-1-1
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'Apply ChestCounterFortnite 1.1.0')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply archive and flatten source
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP=ChestCounterFortnite-1.1-update.zip
+          if [ ! -f "$ZIP" ]; then
+            echo "Missing $ZIP"
+            exit 1
+          fi
+
+          mkdir -p src/ChestCounter/Ui
+          shopt -s nullglob
+          for f in *.cs *.csproj *.ico; do
+            cp -f -- "$f" "src/ChestCounter/$f"
+          done
+          if [ -f app.html ]; then
+            cp -f app.html src/ChestCounter/Ui/app.html
+          fi
+
+          unzip -o "$ZIP" -d .
+          rm -f -- *.cs *.csproj *.ico app.html "$ZIP" .github/workflows/apply-update.yml
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Apply ChestCounterFortnite 1.1.0 — clean source layout"
+          git push
