@@ -38,8 +38,11 @@ jobs:
             cp -f app.html src/ChestCounter/Ui/app.html
           fi
 
-          unzip -o "$ZIP" -d .
-          rm -f -- *.cs *.csproj *.ico app.html "$ZIP" .github/workflows/apply-update.yml
+          # The GITHUB_TOKEN cannot modify workflow files without a dedicated
+          # workflows permission, so leave build.yml and this temporary
+          # workflow untouched. Only source, docs and the archive are changed.
+          unzip -o "$ZIP" -x ".github/workflows/build.yml" -d .
+          rm -f -- *.cs *.csproj *.ico app.html "$ZIP"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
