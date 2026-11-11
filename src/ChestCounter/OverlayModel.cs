@@ -3,7 +3,7 @@ namespace ChestCounter;
 /// <summary>Size and opacity choices of the overlay window (percent), offered in the settings.</summary>
 public static class OverlayAppearance
 {
-    public static readonly int[] Sizes = { 70, 80, 90, 100, 115, 130, 150, 175 };
+    public static readonly int[] Sizes = { 50, 55, 60, 70, 80, 90, 100, 115, 130, 150, 175 };
 
     /// <summary>Below 30 % the numbers can no longer be read.</summary>
     public static readonly int[] Opacities = { 100, 90, 80, 70, 60, 50, 40, 30 };

@@ -111,7 +111,7 @@ public sealed class Config
     public bool OverlayLocked { get; set; }
 
     /// <summary>Size of the overlay in percent (100 = normal), on top of the Windows display scaling.</summary>
-    public int OverlaySize { get; set; } = 100;
+    public int OverlaySize { get; set; } = 60;
 
     /// <summary>Opacity of the overlay in percent (100 = opaque).</summary>
     public int OverlayOpacity { get; set; } = 100;

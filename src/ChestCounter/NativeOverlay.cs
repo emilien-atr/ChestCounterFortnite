@@ -633,9 +633,8 @@ public static class NativeOverlay
 
     // ---- "hud" style: figures only, outlined like the game's own HUD, right-aligned under the minimap -------------
     //
-    //   [chest] 3 934        total (gold while a match is counted live)
-    //   Dernière • 14        last match / "● En partie • …" / "● En direct • 12"
-    //   dont cassés • 17     only when some chests were destroyed
+    //   [chest] 3 934   Dernière • 14   dont cassés • 17
+    // One horizontal row, like the game's own HUD. The last part becomes "● En partie" or "● En direct • 12".
 
     private sealed record HudRow(string Label, string Value, bool Dot);
 
@@ -667,11 +666,14 @@ public static class NativeOverlay
             var lockW = Sc(22);
             var bigW = TextWidth(hdc, _fontHudBig, v.Total, out _hudBigH);
             var state = StateRow(v);
-            var rowsW = new[] { Sc(14) + TextWidth(hdc, _fontHudSmall, state.Label + Sep + state.Value, out _hudSmallH) }
-                .Concat(v.Rows.Select(r => TextWidth(hdc, _fontHudSmall, r.Label + Sep + r.Value, out _)))
-                .Max();
-            w = lockW + pad + Math.Max(Sc(26) + Sc(8) + bigW, rowsW) + pad + Sc(14);
-            h = pad + _hudBigH + (1 + v.Rows.Count) * (_hudSmallH + Sc(2)) + pad;
+            var stateText = state.Label + (state.Value.Length > 0 ? Sep + state.Value : "");
+            var stateTextW = TextWidth(hdc, _fontHudSmall, stateText, out _hudSmallH);
+            var stateW = stateTextW + (state.Dot ? Sc(18) : 0);
+            var rowsW = v.Rows.Sum(r => Sc(18) + TextWidth(hdc, _fontHudSmall, r.Label + Sep + r.Value, out _));
+            var lineH = Math.Max(_hudBigH, _hudSmallH);
+            // One row: chest + total, then the last/live counter and the destroyed chests.
+            w = lockW + pad + Sc(26) + Sc(8) + bigW + Sc(18) + stateW + rowsW + pad + Sc(14);
+            h = pad + lineH + pad;
             w = Math.Max(_stableW, w);
             _stableW = w;
             _lockRect = new RECT { Left = Sc(2), Top = 0, Right = lockW, Bottom = h };
@@ -830,31 +832,38 @@ public static class NativeOverlay
         }
 
         var left = _lockRect.Right;
-        var y = pad;
         var state = StateRow(v);
         var live = v.CurrentLive && state.Value.Length > 0;
-
-        // Total, with the chest.
         var bigW = TextWidth(hdc, _fontHudBig, v.Total, out _);
-        Outlined(hdc, _fontHudBig, live ? gold : white, v.Total, left, y, right, y + _hudBigH, DT_RIGHT);
         var iw = Sc(26);
         var ih = Sc(22);
-        var ix = right - bigW - Sc(8) - iw;
-        Chest(hdc, ix, y + (_hudBigH - ih) / 2, iw, ih, gold, Rgb(224, 165, 38), ink, ink);
-        y += _hudBigH + Sc(2);
+        var stateText = state.Label + (state.Value.Length > 0 ? Sep + state.Value : "");
+        var stateTextW = TextWidth(hdc, _fontHudSmall, stateText, out _);
+        var rowParts = v.Rows.Select(r => new { Row = r, W = TextWidth(hdc, _fontHudSmall, r.Label + Sep + r.Value, out _) }).ToList();
+        var contentW = iw + Sc(8) + bigW + Sc(18) + (state.Dot ? Sc(18) : 0) + stateTextW
+            + rowParts.Sum(r => Sc(18) + r.W);
+        var lineH = Math.Max(_hudBigH, _hudSmallH);
+        var x = Math.Max(left, right - contentW);
+        var smallTop = pad + Math.Max(0, (lineH - _hudSmallH) / 2);
 
-        // Last match (or the match in progress), then the destroyed chests when there are some.
-        var rowH = _hudSmallH;
-        var stateLeft = LabelValue(hdc, state.Label, state.Value, left, right, y, rowH, live ? gold : white);
+        // One horizontal row, like the game's own HUD.
+        Chest(hdc, x, pad + Math.Max(0, (lineH - ih) / 2), iw, ih, gold, Rgb(224, 165, 38), ink, ink);
+        var totalX = x + iw + Sc(8);
+        Outlined(hdc, _fontHudBig, live ? gold : white, v.Total, totalX, pad, totalX + bigW + Sc(4), pad + lineH, DT_LEFT);
+
+        var stateX = totalX + bigW + Sc(18);
         if (state.Dot)
         {
-            Disc(hdc, stateLeft - Sc(12), y + rowH / 2 - Sc(4), Sc(9), Rgb(255, 59, 48), ink, 1);
+            Disc(hdc, stateX, pad + lineH / 2 - Sc(4), Sc(9), Rgb(255, 59, 48), ink, 1);
+            stateX += Sc(18);
         }
-        y += rowH + Sc(2);
-        foreach (var row in v.Rows)
+        LabelValue(hdc, state.Label, state.Value, stateX, stateX + stateTextW, smallTop, _hudSmallH, live ? gold : white);
+
+        var rowX = stateX + stateTextW + Sc(18);
+        foreach (var row in rowParts)
         {
-            LabelValue(hdc, row.Label, row.Value, left, right, y, rowH, white);
-            y += rowH + Sc(2);
+            LabelValue(hdc, row.Row.Label, row.Row.Value, rowX, rowX + row.W, smallTop, _hudSmallH, white);
+            rowX += row.W + Sc(18);
         }
     }
 

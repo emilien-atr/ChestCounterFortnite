@@ -1,94 +1,80 @@
 <div align="center">
 
-<img src="rapport-final.png" alt="Rapport ChestCounterFortnite" width="860">
+<img src="docs/icon.png" alt="ChestCounterFortnite" width="88">
 
 # ChestCounterFortnite
 
 **Tes coffres Fortnite, comptés automatiquement.**
-Un overlay discret en jeu, un rapport clair, et toutes tes données sur ton PC.
 
-[![Télécharger la 1.1.0](https://img.shields.io/badge/T%C3%A9l%C3%A9charger-v1.1.0-E8B04B?style=for-the-badge)](https://github.com/emilien-atr/ChestCounterFortnite/releases/latest)
+Un overlay discret, un rapport clair et toutes tes données sur ton PC.
+
+[![Télécharger](https://img.shields.io/badge/T%C3%A9l%C3%A9charger-la%20derni%C3%A8re%20version-E8B04B?style=for-the-badge)](https://github.com/emilien-atr/ChestCounterFortnite/releases/latest)
 [![Windows 10 / 11](https://img.shields.io/badge/Windows-10%20%7C%2011-3A7BD5?style=flat-square)](#)
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-555?style=flat-square)](LICENSE)
 
+<img src="docs/app-fr.png" alt="Interface ChestCounterFortnite" width="1080">
+
 </div>
 
----
+## En bref
 
-## Ce que fait le compteur
-
-- **Compte tes coffres** à partir des rediffusions enregistrées par Fortnite, quelques secondes après chaque partie.
-- **Affiche un overlay** par-dessus le jeu : total, coffres de la session, coffres cassés.
-- **Garde ton historique** : dernières parties, répartition par type de coffre, trésors trouvés.
-- **Reste simple et local** : aucun compte, aucune donnée envoyée, aucune publicité.
-- **Parle français, anglais et espagnol.**
-
-<p align="center">
-  <img src="overlay-live.png" alt="Overlay en jeu" height="126">
-</p>
+- Compte les coffres à partir des **rediffusions Fortnite**, quelques secondes après chaque partie.
+- Affiche un **HUD sur une ligne** ou une carte classique, avec le total, la dernière partie et les coffres cassés.
+- Garde l’historique, les sessions et les trésors dans un **rapport web** local.
+- Français, anglais et espagnol.
+- Aucun compte, aucune publicité, aucune donnée envoyée.
 
 ## Installation
 
-1. **[Télécharge ChestCounterFortnite.exe](https://github.com/emilien-atr/ChestCounterFortnite/releases/latest)**.
-2. Active les rediffusions dans Fortnite (voir juste en dessous).
-3. Lance l’exécutable. Au premier démarrage, choisis ta langue et vérifie le dossier des replays.
+1. Télécharge la [dernière version](https://github.com/emilien-atr/ChestCounterFortnite/releases/latest).
+2. Active les rediffusions dans **Fortnite → Paramètres → Jeu → Rediffusions → Enregistrer les rediffusions de Battle Royale**, puis clique sur **Appliquer**. Sans replay, aucun coffre ne peut être compté.
+3. Lance `ChestCounterFortnite.exe`. Windows peut afficher un avertissement car l’exécutable n’est pas signé : **Informations complémentaires → Exécuter quand même**.
 
-> Windows peut afficher **« Windows a protégé votre ordinateur »** : clique sur **Informations complémentaires → Exécuter quand même**. L’exécutable n’est pas signé.
+## Interface
 
-## Rien n’est compté ?
+- **Accueil** : total, session, dernière partie, profil et actions rapides (rapport, overlay, verrouillage).
+- **Réglages** : langue, overlay, dossier des replays, totaux de saison et comportement.
+- **Aide** : rappels, raccourcis et dossier de données.
 
-Fortnite doit enregistrer la partie pour que le compteur puisse la lire.
+Le rapport s’ouvre dans le navigateur et se met à jour automatiquement pendant l’analyse.
 
-**Dans Fortnite :** `Paramètres → Jeu → Rediffusions` → active **Enregistrer les rediffusions de Battle Royale**, puis clique sur **Appliquer**.
+## Raccourcis
 
-La version **1.1.0** vérifie ce réglage dans les logs de Fortnite. Si l’enregistrement est refusé, elle affiche un avertissement clair dans la fenêtre et dans le rapport, avec la date du dernier replay. Elle ne peut pas compter une partie qui n’a pas été enregistrée.
+| Raccourci | Action |
+|---|---|
+| **Ctrl+Maj+O** | Afficher ou masquer l’overlay, même en jeu. |
+| **Ctrl+Maj+L** | Verrouiller ou déverrouiller l’overlay. Verrouillé, la souris le traverse ; déverrouillé, maintiens le clic gauche pour le déplacer et utilise le clic droit pour le masquer. |
 
-Le dossier des replays est normalement :
+## Overlay
 
-```text
-%LOCALAPPDATA%\FortniteGame\Saved\Demos
-```
+<img src="docs/overlay-fr.png" alt="Overlay classique et HUD sur une ligne" width="360">
 
-## Où sont mes données ?
+- **HUD** : une seule ligne, dans l’esprit du HUD Fortnite. Idéal sous la minimap.
+- **Classique** : une carte compacte avec le coffre doré.
 
-Tout reste sur ce PC, dans :
+La taille se règle de **50 à 175 %** et l’opacité de **30 à 100 %** dans **Réglages → Overlay en jeu**. Pour l’afficher au-dessus du jeu, utilise le mode **Plein écran fenêtré** de Fortnite.
 
-```text
-%APPDATA%\ChestCounterFortnite\
-```
+## Données
 
-`data.json` contient l’historique, `config.json` tes réglages et `report.html` le rapport généré. Le compteur ne modifie jamais Fortnite et ne lit pas sa mémoire.
+Tout reste sur le PC, dans `%APPDATA%\ChestCounterFortnite` :
 
-## L’overlay
+- `data.json` : historique ;
+- `config.json` : réglages et position de l’overlay ;
+- `report.html` : rapport web ;
+- `matches.csv` : parties exportables.
 
-Deux styles sont disponibles dans les réglages :
-
-- **Classique** — une carte compacte avec le logo doré.
-- **HUD** — une ligne discrète, dans l’esprit de l’interface Fortnite.
-
-`Ctrl+Maj+O` affiche ou masque l’overlay. `Ctrl+Maj+L` le verrouille pour qu’il ne bouge plus en jeu. En jeu, utilise le mode **Plein écran fenêtré**.
+Le compteur ne modifie jamais Fortnite et ne lit pas sa mémoire.
 
 ## Compiler
 
 Prérequis : **.NET 10 SDK** et Windows 10/11.
 
 ```bat
-git clone https://github.com/emilien-atr/ChestCounterFortnite.git
-cd ChestCounterFortnite
 dotnet publish src/ChestCounter/ChestCounter.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o dist
 ```
 
-L’exécutable est créé dans `dist\ChestCounterFortnite.exe`.
+## Licence et crédits
 
-## Crédits
+[MIT](LICENSE) © 2026 **Emilien Autran**. Projet indépendant inspiré de [LED-N/Fortnite-ChestCounter](https://github.com/LED-N/Fortnite-ChestCounter) (MIT), avec [FortniteReplayReader](https://github.com/Shiqan/FortniteReplayReader), OozSharp, Unreal.Core et la police Pirata One (SIL OFL).
 
-Projet indépendant, inspiré de **[LED-N/Fortnite-ChestCounter](https://github.com/LED-N/Fortnite-ChestCounter)** (MIT). Merci à LED-N et aux auteurs des bibliothèques utilisées :
-
-- [FortniteReplayReader](https://github.com/Shiqan/FortniteReplayReader)
-- [OozSharp](https://github.com/KnowingNothing/OozSharp)
-- [Unreal.Core](https://github.com/Shiqan/FortniteReplayReader)
-- Police **Pirata One** (SIL Open Font License)
-
-## Licence
-
-[MIT](LICENSE) — utilise-le, modifies-le, partage-le.
+Ce projet n’est ni affilié, ni approuvé, ni sponsorisé par Epic Games. Fortnite est une marque d’Epic Games, Inc.
