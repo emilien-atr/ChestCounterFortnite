@@ -155,8 +155,8 @@ var config = reset ? null : store.LoadConfig();
 var firstRun = config == null;
 var previousLanguage = reset ? store.LoadConfig()?.Language : null;
 config ??= new Config();
-// Version personnelle : aucune mise à jour GitHub, elle remplacerait cette version.
-config.UpdateMode = "off";
+// Installed builds follow the GitHub releases automatically, including configs saved by older versions.
+config.UpdateMode = "auto";
 
 // Language: --lang, else the saved choice, else asked once (Windows language when nobody can answer).
 if (langArg != null)

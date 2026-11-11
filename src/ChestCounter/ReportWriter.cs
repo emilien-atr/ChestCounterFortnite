@@ -97,7 +97,7 @@ public static class ReportWriter
             var view = Profiles.View(data, config);
             WriteAtomic(store.ReportPath, Report(config, view, Profiles.List(data)));
             WriteAtomic(store.OverlayPath, Overlay(OverlayModel.Build(view, null, false, HeadStart.Total(config))));
-            WriteAtomic(store.CsvPath, Csv(data));
+            WriteAtomic(store.CsvPath, Csv(view));
         }
         catch (Exception ex)
         {
@@ -257,7 +257,7 @@ public static class ReportWriter
         }
     }
 
-    private const string Logo = """<svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd166"/><stop offset="1" stop-color="#e08b1f"/></linearGradient></defs><rect width="64" height="64" rx="17" fill="#0c1220"/><rect x="9" y="28" width="46" height="27" rx="6" fill="#151d2c" stroke="url(#lg)" stroke-width="3"/><path d="M9 33c0-11 10-19 23-19s23 8 23 19" fill="none" stroke="url(#lg)" stroke-width="3"/><rect x="27" y="29" width="10" height="13" rx="3" fill="url(#lg)"/><circle cx="32" cy="34" r="1.8" fill="#0c1220"/><path d="M32 36v3" stroke="#0c1220" stroke-width="2" stroke-linecap="round"/></svg>""";
+    private const string Logo = """<svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd166"/><stop offset="1" stop-color="#b56a10"/></linearGradient></defs><path d="M7 31V24c0-8 6-14 15-14h20c9 0 15 6 15 14v7Z" fill="url(#lg)" stroke="#3a1e08" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 25c2-6 6-9 11-10" fill="none" stroke="#fff3c4" stroke-width="2" stroke-linecap="round" opacity=".55"/><rect x="7" y="30" width="50" height="26" rx="5" fill="url(#lg)" stroke="#3a1e08" stroke-width="2.5"/><rect x="7" y="29" width="50" height="6" rx="3" fill="#7a4516"/><rect x="18" y="31" width="6" height="25" fill="#5c3310"/><rect x="40" y="31" width="6" height="25" fill="#5c3310"/><rect x="25" y="33" width="14" height="12" rx="2.5" fill="#ffefc4" stroke="#5c3310" stroke-width="1.5"/><circle cx="32" cy="38" r="1.8" fill="#3a1e08"/><path d="M32 40v4" stroke="#3a1e08" stroke-width="1.8" stroke-linecap="round"/></svg>""";
     private const string TeamIcon = """<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2" fill="none" stroke="#a78bfa" stroke-width="2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6" fill="none" stroke="#a78bfa" stroke-width="2"/><circle cx="17" cy="9" r="2.6" fill="none" stroke="#a78bfa" stroke-width="2"/><path d="M16 14c3 0 5 2.2 5 5" fill="none" stroke="#a78bfa" stroke-width="2"/></svg>""";
     private const string FlagIcon = """<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="flex:none;margin-top:2px"><path d="M5 21V4M5 4h11l-2 4 2 4H5" fill="none" stroke="#ff8a6a" stroke-width="2" stroke-linejoin="round"/></svg>""";
 

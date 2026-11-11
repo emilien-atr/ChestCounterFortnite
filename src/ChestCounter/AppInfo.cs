@@ -6,6 +6,9 @@ public static class AppInfo
     /// <summary>Name of the application: windows, tray, report, data folder and exe.</summary>
     public const string Name = "ChestCounterFortnite";
 
+    /// <summary>GitHub project whose latest release is installed automatically.</summary>
+    public const string UpdateRepo = "emilien-atr/ChestCounterFortnite";
+
     /// <summary>Who made this build. Replay reading is based on LED-N's open-source project (MIT licence).</summary>
     public const string Author = "Emilien";
 

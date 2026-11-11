@@ -19,16 +19,28 @@ Un overlay discret, un rapport clair et toutes tes données sur ton PC.
 ## En bref
 
 - Compte les coffres à partir des **rediffusions Fortnite**, quelques secondes après chaque partie.
+- Ne prend en compte que les parties **à partir du 1er novembre 2026**.
 - Affiche un **HUD sur une ligne** ou une carte classique, avec le total, la dernière partie et les coffres cassés.
 - Garde l’historique, les sessions et les trésors dans un **rapport web** local.
 - Français, anglais et espagnol.
-- Aucun compte, aucune publicité, aucune donnée envoyée.
+- **Mises à jour automatiques** depuis GitHub.
+- Aucun compte, aucune publicité, aucune donnée de jeu envoyée.
 
 ## Installation
 
 1. Télécharge la [dernière version](https://github.com/emilien-atr/ChestCounterFortnite/releases/latest).
 2. Active les rediffusions dans **Fortnite → Paramètres → Jeu → Rediffusions → Enregistrer les rediffusions de Battle Royale**, puis clique sur **Appliquer**. Sans replay, aucun coffre ne peut être compté.
 3. Lance `ChestCounterFortnite.exe`. Windows peut afficher un avertissement car l’exécutable n’est pas signé : **Informations complémentaires → Exécuter quand même**.
+
+## Mises à jour automatiques
+
+À partir de la version **1.2**, chaque mise à jour du dépôt (`push` sur `main`) construit et publie une nouvelle release. Le compteur vérifie GitHub au démarrage puis régulièrement : il télécharge la nouvelle version, remplace son exe et redémarre tout seul.
+
+Une version antérieure à la 1.2 (sans updater) doit être remplacée **une seule fois** par cette version. Ensuite, plus besoin de retélécharger quoi que ce soit.
+
+## Période comptée
+
+Seules les parties **commencées le 1er novembre 2026 ou après** sont comptées et affichées dans le compteur, l’overlay et le rapport. Les replays plus anciens restent dans `data.json` mais ne participent plus aux statistiques.
 
 ## Interface
 
@@ -63,7 +75,7 @@ Tout reste sur le PC, dans `%APPDATA%\ChestCounterFortnite` :
 - `report.html` : rapport web ;
 - `matches.csv` : parties exportables.
 
-Le compteur ne modifie jamais Fortnite et ne lit pas sa mémoire.
+Le compteur ne modifie jamais Fortnite et ne lit pas sa mémoire. Le seul accès réseau sert à vérifier et télécharger les mises à jour GitHub.
 
 ## Compiler
 

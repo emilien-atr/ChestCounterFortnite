@@ -1,32 +1,23 @@
-## 1.1.0 — Savoir pourquoi rien n'est compté
+## 1.2 — Mise à jour automatique et replays depuis le 1er novembre
 
 **Français**
-- **Nouveau diagnostic** : le compteur détecte quand Fortnite refuse d'enregistrer les replays et affiche la marche à suivre exacte.
-- **Dernier replay visible** dans la fenêtre et le rapport : tu vois tout de suite si une nouvelle partie a été enregistrée.
-- **Alerte claire** dans l'accueil et le rapport, avec un bouton pour ouvrir le dossier des replays.
-- **Aucun chiffre inventé** : sans rediffusion, aucun coffre ne peut être compté.
-
-Si rien n'est compté : dans Fortnite, `Paramètres → Jeu → Rediffusions`, active **Enregistrer les rediffusions de Battle Royale**, puis clique sur **Appliquer**.
+- **Mises à jour automatiques** : le compteur vérifie GitHub, installe la nouvelle version et redémarre tout seul.
+- **Replays depuis le 1er novembre 2026** : seules les parties commencées à cette date ou après sont comptées et affichées.
+- **Une seule installation** : les versions 1.1 et antérieures ne contenaient pas l'updater. Remplace-les une fois par cette version ; les suivantes seront automatiques.
 
 ---
 
 **English**
-- **New diagnostic**: the counter detects when Fortnite refuses to record replays and shows exactly what to change.
-- **Last replay date** in the window and the report, so you can see whether a new match was recorded.
-- **Clear warning** on the home screen and in the report, with a button to open the replays folder.
-- **No invented figures**: without a replay, no chest can be counted.
-
-If nothing is counted: in Fortnite, `Settings → Game → Replays`, turn on **Record Battle Royale Replays**, then click **Apply**.
+- **Automatic updates**: the counter checks GitHub, installs the new version and restarts itself.
+- **Replays from 1 November 2026**: only matches started on or after that date are counted and displayed.
+- **One-time install**: versions 1.1 and earlier had no updater. Replace them once with this version; later updates are automatic.
 
 ---
 
 **Español**
-- **Nuevo diagnóstico**: el contador detecta cuando Fortnite rechaza grabar las repeticiones y muestra exactamente qué cambiar.
-- **Fecha de la última repetición** en la ventana y el informe, para ver si se grabó una partida nueva.
-- **Aviso claro** en el inicio y el informe, con un botón para abrir la carpeta de repeticiones.
-- **Ninguna cifra inventada**: sin repetición, no se puede contar ningún cofre.
-
-Si no se cuenta nada: en Fortnite, `Ajustes → Juego → Repeticiones`, activa **Grabar repeticiones de Battle Royale** y pulsa **Aplicar**.
+- **Actualizaciones automáticas**: el contador consulta GitHub, instala la nueva versión y se reinicia solo.
+- **Repeticiones desde el 1 de noviembre de 2026**: solo se cuentan y se muestran las partidas empezadas en esa fecha o después.
+- **Una sola instalación**: las versiones 1.1 y anteriores no tenían actualizador. Sustitúyelas una vez por esta versión; las siguientes serán automáticas.
 
 ---
 

@@ -75,6 +75,8 @@ internal sealed class AppWindow : Form
     private ReplayHealth _health = new(false, false, null, null);
     private bool _healthWarned;
     private DateTime _nextHealthCheck = DateTime.MinValue;
+    private DateTime _nextUpdateCheck = DateTime.UtcNow.AddSeconds(10);
+    private bool _checkingUpdate;
 
     private FileSystemWatcher? _watcher;
     private volatile bool _dirty;
@@ -727,12 +729,71 @@ internal sealed class AppWindow : Form
             RefreshState();
             UpdateOverlay(force: false);
             AutoCloseCheck();
+            _ = CheckForUpdateAsync();
         }
         catch (Exception ex)
         {
             AppendActivity(L.T($"Erreur pendant la surveillance : {ex.Message}",
                 $"Error while watching: {ex.Message}",
                 $"Error durante la vigilancia: {ex.Message}"));
+        }
+    }
+
+    /// <summary>
+    /// Installed builds follow GitHub: check at startup and then regularly, download the new exe and restart.
+    /// A match being recorded or analyzed is never interrupted by an update.
+    /// </summary>
+    private async Task CheckForUpdateAsync()
+    {
+        if (_checkingUpdate || _closing || AppInfo.ExePath == null || DateTime.UtcNow < _nextUpdateCheck)
+        {
+            return;
+        }
+        _checkingUpdate = true;
+        _nextUpdateCheck = DateTime.UtcNow.AddMinutes(5);
+        try
+        {
+            var (found, _) = await Updater.CheckDetailedAsync();
+            if (found == null || _closing)
+            {
+                return;
+            }
+            if (_tracker.IsLive || _tracker.HasPending || _tracker.IsFinishing)
+            {
+                _nextUpdateCheck = DateTime.UtcNow.AddSeconds(30);
+                return;
+            }
+            var error = await Task.Run(() => Updater.Install(found));
+            if (error != null)
+            {
+                ErrorLog.Write($"Mise à jour {found.Version.ToString(3)}", new Exception(error));
+                _nextUpdateCheck = DateTime.UtcNow.AddMinutes(10);
+                return;
+            }
+            AppendActivity(L.T($"Mise à jour {found.Version.ToString(3)} installée : redémarrage…",
+                $"Version {found.Version.ToString(3)} installed: restarting…",
+                $"Versión {found.Version.ToString(3)} instalada: reiniciando…"));
+            var exe = AppInfo.ExePath;
+            if (exe == null)
+            {
+                return;
+            }
+            Process.Start(new ProcessStartInfo(exe, "--after-update")
+            {
+                UseShellExecute = true,
+                WorkingDirectory = Path.GetDirectoryName(exe) ?? Environment.CurrentDirectory,
+            })?.Dispose();
+            _closing = true;
+            Close();
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Mise à jour", ex);
+            _nextUpdateCheck = DateTime.UtcNow.AddMinutes(10);
+        }
+        finally
+        {
+            _checkingUpdate = false;
         }
     }
 

@@ -65,7 +65,10 @@ public sealed class Tracker
         {
             return Enumerable.Empty<FileInfo>();
         }
-        return dir.EnumerateFiles("*.replay", SearchOption.TopDirectoryOnly).OrderBy(f => f.LastWriteTimeUtc);
+        // Replays from before 1 November 2026 are not opened at all: their stats must not be counted.
+        return dir.EnumerateFiles("*.replay", SearchOption.TopDirectoryOnly)
+            .Where(f => ReplayWindow.FileCanContain(f.LastWriteTime))
+            .OrderBy(f => f.LastWriteTimeUtc);
     }
 
     public IEnumerable<FileInfo> UnprocessedFiles() => ReplayFiles().Where(f => !_data.ProcessedFiles.ContainsKey(FileKey(f)));
@@ -234,6 +237,15 @@ public sealed class Tracker
         }
 
         record.ReplayFile = file.Name;
+
+        if (!ReplayWindow.Includes(record, file.LastWriteTime))
+        {
+            _data.ProcessedFiles[key] = "avant le 1er novembre 2026";
+            _store.SaveData(_data);
+            return new Outcome(Skipped: L.T("replay antérieur au 1er novembre 2026 : ignoré",
+                "replay from before 1 November 2026: skipped",
+                "repetición anterior al 1 de noviembre de 2026: ignorada"));
+        }
 
         if (!record.IsBattleRoyale)
         {

@@ -89,8 +89,8 @@ public sealed class Config
     /// <summary>Open the tool automatically when Fortnite starts (invisible standby process started with Windows).</summary>
     public bool StartWithFortnite { get; set; }
 
-    /// <summary>"prompt" (offer new versions), "auto" (install them) or "off" (never check GitHub).</summary>
-    public string UpdateMode { get; set; } = "prompt";
+    /// <summary>"auto" (install new versions) or "off" (never check GitHub). Installed builds force auto.</summary>
+    public string UpdateMode { get; set; } = "auto";
     public bool OpenReportOnStart { get; set; } = true;
     public bool ShowOverlay { get; set; } = true;
 

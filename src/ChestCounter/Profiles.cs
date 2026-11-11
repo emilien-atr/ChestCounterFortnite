@@ -4,6 +4,33 @@ namespace ChestCounter;
 public sealed record Profile(string Key, string Name, int Matches, int Chests, DateTime LastPlayed);
 
 /// <summary>
+/// Stats only start on 1 November 2026: earlier replays stay in the history file but are not counted or shown.
+/// The cutoff is local time, like the dates displayed in the report.
+/// </summary>
+public static class ReplayWindow
+{
+    public static readonly DateTime StartsAtLocal = new(2026, 11, 1, 0, 0, 0, DateTimeKind.Local);
+
+    public static DateTime StartLocal(MatchRecord m) => ToLocal(m.MatchStartUtc ?? m.AnalyzedAtUtc);
+
+    public static bool Includes(MatchRecord m) => StartLocal(m) >= StartsAtLocal;
+
+    /// <summary>A replay with no readable start date is accepted only when its file was written after the cutoff.</summary>
+    public static bool Includes(MatchRecord m, DateTime fileLastWrite) =>
+        m.MatchStartUtc is { } start ? ToLocal(start) >= StartsAtLocal : fileLastWrite >= StartsAtLocal;
+
+    /// <summary>Old replay files are ignored without being marked as processed (they are never opened).</summary>
+    public static bool FileCanContain(DateTime fileLastWrite) => fileLastWrite >= StartsAtLocal;
+
+    private static DateTime ToLocal(DateTime value) => value.Kind switch
+    {
+        DateTimeKind.Utc => value.ToLocalTime(),
+        DateTimeKind.Local => value,
+        _ => DateTime.SpecifyKind(value, DateTimeKind.Utc).ToLocalTime(),
+    };
+}
+
+/// <summary>
 /// Replays saved on a PC are normally those of its player, so the replay owner (the recording player) is tracked.
 /// When several accounts recorded replays here, each one gets its own profile and the player picks the account
 /// they play on: the overlay and the report only show that profile.
@@ -14,6 +41,7 @@ public static class Profiles
     public static string Key(MatchRecord m) => !string.IsNullOrEmpty(m.EpicId) ? m.EpicId : m.PlayerName ?? "";
 
     public static List<Profile> List(TrackerData d) => d.Matches
+        .Where(ReplayWindow.Includes)
         .GroupBy(Key)
         .Select(g =>
         {
@@ -36,17 +64,25 @@ public static class Profiles
     /// <summary>The data of one profile only (same objects, filtered list), as seen by the overlay and the report.</summary>
     public static TrackerData View(TrackerData d, Config c)
     {
+        var matches = d.Matches.Where(ReplayWindow.Includes).ToList();
         var current = Current(d, c);
         if (current == null)
         {
-            return d;
+            return new TrackerData
+            {
+                Version = d.Version,
+                AnalyzerVersion = d.AnalyzerVersion,
+                CreatedUtc = d.CreatedUtc,
+                Matches = matches,
+                ProcessedFiles = d.ProcessedFiles,
+            };
         }
         return new TrackerData
         {
             Version = d.Version,
             AnalyzerVersion = d.AnalyzerVersion,
             CreatedUtc = d.CreatedUtc,
-            Matches = d.Matches.Where(m => Key(m) == current.Key).ToList(),
+            Matches = matches.Where(m => Key(m) == current.Key).ToList(),
             ProcessedFiles = d.ProcessedFiles,
         };
     }

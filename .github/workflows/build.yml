@@ -1,11 +1,16 @@
-name: Build ChestCounterFortnite.exe
+name: Build and publish ChestCounterFortnite
+
 on:
   push:
-    branches: ['**']
-    tags: ['v*']
+    branches: [main]
   workflow_dispatch:
+
 permissions:
   contents: write
+
+env:
+  APP_VERSION: 1.2.${{ github.run_number }}
+
 jobs:
   build:
     runs-on: windows-latest
@@ -15,14 +20,25 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - name: Publish
-        run: dotnet publish src/ChestCounter/ChestCounter.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o dist
+        run: dotnet publish src/ChestCounter/ChestCounter.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -p:Version=${{ env.APP_VERSION }} -o dist
+      - name: Checksum
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash dist/ChestCounterFortnite.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  ChestCounterFortnite.exe" | Set-Content -Encoding ascii dist/ChestCounterFortnite.exe.sha256
       - uses: actions/upload-artifact@v4
         with:
           name: ChestCounterFortnite
-          path: dist/ChestCounterFortnite.exe
-      - name: Attach to the release (tags only)
-        if: startsWith(github.ref, 'refs/tags/v')
+          path: |
+            dist/ChestCounterFortnite.exe
+            dist/ChestCounterFortnite.exe.sha256
+      - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/ChestCounterFortnite.exe
+          tag_name: v${{ env.APP_VERSION }}
+          name: ChestCounterFortnite ${{ env.APP_VERSION }}
           body_path: RELEASE_NOTES.md
+          files: |
+            dist/ChestCounterFortnite.exe
+            dist/ChestCounterFortnite.exe.sha256
+          make_latest: true

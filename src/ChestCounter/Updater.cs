@@ -79,7 +79,7 @@ public static class ReleaseNotes
 /// <summary>
 /// Checks the latest GitHub release and replaces the exe with it. The running exe is renamed (Windows allows
 /// that), the new one takes its place and is started; the old file is deleted at the next launch.
-/// This is the only network access of the tool, and it can be turned off in the settings.
+/// This is the only network access of the tool. Installed builds are kept on the latest GitHub release.
 /// </summary>
 public static class Updater
 {
@@ -91,12 +91,28 @@ public static class Updater
         return http;
     }
 
-    /// <summary>The newer release, or null (always null: this personal build never updates itself).</summary>
+    /// <summary>The newer release, or null when this build is already the latest one.</summary>
     public static async Task<UpdateInfo?> CheckAsync() => (await CheckDetailedAsync()).Update;
 
-    public static Task<(UpdateInfo? Update, bool Reached)> CheckDetailedAsync()
-        // Version personnelle : aucun accès à GitHub, une mise à jour officielle remplacerait cette version.
-        => Task.FromResult<(UpdateInfo?, bool)>((null, false));
+    /// <summary>Asks GitHub for the latest release. Reached is false when GitHub could not be contacted.</summary>
+    public static async Task<(UpdateInfo? Update, bool Reached)> CheckDetailedAsync()
+    {
+        try
+        {
+            using var http = NewClient(TimeSpan.FromSeconds(20));
+            using var response = await http.GetAsync($"https://api.github.com/repos/{AppInfo.UpdateRepo}/releases/latest");
+            if (!response.IsSuccessStatusCode)
+            {
+                return (null, false);
+            }
+            var json = await response.Content.ReadAsStringAsync();
+            return (Parse(json), true);
+        }
+        catch
+        {
+            return (null, false);
+        }
+    }
 
     /// <summary>The release described by the GitHub API answer, if it is newer and carries the exe.</summary>
     private static UpdateInfo? Parse(string json)
