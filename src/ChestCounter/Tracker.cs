@@ -310,9 +310,9 @@ public sealed class Tracker
     private void PrintErrorLogHint()
     {
         Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.WriteLine(L.T($"   Détails dans {_store.ErrorLogPath}. Souvent dû à une mise à jour de Fortnite : signale-le sur {AppInfo.IssuesUrl}",
-            $"   Details in {_store.ErrorLogPath}. Usually caused by a Fortnite update: report it at {AppInfo.IssuesUrl}",
-            $"   Detalles en {_store.ErrorLogPath}. Suele deberse a una actualización de Fortnite: avísalo en {AppInfo.IssuesUrl}"));
+        Console.WriteLine(L.T($"   Détails dans {_store.ErrorLogPath}. Souvent dû à une mise à jour de Fortnite.",
+            $"   Details in {_store.ErrorLogPath}. Usually caused by a Fortnite update.",
+            $"   Detalles en {_store.ErrorLogPath}. Suele deberse a una actualización de Fortnite."));
         Console.ResetColor();
     }
 
@@ -518,7 +518,7 @@ public sealed class Tracker
 
     private void PrintMatch(MatchRecord m, bool updated)
     {
-        var total = _data.Matches.Where(x => Profiles.Key(x) == Profiles.Key(m)).Sum(x => x.ChestsOpened);
+        var total = _data.Matches.Where(x => Profiles.Key(x) == Profiles.Key(m)).Sum(x => x.ChestsOpened) + HeadStart.Total(_config);
         var when = (m.MatchStartUtc ?? m.AnalyzedAtUtc).ToLocalTime();
 
         Console.ForegroundColor = ConsoleColor.Green;
@@ -561,13 +561,14 @@ public sealed class Tracker
         var profile = Profiles.Current(_data, _config);
         var matches = Profiles.View(_data, _config).Matches;
         var chests = matches.Sum(m => m.ChestsOpened);
+        var total = chests + HeadStart.Total(_config);
         var treasures = matches.Sum(m => m.TreasureFinds.Count);
         var sb = new StringBuilder();
         if (profile != null)
         {
             sb.Append($"{profile.Name}   |   ");
         }
-        sb.Append(L.T($"Parties : {L.N(matches.Count)}   |   Coffres : {L.N(chests)}   |   Trésors : {L.N(treasures)}",
+        sb.Append(L.T($"Parties : {L.N(matches.Count)}   |   Coffres : {L.N(total)}   |   Trésors : {L.N(treasures)}",
             $"Matches: {L.N(matches.Count)}   |   Chests: {L.N(chests)}   |   Treasures: {L.N(treasures)}",
             $"Partidas: {L.N(matches.Count)}   |   Cofres: {L.N(chests)}   |   Tesoros: {L.N(treasures)}"));
         if (matches.Count > 0)

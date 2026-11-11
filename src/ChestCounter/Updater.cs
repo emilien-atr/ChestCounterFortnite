@@ -77,49 +77,28 @@ public static class ReleaseNotes
 }
 
 /// <summary>
-/// Checks the latest GitHub release and replaces ChestCounter.exe with it. The running exe is renamed (Windows allows
+/// Checks the latest GitHub release and replaces the exe with it. The running exe is renamed (Windows allows
 /// that), the new one takes its place and is started; the old file is deleted at the next launch.
 /// This is the only network access of the tool, and it can be turned off in the settings.
 /// </summary>
 public static class Updater
 {
-    private static string ApiUrl => Environment.GetEnvironmentVariable("CHESTCOUNTER_UPDATE_API")
-        ?? $"https://api.github.com/repos/{AppInfo.Repo}/releases/latest";
-
     private static HttpClient NewClient(TimeSpan timeout)
     {
         var http = new HttpClient { Timeout = timeout };
-        http.DefaultRequestHeaders.UserAgent.ParseAdd($"ChestCounter/{AppInfo.VersionText}");
+        http.DefaultRequestHeaders.UserAgent.ParseAdd($"{AppInfo.Name}/{AppInfo.VersionText}");
         http.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
         return http;
     }
 
-    /// <summary>The newer release, or null (up to date, offline, repository not reachable…).</summary>
+    /// <summary>The newer release, or null (always null: this personal build never updates itself).</summary>
     public static async Task<UpdateInfo?> CheckAsync() => (await CheckDetailedAsync()).Update;
 
-    /// <summary>
-    /// The newer release (or null), and whether GitHub answered at all: lets the U key tell
-    /// "you already have the latest version" apart from "GitHub cannot be reached".
-    /// </summary>
-    public static async Task<(UpdateInfo? Update, bool Reached)> CheckDetailedAsync()
-    {
-        try
-        {
-            using var http = NewClient(TimeSpan.FromSeconds(10));
-            using var response = await http.GetAsync(ApiUrl);
-            if (!response.IsSuccessStatusCode)
-            {
-                return (null, false);
-            }
-            return (Parse(await response.Content.ReadAsStringAsync()), true);
-        }
-        catch
-        {
-            return (null, false);
-        }
-    }
+    public static Task<(UpdateInfo? Update, bool Reached)> CheckDetailedAsync()
+        // Version personnelle : aucun accès à GitHub, une mise à jour officielle remplacerait cette version.
+        => Task.FromResult<(UpdateInfo?, bool)>((null, false));
 
-    /// <summary>The release described by the GitHub API answer, if it is newer and carries ChestCounter.exe.</summary>
+    /// <summary>The release described by the GitHub API answer, if it is newer and carries the exe.</summary>
     private static UpdateInfo? Parse(string json)
     {
         try
@@ -138,7 +117,7 @@ public static class Updater
             }
             foreach (var asset in root.GetProperty("assets").EnumerateArray())
             {
-                if (!string.Equals(asset.GetProperty("name").GetString(), "ChestCounter.exe", StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(asset.GetProperty("name").GetString(), AppInfo.Name + ".exe", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
@@ -148,7 +127,7 @@ public static class Updater
                     sha = d[7..];
                 }
                 return new UpdateInfo(version, tag, asset.GetProperty("browser_download_url").GetString()!, asset.GetProperty("size").GetInt64(), sha,
-                    root.TryGetProperty("html_url", out var page) ? page.GetString() ?? AppInfo.RepoUrl : AppInfo.RepoUrl,
+                    root.TryGetProperty("html_url", out var page) ? page.GetString() ?? "" : "",
                     root.TryGetProperty("body", out var body) ? body.GetString() : null);
             }
             return null;
@@ -167,7 +146,7 @@ public static class Updater
         var exe = AppInfo.ExePath;
         if (exe == null)
         {
-            return L.T("mise à jour possible seulement depuis ChestCounter.exe", "update only possible from ChestCounter.exe", "actualización posible solo desde ChestCounter.exe");
+            return L.T($"mise à jour possible seulement depuis {AppInfo.Name}.exe", $"update only possible from {AppInfo.Name}.exe", $"actualización posible solo desde {AppInfo.Name}.exe");
         }
         var download = exe + ".download";
         var old = exe + ".old";
@@ -231,7 +210,7 @@ public static class Updater
         {
             return;
         }
-        foreach (var f in Directory.EnumerateFiles(dir, "ChestCounter.exe.*"))
+        foreach (var f in Directory.EnumerateFiles(dir, AppInfo.Name + ".exe.*"))
         {
             if (f.EndsWith(".old", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".download", StringComparison.OrdinalIgnoreCase))
             {

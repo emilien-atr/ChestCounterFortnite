@@ -85,10 +85,10 @@ public static class Tray
                 cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
                 lpfnWndProc = Marshal.GetFunctionPointerForDelegate(_wndProc),
                 hInstance = hInstance,
-                lpszClassName = "ChestCounterTray",
+                lpszClassName = AppInfo.Name + "Tray",
             };
             RegisterClassExW(ref wc);
-            _hwnd = CreateWindowExW(0, wc.lpszClassName, "Chest Counter tray", WS_POPUP, 0, 0, 0, 0, IntPtr.Zero, IntPtr.Zero, hInstance, IntPtr.Zero);
+            _hwnd = CreateWindowExW(0, wc.lpszClassName, AppInfo.Name + " tray", WS_POPUP, 0, 0, 0, 0, IntPtr.Zero, IntPtr.Zero, hInstance, IntPtr.Zero);
             _taskbarCreated = RegisterWindowMessageW("TaskbarCreated");
             // Told when any window starts minimizing; only the console window is handled.
             _eventProc = (_, _, hwnd, idObject, _, _, _) =>
@@ -120,7 +120,7 @@ public static class Tray
         uFlags = flags,
         uCallbackMessage = WM_APP_TRAY,
         hIcon = _iconSmall != IntPtr.Zero ? _iconSmall : _iconBig,
-        szTip = L.T("Compteur de coffres Fortnite", "Fortnite Chest Counter", "Contador de cofres de Fortnite"),
+        szTip = AppInfo.Name,
         szInfo = "",
         szInfoTitle = "",
     };
@@ -140,7 +140,7 @@ public static class Tray
         {
             // Once per session: the window is not gone, it waits in the tray.
             data.uFlags |= NIF_INFO;
-            data.szInfoTitle = L.T("Compteur de coffres Fortnite", "Fortnite Chest Counter", "Contador de cofres de Fortnite");
+            data.szInfoTitle = AppInfo.Name;
             data.szInfo = L.T("Le compteur continue de compter dans la zone de notification. Clique sur le coffre pour le rouvrir.",
                 "The counter keeps counting in the notification area. Click the chest to open it again.",
                 "El contador sigue contando en el área de notificación. Haz clic en el cofre para volver a abrirlo.");

@@ -11,9 +11,10 @@ namespace ChestCounter;
 /// </summary>
 public static class ReportSite
 {
-    public static string Build(Config config, TrackerData data, IReadOnlyList<Profile> profiles, ScanProgress? progress)
+    public static string Build(Config config, TrackerData data, IReadOnlyList<Profile> profiles, ScanProgress? progress, ReplayHealth? health = null)
     {
         var now = DateTimeOffset.Now;
+        health ??= ReplayHealth.Inspect(config);
         var matches = data.Matches.OrderByDescending(When).ToList();
         var counted = matches.Sum(m => m.ChestsOpened);
         var head = HeadStart.Total(config);
@@ -169,6 +170,8 @@ public static class ReportSite
         SetRow(L.T("Coffres de départ", "Head-start chests", "Cofres iniciales"),
             $"{N(headNormal)} {L.T("classiques", "classic", "clásicos")} · {N(headRare)} {L.T("rares", "rare", "raros")} · {N(headSprite)} {L.T("esprits", "sprite", "espíritus")}");
         SetRow(L.T("Dossier des replays", "Replays folder", "Carpeta de repeticiones"), H(config.DemosFolder));
+        SetRow(L.T("Dernier replay", "Last replay", "Última repetición"), H(health.LastReplayLabel));
+        SetRow(L.T("Enregistrement Fortnite", "Fortnite recording", "Grabación de Fortnite"), H(health.Status));
         SetRow(L.T("Overlay", "Overlay", "Overlay"),
             $"{L.T("Activé", "On", "Activado")} · {(config.OverlayStyle == "classic" ? L.T("Classique", "Classic", "Clásico") : "HUD")} · {config.OverlaySize} % · {config.OverlayOpacity} %");
 
@@ -186,6 +189,14 @@ public static class ReportSite
             ? $"<p>{H(L.T("Autres profils :", "Other profiles:", "Otros perfiles:"))} {H(string.Join(", ", profiles.Select(p => p.Name)))}</p>"
             : "";
         var refreshMeta = progress != null ? "<meta http-equiv=\"refresh\" content=\"2\">" : "";
+        var replayWarning = health.HasWarning
+            ? $"""
+              <div class="health-warn" role="status">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-info"/></svg>
+                <div><b>{H(health.Title)}</b><p>{H(health.Message)}</p><span>{H(health.LastLine)}</span></div>
+              </div>
+            """
+            : "";
         var loading = progress == null
             ? ""
             : $"""
@@ -274,6 +285,7 @@ public static class ReportSite
       <button class="round" id="themeBtn" type="button" aria-label="{H(L.T("Passer au thème clair", "Switch to light theme", "Cambiar al tema claro"))}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use id="themeIcon" href="#ic-moon"/></svg></button>
     </div>
     {loading}
+    {replayWarning}
     <section class="hero" aria-labelledby="heroLabel">
       {HeroArt}
       <div class="hero-inner">
@@ -518,6 +530,11 @@ public static class ReportSite
           --stripe:rgba(45,20,80,.027); --shadow:0 30px 70px -50px rgba(40,20,80,.35);
         }
         *{box-sizing:border-box}
+        .health-warn{display:flex;align-items:flex-start;gap:14px;margin:0 0 18px;padding:16px 18px;border-radius:16px;background:rgba(255,120,80,.1);border:1px solid rgba(255,120,80,.4);color:var(--ink)}
+        .health-warn .ico{width:22px;height:22px;flex:none;color:#ff9b76;margin-top:1px}
+        .health-warn b{display:block;font-size:14.5px;color:#ffb08f}
+        .health-warn p{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.5}
+        .health-warn span{display:block;margin-top:5px;color:var(--muted2);font-size:11.5px}
         html{scroll-behavior:smooth}
         body{
           margin:0; min-height:100vh; color:var(--ink); font-family:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;

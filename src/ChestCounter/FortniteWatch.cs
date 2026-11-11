@@ -14,7 +14,7 @@ namespace ChestCounter;
 public static class FortniteWatch
 {
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    private const string RunValue = "ChestCounter";
+    private const string RunValue = AppInfo.Name;
     // CHESTCOUNTER_GAME_PROCESS: another process name, to test the standby without Fortnite.
     private static readonly string[] GameProcesses =
         { Environment.GetEnvironmentVariable("CHESTCOUNTER_GAME_PROCESS") is { Length: > 0 } test ? test : "FortniteClient-Win64-Shipping" };
@@ -39,7 +39,7 @@ public static class FortniteWatch
 
     /// <summary>
     /// Turns "start with Fortnite" on or off: entry at Windows logon + standby started or stopped right away.
-    /// Returns false when it cannot be done (tool not run from ChestCounter.exe).
+    /// Returns false when it cannot be done (tool not run from ChestCounterFortnite.exe).
     /// </summary>
     public static bool Apply(bool enabled, string dataDir)
     {
@@ -47,6 +47,9 @@ public static class FortniteWatch
         try
         {
             using var key = Registry.CurrentUser.CreateSubKey(RunKey, writable: true);
+            // Previous names: their standby would start the old exe instead of this one.
+            key.DeleteValue("ChestCounter", throwOnMissingValue: false);
+            key.DeleteValue("ChestTracker", throwOnMissingValue: false);
             if (enabled)
             {
                 if (exe == null)

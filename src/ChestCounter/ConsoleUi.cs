@@ -25,9 +25,67 @@ public static class ConsoleUi
     {
         get
         {
-            try { return Math.Max(40, Console.WindowWidth); } catch { return 100; }
+            try { return Math.Max(40, VisibleColumns() ?? Console.WindowWidth); } catch { return 100; }
         }
     }
+
+    /// <summary>
+    /// Columns really shown by the window: some hosts report a wider window than the one on screen, which would
+    /// push the layout (the figures row, the "what's new" panel) past the right edge. The window pixels divided by
+    /// the font cell give the truth; null when it cannot be measured (output redirected, terminal host…).
+    /// </summary>
+    private static int? VisibleColumns()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return null;
+        }
+        try
+        {
+            var hwnd = GetConsoleWindow();
+            if (hwnd == IntPtr.Zero || !GetClientRect(hwnd, out var rect))
+            {
+                return null;
+            }
+            var pixels = rect.Right - rect.Left;
+            var font = new CONSOLE_FONT_INFO_EX { cbSize = System.Runtime.InteropServices.Marshal.SizeOf<CONSOLE_FONT_INFO_EX>(), FaceName = string.Empty };
+            if (pixels <= 0 || !GetCurrentConsoleFontEx(GetStdHandle(STD_OUTPUT_HANDLE), false, ref font) || font.dwFontSize.X <= 0)
+            {
+                return null;
+            }
+            var columns = pixels / font.dwFontSize.X;
+            return columns >= 40 ? columns : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private const int STD_OUTPUT_HANDLE = -11;
+
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    private struct RECT { public int Left, Top, Right, Bottom; }
+
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    private struct COORD { public short X, Y; }
+
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential, CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private struct CONSOLE_FONT_INFO_EX
+    {
+        public int cbSize;
+        public int nFont;
+        public COORD dwFontSize;
+        public int FontFamily;
+        public int FontWeight;
+        [System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.ByValTStr, SizeConst = 32)]
+        public string FaceName;
+    }
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll")] private static extern IntPtr GetStdHandle(int std);
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private static extern bool GetCurrentConsoleFontEx(IntPtr console, bool maximum, ref CONSOLE_FONT_INFO_EX font);
+    [System.Runtime.InteropServices.DllImport("user32.dll")] private static extern bool GetClientRect(IntPtr hwnd, out RECT rect);
 
     public static int Height
     {

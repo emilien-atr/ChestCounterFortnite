@@ -12,17 +12,23 @@ if (args.Contains("--standby"))
         : 1;
 }
 
-// Windows app: open a console window (or write into the terminal for command line options).
-if (OperatingSystem.IsWindows())
+// Normal use is the window; the console is only opened for the command line options (and --console).
+var guiMode = OperatingSystem.IsWindows() && !args.Any(a => a is "--once" or "--help" or "-h" or "--overlay-preview" or "--console" or "--standby");
+if (OperatingSystem.IsWindows() && !guiMode)
 {
-    NativeConsole.Ensure(attachToParent: args.Any(a => a is "--once" or "--help" or "-h" or "--overlay-preview"));
+    NativeConsole.Ensure(attachToParent: true);
 }
-Console.OutputEncoding = Encoding.UTF8;
+try { Console.OutputEncoding = Encoding.UTF8; } catch { /* no console: the window has its own interface */ }
 
 // A crash must not close the window before the message can be read (the exe is usually double-clicked).
 AppDomain.CurrentDomain.UnhandledException += (_, e) =>
 {
     ErrorLog.Write("Crash", e.ExceptionObject);
+    if (guiMode)
+    {
+        System.Windows.Forms.MessageBox.Show(e.ExceptionObject.ToString(), AppInfo.Name, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+        return;
+    }
     Console.ForegroundColor = ConsoleColor.Red;
     Console.WriteLine();
     Console.WriteLine(L.T("Erreur inattendue : ", "Unexpected error: ", "Error inesperado: ") + e.ExceptionObject);
@@ -41,6 +47,7 @@ var reset = false;
 var auto = false;          // opened by the standby when Fortnite started: closes itself after Fortnite
 var afterUpdate = false;   // restarted by the updater: waits for the previous instance to quit
 string? previewPath = null;
+string? reportOnly = null;
 for (var i = 0; i < args.Length; i++)
 {
     switch (args[i])
@@ -51,6 +58,7 @@ for (var i = 0; i < args.Length; i++)
         case "--once": once = true; break;
         case "--reset-config": reset = true; break;
         case "--overlay-preview": previewPath = args[++i]; break;
+        case "--report-only": reportOnly = args[++i]; break;
         case "--auto": auto = true; break;
         case "--after-update": afterUpdate = true; break;
         case "-h":
@@ -58,32 +66,32 @@ for (var i = 0; i < args.Length; i++)
             var langIndex = Array.IndexOf(args, "--lang");
             L.Set(langIndex >= 0 && langIndex + 1 < args.Length ? L.Normalize(args[langIndex + 1]) ?? L.SystemDefault : L.SystemDefault);
             Console.WriteLine(L.T("""
-                Compteur de coffres Fortnite
+                ChestCounterFortnite
 
                 Options :
                   --lang <fr|en|es>   langue de l'outil (français, anglais ou espagnol)
                   --demos <dossier>   dossier des replays (par défaut %LOCALAPPDATA%\FortniteGame\Saved\Demos)
-                  --data <dossier>    dossier des données (par défaut %APPDATA%\ChestCounter)
+                  --data <dossier>    dossier des données (par défaut %APPDATA%\ChestCounterFortnite)
                   --once              analyse les replays terminés puis quitte
                   --reset-config      repose les questions de configuration
                   --overlay-preview <fichier.png>   enregistre des aperçus de l'overlay puis quitte
                 """, """
-                Fortnite Chest Counter
+                ChestCounterFortnite
 
                 Options:
                   --lang <fr|en|es>   language of the tool (French, English or Spanish)
                   --demos <folder>    replays folder (default %LOCALAPPDATA%\FortniteGame\Saved\Demos)
-                  --data <folder>     data folder (default %APPDATA%\ChestCounter)
+                  --data <folder>     data folder (default %APPDATA%\ChestCounterFortnite)
                   --once              analyze the finished replays, then quit
                   --reset-config      ask the setup questions again
                   --overlay-preview <file.png>   save previews of the overlay, then quit
                 """, """
-                Contador de cofres de Fortnite
+                ChestCounterFortnite
 
                 Opciones:
                   --lang <fr|en|es>   idioma de la herramienta (francés, inglés o español)
                   --demos <carpeta>   carpeta de repeticiones (por defecto %LOCALAPPDATA%\FortniteGame\Saved\Demos)
-                  --data <carpeta>    carpeta de datos (por defecto %APPDATA%\ChestCounter)
+                  --data <carpeta>    carpeta de datos (por defecto %APPDATA%\ChestCounterFortnite)
                   --once              analiza las repeticiones terminadas y sale
                   --reset-config      vuelve a hacer las preguntas de configuración
                   --overlay-preview <archivo.png>   guarda vistas previas del overlay y sale
@@ -95,7 +103,20 @@ for (var i = 0; i < args.Length; i++)
 dataDir ??= Store.DefaultFolder();
 var store = new Store(dataDir);
 ErrorLog.FilePath = store.ErrorLogPath;
-var interactive = ConsoleUi.Interactive;
+
+// Development: write the browser report to a file and quit (used to preview the site without opening Fortnite).
+if (reportOnly != null)
+{
+    var reportConfig = store.LoadConfig() ?? new Config();
+    L.Set(reportConfig.Language);
+    var reportData = store.LoadData();
+    var reportHtml = ReportWriter.Report(reportConfig, Profiles.View(reportData, reportConfig), Profiles.List(reportData));
+    var reportFile = Path.GetFullPath(reportOnly);
+    Directory.CreateDirectory(Path.GetDirectoryName(reportFile) ?? ".");
+    File.WriteAllText(reportFile, reportHtml, new UTF8Encoding(false));
+    return 0;
+}
+var interactive = ConsoleUi.Interactive && !guiMode;
 if (interactive && !once && previewPath == null)
 {
     ConsoleUi.EnsureSize(110, 40);
@@ -110,6 +131,12 @@ if (previewPath == null && !AcquireInstance(instance, afterUpdate ? TimeSpan.Fro
         return 0; // opened with Fortnite while the player had already opened it: nothing to do
     }
     L.Set(store.LoadConfig()?.Language ?? L.SystemDefault);
+    if (guiMode)
+    {
+        System.Windows.Forms.MessageBox.Show(L.T("Le compteur est déjà ouvert : regarde dans la barre des tâches.", "The chest counter is already open: look in the taskbar.", "El contador de cofres ya está abierto: búscalo en la barra de tareas."),
+            AppInfo.Name, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
+        return 0;
+    }
     Console.ForegroundColor = ConsoleColor.Yellow;
     Console.WriteLine(L.T("  Le compteur de coffres est déjà ouvert : regarde dans la barre des tâches.",
         "  The chest counter is already open: look in the taskbar.",
@@ -128,6 +155,8 @@ var config = reset ? null : store.LoadConfig();
 var firstRun = config == null;
 var previousLanguage = reset ? store.LoadConfig()?.Language : null;
 config ??= new Config();
+// Version personnelle : aucune mise à jour GitHub, elle remplacerait cette version.
+config.UpdateMode = "off";
 
 // Language: --lang, else the saved choice, else asked once (Windows language when nobody can answer).
 if (langArg != null)
@@ -139,7 +168,7 @@ if (L.Normalize(config.Language) == null)
     var suggested = L.Normalize(previousLanguage) ?? L.SystemDefault;
     if (interactive)
     {
-        ConsoleUi.Screen("Fortnite Chest Counter  ·  Compteur de coffres  ·  Contador de cofres", "1/5");
+        ConsoleUi.Screen("ChestCounterFortnite  ·  Compteur de coffres  ·  Contador de cofres", "1/5");
         ConsoleUi.Text("Choisis ta langue  /  Choose your language  /  Elige tu idioma");
         var choice = ConsoleUi.Menu(L.Codes.Select(L.NativeName).ToList(), Math.Max(0, Array.IndexOf(L.Codes, suggested)), "↑ ↓  +  Entrée / Enter / Intro");
         config.Language = L.Codes[choice];
@@ -150,7 +179,7 @@ if (L.Normalize(config.Language) == null)
     }
 }
 L.Set(config.Language);
-var appName = L.T("Compteur de coffres Fortnite", "Fortnite Chest Counter", "Contador de cofres de Fortnite");
+var appName = L.T("ChestCounterFortnite", "ChestCounterFortnite", "ChestCounterFortnite");
 ConsoleUi.SetTitle($"{appName} {AppInfo.VersionText}");
 
 if (demosArg != null) config.DemosFolder = demosArg;
@@ -182,7 +211,7 @@ if (previewPath != null)
         NativeOverlay.SetStyle(style);
         foreach (var (suffix, live, inProgress) in new[] { ("-idle", (MatchRecord?)null, false), ("-inprogress", null, true), ("-live", fakeLive, true) })
         {
-            NativeOverlay.Update(OverlayModel.Build(previewData, live, inProgress));
+            NativeOverlay.Update(OverlayModel.Build(previewData, live, inProgress, HeadStart.Total(config)));
             Thread.Sleep(600);
             var name = Path.GetFileNameWithoutExtension(previewPath) + (style == "classic" ? "" : "-" + style) + suffix + ".png";
             var file = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(previewPath)) ?? ".", name);
@@ -197,6 +226,14 @@ var data = store.LoadData();
 var tracker = new Tracker(store, config, data);
 // Before any scan: otherwise replays analyzed during the setup would be analyzed a second time right after.
 var reanalyzing = tracker.UpgradeIfNeeded();
+
+// ---- Window (normal use) --------------------------------------------------------------------
+if (guiMode)
+{
+    store.SaveConfig(config);
+    return GuiApp.Run(store, config, data, tracker, auto, dataDir, reanalyzing);
+}
+
 var reportOpened = false;
 
 // ---- First launch: setup screens ----------------------------------------------------------
@@ -322,9 +359,9 @@ if (firstRun && interactive)
         ConsoleUi.Text(L.T("Un tout petit processus invisible attend le lancement de Fortnite, puis ouvre le compteur.\nLe compteur se ferme tout seul après Fortnite.",
             "A tiny invisible process waits for Fortnite to start, then opens the counter.\nThe counter closes by itself after Fortnite.",
             "Un pequeño proceso invisible espera a que se inicie Fortnite y luego abre el contador.\nEl contador se cierra solo después de Fortnite."));
-        ConsoleUi.Hint(L.T("Modifiable à tout moment dans les réglages. Désactive-le avant de supprimer ChestCounter.exe.",
-            "Can be changed at any time in the settings. Turn it off before deleting ChestCounter.exe.",
-            "Se puede cambiar en cualquier momento en los ajustes. Desactívalo antes de borrar ChestCounter.exe."));
+        ConsoleUi.Hint(L.T("Modifiable à tout moment dans les réglages. Désactive-le avant de supprimer ChestCounterFortnite.exe.",
+            "Can be changed at any time in the settings. Turn it off before deleting ChestCounterFortnite.exe.",
+            "Se puede cambiar en cualquier momento en los ajustes. Desactívalo antes de borrar ChestCounterFortnite.exe."));
         var withFortnite = ConsoleUi.Menu(new[]
         {
             L.T("Non, je le lancerai moi-même", "No, I will start it myself", "No, lo abriré yo mismo"),
@@ -452,12 +489,12 @@ if (OperatingSystem.IsWindows())
     {
         FortniteWatch.Apply(true, dataDir); // follows the exe if it was moved or updated, and restarts the standby
     }
-    if (Process.GetProcessesByName("ChestTracker") is { Length: > 0 } oldTool)
+    if (Process.GetProcessesByName("ChestCounter").Concat(Process.GetProcessesByName("ChestTracker")).ToArray() is { Length: > 0 } oldTool)
     {
         Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine(L.T("L'ancienne version (ChestTracker.exe) est encore ouverte : ferme-la, sinon les deux comptent en même temps.",
-            "The old version (ChestTracker.exe) is still open: close it, otherwise both count at the same time.",
-            "La versión antigua (ChestTracker.exe) sigue abierta: ciérrala, si no las dos cuentan a la vez."));
+        Console.WriteLine(L.T("Une ancienne version (ChestCounter.exe ou ChestTracker.exe) est encore ouverte : ferme-la, sinon les deux comptent en même temps.",
+            "An old version (ChestCounter.exe or ChestTracker.exe) is still open: close it, otherwise both count at the same time.",
+            "Una versión antigua (ChestCounter.exe o ChestTracker.exe) sigue abierta: ciérrala, si no las dos cuentan a la vez."));
         Console.ResetColor();
         foreach (var p in oldTool) p.Dispose();
     }
@@ -779,21 +816,17 @@ List<(string Label, Action Run, string? About)> Items()
             if (OperatingSystem.IsWindows())
             {
                 list.Add(Item($"{L.T("Ouvrir avec Fortnite", "Open with Fortnite", "Abrir con Fortnite")} : {YesNo(config.StartWithFortnite)}", ToggleStartWithFortnite,
-                    L.T("Un petit processus invisible attend Fortnite et ouvre le compteur, qui se ferme après. Il reste actif quand tu quittes le compteur : mets « non » avant de supprimer ou déplacer ChestCounter.exe.",
-                        "A tiny invisible process waits for Fortnite and opens the counter, which closes afterwards. It keeps running when you quit the counter: set this to \"no\" before deleting or moving ChestCounter.exe.",
-                        "Un pequeño proceso invisible espera a Fortnite y abre el contador, que se cierra después. Sigue activo cuando sales del contador: pon «no» antes de borrar o mover ChestCounter.exe.")));
+                    L.T("Un petit processus invisible attend Fortnite et ouvre le compteur, qui se ferme après. Il reste actif quand tu quittes le compteur : mets « non » avant de supprimer ou déplacer ChestCounterFortnite.exe.",
+                        "A tiny invisible process waits for Fortnite and opens the counter, which closes afterwards. It keeps running when you quit the counter: set this to \"no\" before deleting or moving ChestCounterFortnite.exe.",
+                        "Un pequeño proceso invisible espera a Fortnite y abre el contador, que se cierra después. Sigue activo cuando sales del contador: pon «no» antes de borrar o mover ChestCounterFortnite.exe.")));
             }
-            var updates = config.UpdateMode switch
-            {
-                "auto" => L.T("installées automatiquement", "installed automatically", "instaladas automáticamente"),
-                "off" => L.T("désactivées", "off", "desactivadas"),
-                _ => L.T("proposées", "offered", "propuestas"),
-            };
-            list.Add(Item($"{L.T("Mises à jour", "Updates", "Actualizaciones")} : {updates}",
-                () => config.UpdateMode = config.UpdateMode switch { "prompt" => "auto", "auto" => "off", _ => "prompt" },
-                L.T("Vérifiées sur GitHub au démarrage (le seul accès réseau de l'outil). Proposées : les nouveautés s'affichent et tu choisis. Automatiques : installées entre deux parties.",
-                    "Checked on GitHub at startup (the only network access of the tool). Offered: what's new is shown and you choose. Automatic: installed between two matches.",
-                    "Se comprueban en GitHub al iniciar (único acceso a la red). Propuestas: se muestran las novedades y tú eliges. Automáticas: se instalan entre dos partidas.")));
+            var countedKinds = CountedByKind(data, config);
+            var headAdvice = L.T("Total de la saison pour ce type de coffre, coffres ouverts avant le suivi compris. Entrée pour indiquer ton total actuel (début de saison, avant les rediffusions) : tes prochaines parties s'ajoutent par-dessus.",
+                "Season total for this chest type, including chests opened before tracking. Enter to set your current total (start of the season, before replays): your next matches add to it.",
+                "Total de la temporada para este tipo de cofre, cofres abiertos antes del seguimiento incluidos. Intro para indicar tu total actual (inicio de temporada, antes de las repeticiones): tus próximas partidas se suman encima.");
+            list.Add(Item($"{L.T("Coffres classiques", "Classic chests", "Cofres clásicos")} : {L.N(countedKinds.Classic + Math.Max(0, config.HeadStartChests))}", () => EditHeadStart(ChestKinds.Normal), headAdvice));
+            list.Add(Item($"{L.T("Coffres rares", "Rare chests", "Cofres raros")} : {L.N(countedKinds.Rare + Math.Max(0, config.HeadStartRareChests))}", () => EditHeadStart(ChestKinds.Rare), headAdvice));
+            list.Add(Item($"{L.T("Coffres d'esprit", "Sprite chests", "Cofres de espíritu")} : {L.N(countedKinds.Sprite + Math.Max(0, config.HeadStartSpriteChests))}", () => EditHeadStart(ChestKinds.Extraction), headAdvice));
             list.Add(Item($"{L.T("Dossier des replays", "Replays folder", "Carpeta de repeticiones")} : {config.DemosFolder}", ChangeDemosFolder,
                 L.T("Là où Fortnite enregistre ses replays. À changer seulement si tu l'as déplacé. Entrée pour le modifier.",
                     "Where Fortnite saves its replays. Only change it if you moved it. Enter to edit.",
@@ -812,8 +845,8 @@ List<(string Label, Action Run, string? About)> Items()
                 list.Add(Item(L.T("Ouvrir le journal d'erreurs", "Open the error log", "Abrir el registro de errores"), () => Open(store.ErrorLogPath),
                     L.T("À joindre si tu signales un problème.", "Attach it when you report a problem.", "Adjúntalo si informas de un problema.")));
             }
-            list.Add(Item(L.T("Signaler un problème (GitHub)", "Report a problem (GitHub)", "Informar de un problema (GitHub)"), () => Open(AppInfo.IssuesUrl), AppInfo.IssuesUrl));
-            list.Add(Item(L.T("Page du projet (GitHub)", "Project page (GitHub)", "Página del proyecto (GitHub)"), () => Open(AppInfo.RepoUrl), AppInfo.RepoUrl));
+            list.Add(Item($"{AppInfo.Name} · v{AppInfo.VersionText} · {AppInfo.Author}", () => Open(store.Folder),
+                L.T("Version personnelle : historique, réglages et rapport dans ce dossier.", "Personal build: history, settings and report in this folder.", "Versión personal: historial, ajustes e informe en esta carpeta.")));
             break;
     }
     return list;
@@ -837,16 +870,26 @@ void Draw()
     var width = ConsoleUi.Width;
     var f = new Frame();
     f.Blank();
-    f.Add(new Seg($"  {appName}", ConsoleColor.Yellow), new Seg($"   v{AppInfo.VersionText}", ConsoleColor.DarkGray));
-    f.Add("  " + new string('─', Math.Min(width - 4, 76)), ConsoleColor.DarkGray);
+    // Brand on the left, live state on the right: one glance tells whether a match is being counted.
+    var state = tracker.IsLive
+        ? "● " + L.T("Partie en cours", "Match in progress", "Partida en curso")
+        : tracker.IsFinishing || tracker.HasPending
+            ? "● " + L.T("Comptage…", "Counting…", "Contando…")
+            : "● " + L.T("En attente", "Waiting", "Esperando");
+    var brand = $"  {appName}";
+    var version = $"  v{AppInfo.VersionText}";
+    var gap = Math.Max(2, width - 3 - brand.Length - version.Length - state.Length);
+    f.Add(new Seg(brand, ConsoleColor.Yellow), new Seg(version, ConsoleColor.DarkGray), new Seg(new string(' ', gap)),
+        new Seg(state, tracker.IsLive ? ConsoleColor.Red : tracker.IsFinishing || tracker.HasPending ? ConsoleColor.Cyan : ConsoleColor.Green));
+    f.Add("  " + new string('─', Math.Max(10, Math.Min(width - 4, 110))), ConsoleColor.DarkGray);
 
     // Tabs.
     var names = TabNames();
     var tabLine = new List<Seg> { new("  ") };
     for (var i = 0; i < names.Length; i++)
     {
-        tabLine.Add(i == tab ? new Seg($" {names[i]} ", ConsoleColor.Black, ConsoleColor.Yellow) : new Seg($" {names[i]} ", ConsoleColor.Gray));
-        tabLine.Add(new Seg("  "));
+        tabLine.Add(i == tab ? new Seg($" {names[i]} ", ConsoleColor.Black, ConsoleColor.Yellow) : new Seg($" {names[i]} ", ConsoleColor.DarkGray));
+        tabLine.Add(new Seg("│", ConsoleColor.DarkGray));
     }
     f.Add(tabLine.ToArray());
     f.Blank();
@@ -915,57 +958,89 @@ void DrawHome(Frame f, int noteRoom)
     var matches = view.Matches;
     var profile = Profiles.Current(data, config);
     var profiles = Profiles.List(data);
-    var labelWidth = new[] { L.T("Profil", "Profile", "Perfil"), L.T("État", "Status", "Estado"), L.T("Dernière partie", "Last match", "Última partida") }.Max(x => x.Length) + 3;
-    void Row(string label, params Seg[] value) => f.Add(new[] { new Seg("  " + label.PadRight(labelWidth), ConsoleColor.DarkGray) }.Concat(value).ToArray());
+    var chests = matches.Sum(m => m.ChestsOpened);
+    var headStart = HeadStart.Total(config);
+    var totalChests = chests + headStart;
+    var session = matches.Where(ReportWriter.IsThisSession).ToList();
+    var last = matches.OrderByDescending(m => m.MatchStartUtc ?? m.AnalyzedAtUtc).FirstOrDefault();
 
-    Row(L.T("Profil", "Profile", "Perfil"), new Seg(profile?.Name ?? L.T("créé à ta première partie", "created with your first match", "se crea con tu primera partida"), ConsoleColor.White),
-        new Seg(profiles.Count >= 2 ? L.T($"   ({profiles.Count} comptes sur ce PC)", $"   ({profiles.Count} accounts on this PC)", $"   ({profiles.Count} cuentas en este PC)") : "", ConsoleColor.DarkGray));
+    // Four big figures in boxes: the whole counter at a glance.
+    var cards = new (string Value, string Label, ConsoleColor Color)[]
+    {
+        (L.N(totalChests), L.T("Total", "Total", "Total"), ConsoleColor.Yellow),
+        (L.N(session.Sum(m => m.ChestsOpened)), L.T("Session", "Session", "Sesión"), ConsoleColor.Green),
+        (last != null ? L.N(last.ChestsOpened) : "—", L.T("Dernière", "Last", "Última"), ConsoleColor.White),
+        (headStart > 0 ? L.N(headStart) : "—", L.T("Départ", "Start", "Inicio"), ConsoleColor.DarkYellow),
+    };
+    var perRow = ConsoleUi.Width >= 84 ? 4 : 2;
+    for (var start = 0; start < cards.Length; start += perRow)
+    {
+        var row = cards.Skip(start).Take(perRow).ToArray();
+        var inner = Math.Clamp((ConsoleUi.Width - 6 - (row.Length - 1)) / row.Length - 2, 8, 20);
+        var line = new string('─', inner);
+        f.Add("  ┌" + string.Join("┬", row.Select(_ => line)) + "┐", ConsoleColor.DarkGray);
+        var values = new List<Seg> { new("  │", ConsoleColor.DarkGray) };
+        var labels = new List<Seg> { new("  │", ConsoleColor.DarkGray) };
+        foreach (var c in row)
+        {
+            values.Add(new Seg(" " + Fit(c.Value, inner).PadRight(inner) + " ", c.Color));
+            values.Add(new Seg("│", ConsoleColor.DarkGray));
+            labels.Add(new Seg(" " + Fit(c.Label.ToUpperInvariant(), inner).PadRight(inner) + " ", ConsoleColor.DarkGray));
+            labels.Add(new Seg("│", ConsoleColor.DarkGray));
+        }
+        f.Add(values.ToArray());
+        f.Add(labels.ToArray());
+        f.Add("  └" + string.Join("┴", row.Select(_ => line)) + "┘", ConsoleColor.DarkGray);
+    }
 
-    // State: what the counter is doing right now.
+    string Fit(string s, int n) => s.Length <= n ? s : s[..Math.Max(0, n - 1)] + "…";
+    void Info(string label, params Seg[] value) =>
+        f.Add(new[] { new Seg("  " + label.PadRight(12), ConsoleColor.DarkGray) }.Concat(value).ToArray());
+
+    Info(L.T("Profil", "Profile", "Perfil"), new Seg(profile?.Name ?? L.T("créé à ta première partie", "created with your first match", "se crea con tu primera partida"), ConsoleColor.White),
+        new Seg(profiles.Count >= 2 ? $"  ·  {L.T($"{profiles.Count} comptes sur ce PC", $"{profiles.Count} accounts on this PC", $"{profiles.Count} cuentas en este PC")}" : "", ConsoleColor.DarkGray));
+
     if (autoCloseAt is { } closeAt)
     {
         var s = Math.Max(0, (int)Math.Ceiling((closeAt - DateTime.UtcNow).TotalSeconds));
-        Row(L.T("État", "Status", "Estado"), new Seg(L.T($"Fortnite est fermé : le compteur se ferme dans {s} s. Appuie sur une touche pour le garder ouvert.",
-            $"Fortnite is closed: the counter closes in {s} s. Press any key to keep it open.",
-            $"Fortnite está cerrado: el contador se cierra en {s} s. Pulsa una tecla para mantenerlo abierto."), ConsoleColor.Yellow));
+        Info(L.T("État", "Status", "Estado"), new Seg(L.T($"Fortnite est fermé : fermeture dans {s} s (une touche pour rester)", $"Fortnite is closed: closing in {s} s (any key to stay)", $"Fortnite está cerrado: cierre en {s} s (una tecla para quedarte)"), ConsoleColor.Yellow));
     }
     else if (tracker.IsLive)
     {
         var live = tracker.LiveMatch;
-        Row(L.T("État", "Status", "Estado"), new Seg("● " + L.T("Partie en cours", "Match in progress", "Partida en curso"), ConsoleColor.Red),
+        Info(L.T("État", "Status", "Estado"), new Seg("● " + L.T("Partie en cours", "Match in progress", "Partida en curso"), ConsoleColor.Red),
             new Seg(live != null
-                ? L.T($" : {L.Count(live.ChestsOpened, "coffre", "chest", "cofre")} pour l'instant", $": {L.Count(live.ChestsOpened, "coffre", "chest", "cofre")} so far", $": {L.Count(live.ChestsOpened, "coffre", "chest", "cofre")} por ahora")
-                : L.T(" : ses coffres seront comptés à la fin", ": its chests will be counted at the end", ": sus cofres se contarán al final"), ConsoleColor.Gray));
+                ? L.T($"  ·  {L.Count(live.ChestsOpened, "coffre", "chest", "cofre")} pour l'instant", $"  ·  {L.Count(live.ChestsOpened, "coffre", "chest", "cofre")} so far", $"  ·  {L.Count(live.ChestsOpened, "cofre", "chest", "cofre")} por ahora")
+                : L.T("  ·  comptés à la fin", "  ·  counted at the end", "  ·  se cuentan al final"), ConsoleColor.Gray));
     }
     else if (tracker.IsFinishing || tracker.HasPending)
     {
-        Row(L.T("État", "Status", "Estado"), new Seg(L.T("Partie terminée : comptage des coffres…", "Match over: counting the chests…", "Partida terminada: contando los cofres…"), ConsoleColor.Cyan));
+        Info(L.T("État", "Status", "Estado"), new Seg(L.T("Partie terminée : comptage des coffres…", "Match over: counting the chests…", "Partida terminada: contando los cofres…"), ConsoleColor.Cyan));
     }
     else
     {
-        Row(L.T("État", "Status", "Estado"), Directory.Exists(config.DemosFolder)
+        Info(L.T("État", "Status", "Estado"), Directory.Exists(config.DemosFolder)
             ? new Seg(L.T("En attente d'une partie", "Waiting for a match", "Esperando una partida"), ConsoleColor.Green)
             : new Seg(L.T("Dossier des replays introuvable (voir l'aide)", "Replays folder not found (see help)", "Carpeta de repeticiones no encontrada (ver ayuda)"), ConsoleColor.DarkYellow));
     }
 
-    var chests = matches.Sum(m => m.ChestsOpened);
-    var treasures = matches.Sum(m => m.TreasureFinds.Count);
-    var avg = matches.Count > 0 ? ((double)chests / matches.Count).ToString("F1", L.Culture) : "0";
-    Row(L.T("Total", "Total", "Total"), new Seg(L.Count(chests, "coffre", "chest", "cofre"), ConsoleColor.Yellow),
-        new Seg($"  ·  {L.Count(matches.Count, "partie", "parties", "match", "matches", "partida", "partidas")}  ·  {L.T($"{avg} par partie", $"{avg} per match", $"{avg} por partida")}", ConsoleColor.Gray),
-        new Seg(treasures > 0 ? $"  ·  ★ {L.Count(treasures, "trésor", "treasure", "tesoro")}" : "", ConsoleColor.Magenta),
-        new Seg(treasures > 0 ? L.T($" (1 tous les {L.N((int)Math.Round((double)chests / treasures))} coffres)", $" (1 every {L.N((int)Math.Round((double)chests / treasures))} chests)", $" (1 cada {L.N((int)Math.Round((double)chests / treasures))} cofres)") : "", ConsoleColor.DarkGray));
-    var session = matches.Where(ReportWriter.IsThisSession).ToList();
-    Row(L.T("Session", "Session", "Sesión"), new Seg(L.Count(session.Sum(m => m.ChestsOpened), "coffre", "chest", "cofre"), ConsoleColor.Yellow),
-        new Seg($"  ·  {L.Count(session.Count, "partie", "parties", "match", "matches", "partida", "partidas")}", ConsoleColor.Gray));
-    if (matches.OrderByDescending(m => m.MatchStartUtc ?? m.AnalyzedAtUtc).FirstOrDefault() is { } last)
+    if (headStart > 0)
     {
-        Row(L.T("Dernière partie", "Last match", "Última partida"), new Seg(L.Count(last.ChestsOpened, "coffre", "chest", "cofre"), ConsoleColor.Yellow),
-            new Seg($"  ·  {L.DateTimeShort((last.MatchStartUtc ?? last.AnalyzedAtUtc).ToLocalTime())}  ·  {Pretty.Playlist(last.Playlist)}  ·  {Pretty.Placement(last)}", ConsoleColor.Gray));
+        var parts = new List<string>();
+        if (config.HeadStartChests > 0) parts.Add(L.Count(config.HeadStartChests, "classique", "classic", "clásico"));
+        if (config.HeadStartRareChests > 0) parts.Add(L.Count(config.HeadStartRareChests, "rare", "rare", "raro"));
+        if (config.HeadStartSpriteChests > 0) parts.Add(L.Count(config.HeadStartSpriteChests, "esprit", "sprite", "espíritu"));
+        Info(L.T("Départ", "Start", "Inicio"), new Seg(string.Join(" · ", parts), ConsoleColor.DarkYellow),
+            new Seg("  ·  " + L.T("avant le suivi (Réglages)", "before tracking (Settings)", "antes del seguimiento (Ajustes)"), ConsoleColor.DarkGray));
+    }
+
+    if (last != null)
+    {
+        Info(L.T("Dernière", "Last", "Última"), new Seg($"{L.DateTimeShort((last.MatchStartUtc ?? last.AnalyzedAtUtc).ToLocalTime())}  ·  {Pretty.Playlist(last.Playlist)}  ·  {Pretty.Placement(last)}", ConsoleColor.Gray));
     }
     f.Blank();
 
-    // New version: what's new, in the chosen language.
+    // What's new, once after an update.
     if (Volatile.Read(ref update) is { } u && !notesHidden)
     {
         NotesBox(f, noteRoom, L.T($"Nouvelle version {u.Version.ToString(3)} disponible", $"New version {u.Version.ToString(3)} available", $"Nueva versión {u.Version.ToString(3)} disponible"),
@@ -974,7 +1049,6 @@ void DrawHome(Frame f, int noteRoom)
     }
     else if (showWhatsNew && ReleaseNotes.WhatsNew(ReleaseNotes.Embedded, L.Code) is { Count: > 0 } current)
     {
-        // First launch after an update: what this version brings (the notes are built into the exe).
         NotesBox(f, noteRoom, L.T($"Nouveautés de la {AppInfo.VersionText}", $"What's new in {AppInfo.VersionText}", $"Novedades de la {AppInfo.VersionText}"),
             L.T("  (mise à jour installée)", "  (update installed)", "  (actualización instalada)"), current, null);
     }
@@ -1128,7 +1202,7 @@ void CycleLanguage()
 {
     config.Language = L.Codes[(Array.IndexOf(L.Codes, L.Code) + 1) % L.Codes.Length]; // fr → en → es → fr
     L.Set(config.Language);
-    appName = L.T("Compteur de coffres Fortnite", "Fortnite Chest Counter", "Contador de cofres de Fortnite");
+    appName = L.T("ChestCounterFortnite", "ChestCounterFortnite", "ChestCounterFortnite");
     ConsoleUi.SetTitle($"{appName} {AppInfo.VersionText}");
 }
 
@@ -1141,10 +1215,62 @@ void ToggleStartWithFortnite()
         return;
     }
     Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine(L.T("Ouvrir avec Fortnite : impossible ici, lance le compteur depuis ChestCounter.exe.",
-        "Open with Fortnite: not possible here, run the counter from ChestCounter.exe.",
-        "Abrir con Fortnite: no es posible aquí, abre el contador desde ChestCounter.exe."));
+    Console.WriteLine(L.T("Ouvrir avec Fortnite : impossible ici, lance le compteur depuis ChestCounterFortnite.exe.",
+        "Open with Fortnite: not possible here, run the counter from ChestCounterFortnite.exe.",
+        "Abrir con Fortnite: no es posible aquí, abre el contador desde ChestCounterFortnite.exe."));
     Console.ResetColor();
+}
+
+// Replays may have been off at the start of the season: the player enters the totals they already had, per chest
+// kind. Only the difference with what the tool counted is stored, so each new match still adds to the total.
+void EditHeadStart(string kind)
+{
+    var counted = CountedByKind(data, config);
+    var (name, countedKind, before) = kind switch
+    {
+        ChestKinds.Rare => (L.T("coffres rares", "rare chests", "cofres raros"), counted.Rare, config.HeadStartRareChests),
+        ChestKinds.Extraction => (L.T("coffres d'esprit", "sprite chests", "cofres de espíritu"), counted.Sprite, config.HeadStartSpriteChests),
+        _ => (L.T("coffres classiques", "classic chests", "cofres clásicos"), counted.Classic, config.HeadStartChests),
+    };
+    var current = countedKind + Math.Max(0, before);
+    ConsoleUi.Screen(appName, name);
+    ConsoleUi.Text(L.T($"Indique le nombre total de {name} que tu veux voir maintenant, pour toute la saison (même ceux ouverts avant que les rediffusions soient activées).",
+        $"Enter the total number of {name} you want to see now, for the whole season (including those opened before replays were turned on).",
+        $"Indica el número total de {name} que quieres ver ahora, para toda la temporada (incluidos los abiertos antes de activar las repeticiones)."));
+    ConsoleUi.Blank();
+    ConsoleUi.Hint(L.T($"Coffres de ce type déjà comptés par l'outil : {L.N(countedKind)}. Tes prochaines parties s'ajouteront à ce total.",
+        $"Chests of this type already counted by the tool: {L.N(countedKind)}. Your next matches will add to this total.",
+        $"Cofres de este tipo ya contados por la herramienta: {L.N(countedKind)}. Tus próximas partidas se sumarán a este total."));
+    ConsoleUi.Blank();
+    var answer = ConsoleUi.Input(L.T("Total actuel : ", "Current total: ", "Total actual: "), current.ToString());
+    if (!int.TryParse(answer, out var wanted) || wanted < 0)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine(L.T("Nombre invalide : rien n'a changé.", "Invalid number: nothing changed.", "Número no válido: no se cambió nada."));
+        Console.ResetColor();
+        return;
+    }
+    if (wanted < countedKind)
+    {
+        wanted = countedKind; // the tool has already counted more than that
+    }
+    var head = wanted - countedKind;
+    switch (kind)
+    {
+        case ChestKinds.Rare: config.HeadStartRareChests = head; break;
+        case ChestKinds.Extraction: config.HeadStartSpriteChests = head; break;
+        default: config.HeadStartChests = head; break;
+    }
+    Console.WriteLine(L.T($"Total des {name} : {L.N(wanted)} (dont {L.N(countedKind)} comptés par l'outil).",
+        $"Total {name}: {L.N(wanted)} (of which {L.N(countedKind)} counted by the tool).",
+        $"Total de {name}: {L.N(wanted)} (de los cuales {L.N(countedKind)} contados por la herramienta)."));
+}
+
+// Chests counted by the tool for the profile shown, per kind (the three kinds the head start can hold).
+static (int Classic, int Rare, int Sprite) CountedByKind(TrackerData d, Config c)
+{
+    var kinds = Profiles.View(d, c).Matches.SelectMany(m => m.Chests).Select(x => ChestKinds.Canonical(x.Kind)).ToList();
+    return (kinds.Count(k => k == ChestKinds.Normal), kinds.Count(k => k == ChestKinds.Rare), kinds.Count(k => k == ChestKinds.Extraction));
 }
 
 void ChangeDemosFolder()
@@ -1336,7 +1462,7 @@ static void ChooseProfile(TrackerData d, Config c, Store s)
 
 static void UpdateOverlay(Store store, Config config, TrackerData d, MatchRecord? live, bool inProgress)
 {
-    var view = OverlayModel.Build(Profiles.View(d, config), live, inProgress);
+    var view = OverlayModel.Build(Profiles.View(d, config), live, inProgress, HeadStart.Total(config));
     ReportWriter.WriteOverlay(store, view);
     if (OperatingSystem.IsWindows() && NativeOverlay.IsRunning)
     {

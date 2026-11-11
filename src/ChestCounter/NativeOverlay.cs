@@ -211,9 +211,9 @@ public static class NativeOverlay
         int S(int v) => (int)Math.Round(v * _scale);
 
         CreateFonts();
-        _brushBg = CreateSolidBrush(Rgb(18, 18, 22));
-        _brushBorder = CreateSolidBrush(Rgb(58, 58, 66));
-        _brushLine = CreateSolidBrush(Rgb(44, 44, 52));
+        _brushBg = CreateSolidBrush(Rgb(13, 7, 30));
+        _brushBorder = CreateSolidBrush(Rgb(58, 39, 87));
+        _brushLine = CreateSolidBrush(Rgb(47, 32, 77));
 
         var hInstance = GetModuleHandleW(null);
         _wndProc = WndProc;
@@ -224,7 +224,7 @@ public static class NativeOverlay
             hInstance = hInstance,
             hCursor = LoadCursorW(IntPtr.Zero, IDC_SIZEALL),
             hbrBackground = _brushBg,
-            lpszClassName = "ChestCounterOverlay",
+            lpszClassName = AppInfo.Name + "Overlay",
         };
         // Already registered when the overlay is turned off and on again in the same run (ERROR_CLASS_ALREADY_EXISTS).
         if (RegisterClassExW(ref wc) == 0 && Marshal.GetLastWin32Error() != 1410)
@@ -239,7 +239,7 @@ public static class NativeOverlay
         _hwnd = CreateWindowExW(
             // Opaque (no WS_EX_LAYERED alpha): nothing for the compositor to blend every frame.
             WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
-            wc.lpszClassName, L.T("Coffres", "Chests", "Cofres"), WS_POPUP,
+            wc.lpszClassName, AppInfo.Name, WS_POPUP,
 
             posX, posY, w, h, IntPtr.Zero, IntPtr.Zero, hInstance, IntPtr.Zero);
         if (_hwnd == IntPtr.Zero)
@@ -446,8 +446,11 @@ public static class NativeOverlay
         var hdc = GetDC(hwnd);
         try
         {
-            // Header: "COFFRES" ... "● EN DIRECT" [lock]
-            var headerW = TextWidth(hdc, _fontHeader, Header, out _headerH) + S(16) + (v.Badge != null ? TextWidth(hdc, _fontHeader, v.Badge, out _) : 0) + S(30);
+            // Header: [chest] "COFFRES" ... "● EN DIRECT" [lock]
+            var headerTextW = TextWidth(hdc, _fontHeader, Header, out _headerH);
+            var headerIconW = S(18);
+            _headerH = Math.Max(_headerH, S(14));
+            var headerW = headerIconW + S(6) + headerTextW + S(16) + (v.Badge != null ? TextWidth(hdc, _fontHeader, v.Badge, out _) : 0) + S(30);
 
             // Two counters side by side.
             _col1W = Math.Max(TextWidth(hdc, _fontBig, v.Total, out _bigH), TextWidth(hdc, _fontCaption, CaptionTotal, out _captionH));
@@ -537,7 +540,7 @@ public static class NativeOverlay
         var v = _view;
         {
             GetClientRect(hwnd, out var rc);
-            FillRect(hdc, ref rc, _brushBg);
+            PaintCardBackground(hdc, rc);
             SetBkMode(hdc, TRANSPARENT);
 
             int S(int n) => (int)Math.Round(n * _scale);
@@ -545,33 +548,40 @@ public static class NativeOverlay
             var right = rc.Right - S(Pad);
             var y = S(12);
 
-            // Thin border following the rounded shape.
+            // Thin border following the rounded shape, plus the violet accent of the report cards.
             var border = CreateRoundRectRgn(0, 0, rc.Right + 1, rc.Bottom + 1, S(18), S(18));
             FrameRgn(hdc, border, _brushBorder, 1, 1);
             DeleteObject(border);
+            var accent = new RECT { Left = 0, Top = 0, Right = rc.Right, Bottom = Math.Max(1, S(2)) };
+            var accentBrush = CreateSolidBrush(Rgb(139, 92, 246));
+            FillRect(hdc, ref accent, accentBrush);
+            DeleteObject(accentBrush);
 
-            // Header
-            Text(hdc, _fontHeader, Rgb(150, 150, 162), Header, x, y, right, y + _headerH);
+            // Header, with the little chest from the report.
+            var iconW = S(18);
+            var iconH = S(14);
+            Chest(hdc, x, y + Math.Max(0, (_headerH - iconH) / 2), iconW, iconH, Rgb(246, 183, 60), Rgb(246, 183, 60), Rgb(59, 130, 246), Rgb(26, 16, 48));
+            Text(hdc, _fontHeader, Rgb(185, 169, 212), Header, x + iconW + S(6), y, right, y + _headerH);
             if (v.Badge != null)
             {
-                Text(hdc, _fontHeader, Rgb(96, 214, 128), v.Badge, x, y, _lockRect.Left - S(6), y + _headerH, DT_RIGHT);
+                Text(hdc, _fontHeader, Rgb(74, 222, 128), v.Badge, x, y, _lockRect.Left - S(6), y + _headerH, DT_RIGHT);
             }
             // Lock button (Segoe MDL2 Assets: E785 = open padlock, E72E = closed padlock).
             SelectObject(hdc, _fontIcon);
-            SetTextColor(hdc, _locked ? Rgb(96, 96, 106) : Rgb(200, 200, 208));
+            SetTextColor(hdc, _locked ? Rgb(122, 105, 148) : Rgb(196, 181, 253));
             var lr = _lockRect;
             DrawTextW(hdc, _locked ? "" : "", -1, ref lr, DT_SINGLELINE | DT_CENTER | DT_VCENTER | DT_NOPREFIX);
             y += _headerH + S(6);
 
             // Counters: total | match in progress
             var x2 = x + _col1W + S(ColGap);
-            Text(hdc, _fontBig, Rgb(242, 184, 75), v.Total, x - S(1), y, x + _col1W + S(4), y + _bigH);
-            Text(hdc, _fontBig, v.Current == null ? Rgb(80, 80, 92) : v.CurrentLive ? Rgb(110, 224, 150) : Rgb(226, 226, 232), v.Current ?? "—", x2 - S(1), y, right + S(4), y + _bigH);
+            Text(hdc, _fontBig, Rgb(246, 183, 60), v.Total, x - S(1), y, x + _col1W + S(4), y + _bigH);
+            Text(hdc, _fontBig, v.Current == null ? Rgb(111, 97, 136) : v.CurrentLive ? Rgb(74, 222, 128) : Rgb(245, 240, 255), v.Current ?? "—", x2 - S(1), y, right + S(4), y + _bigH);
             var sep = new RECT { Left = x + _col1W + S(ColGap) / 2, Top = y + S(8), Right = x + _col1W + S(ColGap) / 2 + 1, Bottom = y + _bigH + _captionH };
             FillRect(hdc, ref sep, _brushLine);
             y += _bigH;
-            Text(hdc, _fontCaption, Rgb(130, 130, 142), CaptionTotal, x, y, x + _col1W + S(4), y + _captionH);
-            Text(hdc, _fontCaption, Rgb(130, 130, 142), v.CurrentCaption, x2, y, right + S(4), y + _captionH);
+            Text(hdc, _fontCaption, Rgb(168, 155, 194), CaptionTotal, x, y, x + _col1W + S(4), y + _captionH);
+            Text(hdc, _fontCaption, Rgb(168, 155, 194), v.CurrentCaption, x2, y, right + S(4), y + _captionH);
             y += _captionH + S(12);
 
             if (v.Rows.Count > 0)
@@ -581,13 +591,13 @@ public static class NativeOverlay
                 y += 1 + S(10);
                 foreach (var row in v.Rows)
                 {
-                    Text(hdc, _fontLabel, Rgb(130, 130, 142), row.Label, x, y, x + _labelW, y + _rowH);
+                    Text(hdc, _fontLabel, Rgb(168, 155, 194), row.Label, x, y, x + _labelW, y + _rowH);
                     var vx = x + _labelW + S(12);
-                    Text(hdc, _fontSmall, row.Treasure ? Rgb(196, 160, 255) : Rgb(226, 226, 232), row.Value, vx, y, right + S(4), y + _rowH);
+                    Text(hdc, _fontSmall, row.Treasure ? Rgb(196, 181, 253) : Rgb(245, 240, 255), row.Value, vx, y, right + S(4), y + _rowH);
                     if (row.Detail != null)
                     {
                         var dx = vx + TextWidth(hdc, _fontSmall, row.Value, out _) + S(6);
-                        Text(hdc, _fontCaption, Rgb(130, 130, 142), row.Detail, dx, y, right + S(4), y + _rowH - S(2), DT_BOTTOM);
+                        Text(hdc, _fontCaption, Rgb(168, 155, 194), row.Detail, dx, y, right + S(4), y + _rowH - S(2), DT_BOTTOM);
                     }
                     y += _rowH + S(4);
                 }
@@ -596,12 +606,36 @@ public static class NativeOverlay
     }
 
 
+    /// <summary>Deep violet card matching the report's panels.</summary>
+    private static void PaintCardBackground(IntPtr hdc, RECT rc)
+    {
+        var height = Math.Max(1, rc.Bottom - rc.Top);
+        for (var i = 0; i < height; i++)
+        {
+            var t = height <= 1 ? 0d : i / (double)(height - 1);
+            var brush = CreateSolidBrush(Blend(Rgb(30, 18, 53), Rgb(13, 7, 30), t));
+            var line = new RECT { Left = rc.Left, Top = rc.Top + i, Right = rc.Right, Bottom = rc.Top + i + 1 };
+            FillRect(hdc, ref line, brush);
+            DeleteObject(brush);
+        }
+    }
+
+    private static uint Blend(uint a, uint b, double t)
+    {
+        var ar = (int)(a & 0xFF); var br = (int)(b & 0xFF);
+        var ag = (int)((a >> 8) & 0xFF); var bg = (int)((b >> 8) & 0xFF);
+        var ab = (int)((a >> 16) & 0xFF); var bb = (int)((b >> 16) & 0xFF);
+        return Rgb(
+            (byte)Math.Round(ar + (br - ar) * t),
+            (byte)Math.Round(ag + (bg - ag) * t),
+            (byte)Math.Round(ab + (bb - ab) * t));
+    }
+
     // ---- "hud" style: figures only, outlined like the game's own HUD, right-aligned under the minimap -------------
     //
     //   [chest] 3 934        total (gold while a match is counted live)
     //   Dernière • 14        last match / "● En partie • …" / "● En direct • 12"
-    //    Session • 83
-    //      [star] 36         treasures
+    //   dont cassés • 17     only when some chests were destroyed
 
     private sealed record HudRow(string Label, string Value, bool Dot);
 
@@ -633,15 +667,11 @@ public static class NativeOverlay
             var lockW = Sc(22);
             var bigW = TextWidth(hdc, _fontHudBig, v.Total, out _hudBigH);
             var state = StateRow(v);
-            var sessionLabel = L.T("Session", "Session", "Sesión");
-            var rowsW = new[]
-            {
-                Sc(14) + TextWidth(hdc, _fontHudSmall, state.Label + Sep + state.Value, out _hudSmallH),
-                TextWidth(hdc, _fontHudSmall, sessionLabel + Sep + v.Session, out _),
-                Sc(22) + TextWidth(hdc, _fontHudSmall, v.Treasures, out _),
-            }.Max();
+            var rowsW = new[] { Sc(14) + TextWidth(hdc, _fontHudSmall, state.Label + Sep + state.Value, out _hudSmallH) }
+                .Concat(v.Rows.Select(r => TextWidth(hdc, _fontHudSmall, r.Label + Sep + r.Value, out _)))
+                .Max();
             w = lockW + pad + Math.Max(Sc(26) + Sc(8) + bigW, rowsW) + pad + Sc(14);
-            h = pad + _hudBigH + 3 * (_hudSmallH + Sc(2)) + pad;
+            h = pad + _hudBigH + (1 + v.Rows.Count) * (_hudSmallH + Sc(2)) + pad;
             w = Math.Max(_stableW, w);
             _stableW = w;
             _lockRect = new RECT { Left = Sc(2), Top = 0, Right = lockW, Bottom = h };
@@ -813,7 +843,7 @@ public static class NativeOverlay
         Chest(hdc, ix, y + (_hudBigH - ih) / 2, iw, ih, gold, Rgb(224, 165, 38), ink, ink);
         y += _hudBigH + Sc(2);
 
-        // Last match (or the match in progress), session, treasures.
+        // Last match (or the match in progress), then the destroyed chests when there are some.
         var rowH = _hudSmallH;
         var stateLeft = LabelValue(hdc, state.Label, state.Value, left, right, y, rowH, live ? gold : white);
         if (state.Dot)
@@ -821,11 +851,11 @@ public static class NativeOverlay
             Disc(hdc, stateLeft - Sc(12), y + rowH / 2 - Sc(4), Sc(9), Rgb(255, 59, 48), ink, 1);
         }
         y += rowH + Sc(2);
-        LabelValue(hdc, L.T("Session", "Session", "Sesión"), v.Session, left, right, y, rowH, white);
-        y += rowH + Sc(2);
-        var tw = TextWidth(hdc, _fontHudSmall, v.Treasures, out _);
-        Outlined(hdc, _fontHudSmall, Rgb(214, 190, 255), v.Treasures, left, y, right, y + rowH, DT_RIGHT, thin: true);
-        Star(hdc, right - tw - Sc(12), y + rowH / 2, Sc(8), Rgb(196, 155, 255), ink);
+        foreach (var row in v.Rows)
+        {
+            LabelValue(hdc, row.Label, row.Value, left, right, y, rowH, white);
+            y += rowH + Sc(2);
+        }
     }
 
     private static uint Rgb(byte r, byte g, byte b) => (uint)(r | (g << 8) | (b << 16));

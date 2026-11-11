@@ -12,8 +12,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: Chest Counter version / Version du compteur
-      description: Shown in the window title, e.g. 1.2.0. / Affichée dans le titre de la fenêtre, par ex. 1.2.0.
+      label: ChestCounterFortnite version / Version du compteur
+      description: Shown in the window title, e.g. 1.0.0. / Affichée dans le titre de la fenêtre, par ex. 1.0.0.
     validations:
       required: true
   - type: input
@@ -24,5 +24,5 @@ body:
     id: log
     attributes:
       label: errors.log
-      description: Paste the content of %APPDATA%\ChestCounter\errors.log (or attach the file). / Colle le contenu de %APPDATA%\ChestCounter\errors.log (ou joins le fichier).
+      description: Paste the content of %APPDATA%\ChestCounterFortnite\errors.log (or attach the file). / Colle le contenu de %APPDATA%\ChestCounterFortnite\errors.log (ou joins le fichier).
       render: text

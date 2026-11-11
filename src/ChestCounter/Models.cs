@@ -100,6 +100,9 @@ public sealed class Config
     /// <summary>Version of the tool the player last used: what's new is shown once after an update.</summary>
     public string? LastVersion { get; set; }
 
+    /// <summary>Version whose "what's new" card the player dismissed with "OK, masquer les nouveautés".</summary>
+    public string? NewsDismissed { get; set; }
+
     /// <summary>Look of the overlay: "hud" (figures only, like the game's HUD) or "classic" (dark card).</summary>
     public string OverlayStyle { get; set; } = "hud";
     public int? OverlayX { get; set; }
@@ -118,6 +121,30 @@ public sealed class Config
 
     /// <summary>Minimum delay between two readings of the replay in progress (seconds, 10 minimum).</summary>
     public int LiveIntervalSeconds { get; set; } = 30;
+
+    /// <summary>
+    /// Chests already opened before the tool started counting (replays turned on late, for example), by kind:
+    /// added to the total so that the counter shows the whole season, while the per-match figures stay exact.
+    /// </summary>
+    public int HeadStartChests { get; set; }
+    public int HeadStartRareChests { get; set; }
+    public int HeadStartSpriteChests { get; set; }
+}
+
+/// <summary>Chests opened before the tool started counting, split between the three kinds the player can set.</summary>
+public static class HeadStart
+{
+    public static int Total(Config c) =>
+        Math.Max(0, c.HeadStartChests) + Math.Max(0, c.HeadStartRareChests) + Math.Max(0, c.HeadStartSpriteChests);
+
+    /// <summary>Part of the head start that belongs to one chest kind (0 for the other kinds).</summary>
+    public static int For(Config c, string kind) => ChestKinds.Canonical(kind) switch
+    {
+        ChestKinds.Normal => Math.Max(0, c.HeadStartChests),
+        ChestKinds.Rare => Math.Max(0, c.HeadStartRareChests),
+        ChestKinds.Extraction => Math.Max(0, c.HeadStartSpriteChests),
+        _ => 0,
+    };
 }
 
 public sealed class TrackerData
@@ -144,24 +171,28 @@ public sealed class Store
     public string Folder { get; }
 
     /// <summary>
-    /// %APPDATA%\ChestCounter. The tool was called ChestTracker before version 1.1: its folder is moved
-    /// (history, settings and treasure names are kept).
+    /// %APPDATA%\ChestCounterFortnite. Older folders (ChestCounter, then ChestTracker) are moved on first launch so
+    /// that the history, the settings and the treasure names are kept.
     /// </summary>
     public static string DefaultFolder()
     {
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var folder = Path.Combine(appData, "ChestCounter");
-        var old = Path.Combine(appData, "ChestTracker");
-        try
+        var folder = Path.Combine(appData, AppInfo.DataFolderName);
+        foreach (var previous in new[] { "ChestCounter", "ChestTracker" })
         {
-            if (!Directory.Exists(folder) && File.Exists(Path.Combine(old, "data.json")))
+            var old = Path.Combine(appData, previous);
+            try
             {
-                Directory.Move(old, folder);
+                if (!Directory.Exists(folder) && File.Exists(Path.Combine(old, "data.json")))
+                {
+                    Directory.Move(old, folder);
+                    break;
+                }
             }
-        }
-        catch
-        {
-            // the old folder is in use (old version still running): start fresh, nothing is lost
+            catch
+            {
+                // the old folder is in use (old version still running): start fresh, nothing is lost
+            }
         }
         return folder;
     }

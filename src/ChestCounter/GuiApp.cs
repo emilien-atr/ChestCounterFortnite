@@ -72,6 +72,9 @@ internal sealed class AppWindow : Form
     private readonly ToolStripMenuItem _trayQuit;
     private readonly WebView2 _web = new();
     private readonly List<string> _activity = new();
+    private ReplayHealth _health = new(false, false, null, null);
+    private bool _healthWarned;
+    private DateTime _nextHealthCheck = DateTime.MinValue;
 
     private FileSystemWatcher? _watcher;
     private volatile bool _dirty;
@@ -193,6 +196,7 @@ internal sealed class AppWindow : Form
         AppendActivity(L.T("Prêt : les coffres sont comptés quelques secondes après chaque partie.",
             "Ready: chests are counted a few seconds after each match.",
             "Listo: los cofres se cuentan unos segundos después de cada partida."));
+        RefreshHealth(force: true);
         if (_reanalyzing)
         {
             AppendActivity(L.T("Nouvelle version de l'analyse : les replays encore présents vont être réanalysés (sans doublon).",
@@ -330,6 +334,9 @@ internal sealed class AppWindow : Form
                 case "browse":
                     BrowseFolder();
                     break;
+                case "demos":
+                    OpenDemosFolder();
+                    break;
                 case "save":
                     if (root.TryGetProperty("settings", out var settings))
                     {
@@ -455,6 +462,14 @@ internal sealed class AppWindow : Form
                 running = OperatingSystem.IsWindows() && NativeOverlay.IsRunning,
                 visible = OperatingSystem.IsWindows() && NativeOverlay.IsVisible,
                 locked = OperatingSystem.IsWindows() && NativeOverlay.IsLocked,
+            },
+            replay = new
+            {
+                warning = _health.HasWarning,
+                title = _health.Title,
+                message = _health.Message,
+                last = _health.LastLine,
+                action = _health.ActionLabel,
             },
             news = _config.NewsDismissed != AppInfo.VersionText,
             activity = _activity.Count > 0 ? _activity[^1] : "",
@@ -587,6 +602,8 @@ internal sealed class AppWindow : Form
 
         _store.SaveConfig(_config);
         RebuildWatcher();
+        _nextHealthCheck = DateTime.MinValue;
+        RefreshHealth(force: true);
         try
         {
             ReportWriter.WriteAll(_store, _config, _data);
@@ -706,6 +723,7 @@ internal sealed class AppWindow : Form
                 _tracker.UpdateLive();
                 _lastLive = DateTime.UtcNow;
             }
+            RefreshHealth();
             RefreshState();
             UpdateOverlay(force: false);
             AutoCloseCheck();
@@ -715,6 +733,43 @@ internal sealed class AppWindow : Form
             AppendActivity(L.T($"Erreur pendant la surveillance : {ex.Message}",
                 $"Error while watching: {ex.Message}",
                 $"Error durante la vigilancia: {ex.Message}"));
+        }
+    }
+
+    /// <summary>Refreshes the "Fortnite is not recording" warning without hammering the game log.</summary>
+    private void RefreshHealth(bool force = false)
+    {
+        if (!force && DateTime.UtcNow < _nextHealthCheck)
+        {
+            return;
+        }
+        _health = ReplayHealth.Inspect(_config, force);
+        _nextHealthCheck = DateTime.UtcNow.AddSeconds(30);
+        if (_health.HasWarning && !_healthWarned)
+        {
+            AppendActivity(_health.Activity);
+            _healthWarned = true;
+        }
+        else if (!_health.HasWarning)
+        {
+            _healthWarned = false;
+        }
+    }
+
+    private void OpenDemosFolder()
+    {
+        try
+        {
+            if (!Directory.Exists(_config.DemosFolder))
+            {
+                Toast(L.T("Le dossier des replays n'existe pas encore.", "The replays folder does not exist yet.", "La carpeta de repeticiones aún no existe."), "error");
+                return;
+            }
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{_config.DemosFolder}\"") { UseShellExecute = true })?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Toast(ex.Message, "error");
         }
     }
 

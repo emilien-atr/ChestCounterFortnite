@@ -16,7 +16,7 @@ public static class ErrorLog
         try
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"==== {DateTime.Now:yyyy-MM-dd HH:mm:ss} · ChestCounter {AppInfo.VersionText} · {Environment.OSVersion.VersionString}");
+            sb.AppendLine($"==== {DateTime.Now:yyyy-MM-dd HH:mm:ss} · {AppInfo.Name} {AppInfo.VersionText} · {Environment.OSVersion.VersionString}");
             sb.AppendLine(what);
             sb.AppendLine(error.ToString());
             sb.AppendLine();

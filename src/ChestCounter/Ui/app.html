@@ -75,6 +75,13 @@ h1{margin:0;font-size:35px;font-weight:700;letter-spacing:-.6px;color:#f7f3ff;li
 .news-list{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
 .news-list li{position:relative;padding-left:20px;font-size:15.5px;line-height:1.45;color:#cfdcd4}
 .news-list li::before{content:"";position:absolute;left:2px;top:8px;width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px rgba(74,222,128,.7)}
+.replay-alert{position:relative;margin-top:16px;display:flex;align-items:flex-start;gap:18px;padding:20px 24px;border-radius:15px;background:linear-gradient(135deg,rgba(58,23,20,.94),rgba(26,13,20,.96));border:1px solid rgba(255,120,80,.5);box-shadow:0 0 28px rgba(255,90,60,.1),inset 0 0 42px rgba(255,90,60,.04)}
+.replay-alert .alert-ico{width:30px;height:30px;flex:none;margin-top:2px;color:#ffb07a;filter:drop-shadow(0 0 9px rgba(255,120,80,.3))}
+.replay-alert .alert-body{flex:1;min-width:0}
+.replay-alert .alert-title{font-size:19px;font-weight:700;color:#ffd0b8;letter-spacing:-.2px}
+.replay-alert p{margin:7px 0 0;font-size:14px;line-height:1.5;color:#e6c6b8;max-width:900px}
+.replay-alert .alert-last{margin-top:7px;font-size:12px;color:#bf9f95}
+.replay-alert .btn{align-self:center;flex:none}
 .actions{height:200px;margin-top:16px;border-radius:13px;overflow:hidden;background:rgba(13,9,22,.9);box-shadow:0 0 0 1px rgba(255,255,255,.06) inset}
 .action{width:100%;height:40px;display:flex;align-items:center;gap:14px;padding:0 20px;font-size:15.5px;font-weight:500;color:#e6e0f0;background:rgba(17,12,28,.88);border-top:1px solid rgba(255,255,255,.05);text-align:left;transition:.14s}
 .action:first-child{border-top:0}
@@ -236,7 +243,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   <div class="window">
     <header class="titlebar" id="titlebar">
       <svg class="tb-chest" viewBox="0 0 120 120" aria-hidden="true"><use href="#chestArt"/></svg>
-      <span class="tb-title" id="tb-title">ChestCounterFortnite 1.0</span>
+      <span class="tb-title" id="tb-title">ChestCounterFortnite 1.1</span>
       <div class="tb-actions">
         <button class="tb-btn" data-action="minimize" aria-label="Réduire" title="Réduire"><svg class="ico"><use href="#i-min"/></svg></button>
         <button class="tb-btn close" data-action="close" aria-label="Fermer" title="Fermer"><svg class="ico"><use href="#i-x"/></svg></button>
@@ -247,7 +254,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
       <div class="brand">
         <div class="brand-logo"><svg viewBox="0 0 120 120" aria-hidden="true"><use href="#chestArt"/></svg></div>
         <h1>ChestCounterFortnite</h1>
-        <span class="version" id="brand-version">v1.0</span>
+        <span class="version" id="brand-version">v1.1</span>
       </div>
 
       <nav class="tabs" role="tablist" aria-label="Navigation">
@@ -288,7 +295,17 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
           <button class="track-pill" data-action="settings" id="track-pill"><svg class="ico"><use href="#i-clock"/></svg><span data-i18n="beforeTracking">avant le suivi (Réglages)</span></button>
         </section>
 
-        <section class="news" id="news-card">
+          <section class="replay-alert" id="replay-alert" hidden aria-live="polite">
+          <svg class="ico alert-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-info"/></svg>
+          <div class="alert-body">
+            <div class="alert-title" id="replay-alert-title"></div>
+            <p id="replay-alert-text"></p>
+            <div class="alert-last" id="replay-alert-last"></div>
+          </div>
+          <button class="btn ghost" type="button" data-action="demos" data-i18n="alert.openFolder">Ouvrir le dossier des replays</button>
+        </section>
+
+      <section class="news" id="news-card">
           <svg class="gift" viewBox="0 0 100 100" aria-hidden="true"><use href="#giftArt"/></svg>
           <div class="news-body">
             <div class="news-head">
@@ -317,7 +334,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
       <div class="page" id="page-settings" role="tabpanel">
         <div class="page-head">
           <div><div class="kicker" data-i18n="settings.kicker">Personnalise ton compteur</div><h2 data-i18n="settings.title">Réglages</h2></div>
-          <div class="head-note" id="settings-note">ChestCounterFortnite v1.0</div>
+          <div class="head-note" id="settings-note">ChestCounterFortnite v1.1</div>
         </div>
         <div class="settings-grid">
           <div class="col">
@@ -410,7 +427,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
       <div class="page" id="page-help" role="tabpanel">
         <div class="page-head">
           <div><div class="kicker" data-i18n="help.kicker">Tout savoir en deux minutes</div><h2 data-i18n="help.title">Aide</h2></div>
-          <div class="head-note" id="help-note">ChestCounterFortnite v1.0</div>
+          <div class="head-note" id="help-note">ChestCounterFortnite v1.1</div>
         </div>
         <div class="help-grid">
           <section class="help-card">
@@ -455,7 +472,7 @@ const I18N = {
     "status.waiting":"En attente d'une partie","status.live":"Partie en cours","status.counting":"Comptage…",
     "news.title":"Nouveautés de la {v}","news.installed":"mise à jour installée",
     "news.bullets":["Nouveau design du rapport : tableau de bord sombre, chiffres plus lisibles, détail par partie","Nouveau nom et nouveau logo : ChestCounterFortnite, à tes couleurs","Coffres déjà ouverts : règle ton total de la saison pour les classiques, rares et esprits (Réglages)","Plus de mises à jour en ligne : cette version est la tienne, rien ne la remplace"],
-    "action.report":"Ouvrir le rapport (statistiques détaillées)","action.overlayHide":"Masquer l'overlay","action.overlayShow":"Afficher l'overlay","action.overlayOff":"Overlay désactivé — ouvrir les Réglages","action.overlayUnlock":"Déverrouiller l'overlay (pour le déplacer)","action.overlayLock":"Verrouiller l'overlay (pour jouer sans le bouger)","action.news":"OK, masquer les nouveautés","action.quit":"Quitter",
+    "action.report":"Ouvrir le rapport (statistiques détaillées)","alert.openFolder":"Ouvrir le dossier des replays","action.overlayHide":"Masquer l'overlay","action.overlayShow":"Afficher l'overlay","action.overlayOff":"Overlay désactivé — ouvrir les Réglages","action.overlayUnlock":"Déverrouiller l'overlay (pour le déplacer)","action.overlayLock":"Verrouiller l'overlay (pour jouer sans le bouger)","action.news":"OK, masquer les nouveautés","action.quit":"Quitter",
     "footer.activity":"Activité","ready":"Prêt : les coffres sont comptés quelques secondes après chaque partie.",
     "settings.kicker":"Personnalise ton compteur","settings.title":"Réglages","settings.language":"Langue","settings.languageDesc":"La langue de la fenêtre, du rapport et de l'overlay.","settings.overlay":"Overlay en jeu","settings.showOverlay":"Afficher l'overlay en jeu","settings.showOverlayDesc":"Un petit HUD avec le total et la partie en cours.","settings.style":"Style","settings.styleClassic":"Classique (carte sombre)","settings.styleHud":"HUD (intégré au jeu)","settings.size":"Taille","settings.opacity":"Opacité","settings.overlayHint":"En jeu : Ctrl+Maj+O pour l'afficher ou le masquer, Ctrl+Maj+L pour le verrouiller.","settings.behavior":"Comportement","settings.tray":"Réduire dans la zone de notification","settings.trayDesc":"Le compteur continue de tourner, loin de la barre des tâches.","settings.reportStart":"Ouvrir le rapport au démarrage","settings.reportStartDesc":"Le tableau de bord s'ouvre dans le navigateur.","settings.withFortnite":"Ouvrir avec Fortnite","settings.withFortniteDesc":"Une veille discrète démarre le compteur avec le jeu.","settings.totals":"Totaux de saison","settings.totalsDesc":"Les coffres ouverts avant le début du suivi.","settings.classic":"Coffres classiques","settings.rare":"Coffres rares","settings.sprite":"Coffres d'esprit","settings.totalsHint":"Total de la saison, parties déjà comptées comprises : les prochaines s'ajoutent par-dessus.","settings.replays":"Dossier des replays","settings.replaysDesc":"Là où Fortnite enregistre ses rediffusions.","settings.browse":"Parcourir…","settings.account":"Compte","settings.localHint":"Tout est enregistré sur ce PC, dans ton dossier de données.","settings.cancel":"Annuler","settings.save":"Enregistrer","settings.saved":"Réglages enregistrés.","settings.saveError":"Impossible d'enregistrer les réglages.","settings.withFortniteError":"Ouvrir avec Fortnite : impossible ici, lance le compteur depuis ChestCounterFortnite.exe.",
     "help.kicker":"Tout savoir en deux minutes","help.title":"Aide","help.howTitle":"Comment ça marche","help.howText":"Le compteur lit les replays que Fortnite enregistre et compte tes coffres quelques secondes après la fin de chaque partie. Garde la fenêtre ouverte pendant que tu joues : elle peut rester dans la zone de notification.","help.replayTitle":"Rien n'est compté ?","help.replayText":"Dans Fortnite, active Paramètres → Jeu → Rediffusions → Enregistrer les rediffusions. Les coffres apparaissent ensuite tout seuls.","help.overlayTitle":"L'overlay","help.overlayText":"Affiche ou masque-le avec","help.overlayText2":"et verrouille-le avec","help.overlayText3":"Déverrouillé, maintiens le clic gauche pour le déplacer. En jeu, choisis « Plein écran fenêtré ».","help.dataTitle":"Tes données","help.dataText":"Tout reste sur ce PC, dans %APPDATA%\\ChestCounterFortnite : historique, réglages et rapport. Aucune mise à jour en ligne ne remplace cette version.",
@@ -470,7 +487,7 @@ const I18N = {
     "status.waiting":"Waiting for a match","status.live":"Match in progress","status.counting":"Counting…",
     "news.title":"What's new in {v}","news.installed":"update installed",
     "news.bullets":["New report design: dark dashboard, clearer figures, per-match details","New name and new logo: ChestCounterFortnite, in your colours","Chests opened before tracking: set your season total for classic, rare and sprite chests (Settings)","No more online updates: this version is yours, nothing replaces it"],
-    "action.report":"Open the report (detailed statistics)","action.overlayHide":"Hide the overlay","action.overlayShow":"Show the overlay","action.overlayOff":"Overlay off — open Settings","action.overlayUnlock":"Unlock the overlay (to move it)","action.overlayLock":"Lock the overlay (to play without moving it)","action.news":"OK, hide what's new","action.quit":"Quit",
+    "action.report":"Open the report (detailed statistics)","alert.openFolder":"Open the replays folder","action.overlayHide":"Hide the overlay","action.overlayShow":"Show the overlay","action.overlayOff":"Overlay off — open Settings","action.overlayUnlock":"Unlock the overlay (to move it)","action.overlayLock":"Lock the overlay (to play without moving it)","action.news":"OK, hide what's new","action.quit":"Quit",
     "footer.activity":"Activity","ready":"Ready: chests are counted a few seconds after each match.",
     "settings.kicker":"Make it yours","settings.title":"Settings","settings.language":"Language","settings.languageDesc":"The language of the window, the report and the overlay.","settings.overlay":"In-game overlay","settings.showOverlay":"Show the in-game overlay","settings.showOverlayDesc":"A small HUD with the total and the current match.","settings.style":"Style","settings.styleClassic":"Classic (dark card)","settings.styleHud":"HUD (blends into the game)","settings.size":"Size","settings.opacity":"Opacity","settings.overlayHint":"In game: Ctrl+Shift+O to show or hide it, Ctrl+Shift+L to lock it.","settings.behavior":"Behaviour","settings.tray":"Minimize to the notification area","settings.trayDesc":"The counter keeps running, out of the taskbar.","settings.reportStart":"Open the report at startup","settings.reportStartDesc":"The dashboard opens in your browser.","settings.withFortnite":"Open with Fortnite","settings.withFortniteDesc":"A quiet watcher starts the counter with the game.","settings.totals":"Season totals","settings.totalsDesc":"Chests opened before tracking began.","settings.classic":"Classic chests","settings.rare":"Rare chests","settings.sprite":"Sprite chests","settings.totalsHint":"Season total, including matches already counted: new ones add on top.","settings.replays":"Replays folder","settings.replaysDesc":"Where Fortnite saves its replays.","settings.browse":"Browse…","settings.account":"Account","settings.localHint":"Everything is saved on this PC, in your data folder.","settings.cancel":"Cancel","settings.save":"Save","settings.saved":"Settings saved.","settings.saveError":"Could not save the settings.","settings.withFortniteError":"Open with Fortnite: not possible here, run the counter from ChestCounterFortnite.exe.",
     "help.kicker":"Everything in two minutes","help.title":"Help","help.howTitle":"How it works","help.howText":"The counter reads the replays Fortnite saves and counts your chests a few seconds after each match ends. Keep the window open while you play: it can stay in the notification area.","help.replayTitle":"Nothing counted?","help.replayText":"In Fortnite, turn on Settings → Game → Replays → Record Replays. Chests then appear on their own.","help.overlayTitle":"The overlay","help.overlayText":"Show or hide it with","help.overlayText2":"and lock it with","help.overlayText3":"Unlocked, hold the left button to move it. In game, choose Windowed Fullscreen.","help.dataTitle":"Your data","help.dataText":"Everything stays on this PC, in %APPDATA%\\ChestCounterFortnite: history, settings and report. No online update replaces this version.",
@@ -485,7 +502,7 @@ const I18N = {
     "status.waiting":"Esperando una partida","status.live":"Partida en curso","status.counting":"Contando…",
     "news.title":"Novedades de la {v}","news.installed":"actualización instalada",
     "news.bullets":["Nuevo diseño del informe: panel oscuro, cifras más claras, detalle por partida","Nuevo nombre y nuevo logo: ChestCounterFortnite, a tus colores","Cofres ya abiertos: ajusta tu total de temporada para clásicos, raros y espíritus (Ajustes)","Sin más actualizaciones en línea: esta versión es tuya, nada la reemplaza"],
-    "action.report":"Abrir el informe (estadísticas detalladas)","action.overlayHide":"Ocultar el overlay","action.overlayShow":"Mostrar el overlay","action.overlayOff":"Overlay desactivado — abrir Ajustes","action.overlayUnlock":"Desbloquear el overlay (para moverlo)","action.overlayLock":"Bloquear el overlay (para jugar sin moverlo)","action.news":"OK, ocultar las novedades","action.quit":"Salir",
+    "action.report":"Abrir el informe (estadísticas detalladas)","alert.openFolder":"Abrir la carpeta de repeticiones","action.overlayHide":"Ocultar el overlay","action.overlayShow":"Mostrar el overlay","action.overlayOff":"Overlay desactivado — abrir Ajustes","action.overlayUnlock":"Desbloquear el overlay (para moverlo)","action.overlayLock":"Bloquear el overlay (para jugar sin moverlo)","action.news":"OK, ocultar las novedades","action.quit":"Salir",
     "footer.activity":"Actividad","ready":"Listo: los cofres se cuentan unos segundos después de cada partida.",
     "settings.kicker":"Personaliza tu contador","settings.title":"Ajustes","settings.language":"Idioma","settings.languageDesc":"El idioma de la ventana, el informe y el overlay.","settings.overlay":"Overlay en el juego","settings.showOverlay":"Mostrar el overlay en el juego","settings.showOverlayDesc":"Un pequeño HUD con el total y la partida actual.","settings.style":"Estilo","settings.styleClassic":"Clásico (tarjeta oscura)","settings.styleHud":"HUD (integrado en el juego)","settings.size":"Tamaño","settings.opacity":"Opacidad","settings.overlayHint":"En el juego: Ctrl+Mayús+O para mostrarlo u ocultarlo, Ctrl+Mayús+L para bloquearlo.","settings.behavior":"Comportamiento","settings.tray":"Minimizar al área de notificación","settings.trayDesc":"El contador sigue funcionando, fuera de la barra de tareas.","settings.reportStart":"Abrir el informe al iniciar","settings.reportStartDesc":"El panel se abre en tu navegador.","settings.withFortnite":"Abrir con Fortnite","settings.withFortniteDesc":"Una vigilia discreta inicia el contador con el juego.","settings.totals":"Totales de temporada","settings.totalsDesc":"Cofres abiertos antes de empezar el seguimiento.","settings.classic":"Cofres clásicos","settings.rare":"Cofres raros","settings.sprite":"Cofres de espíritu","settings.totalsHint":"Total de la temporada, partidas ya contadas incluidas: las nuevas se suman encima.","settings.replays":"Carpeta de repeticiones","settings.replaysDesc":"Donde Fortnite guarda sus repeticiones.","settings.browse":"Examinar…","settings.account":"Cuenta","settings.localHint":"Todo se guarda en este PC, en tu carpeta de datos.","settings.cancel":"Cancelar","settings.save":"Guardar","settings.saved":"Ajustes guardados.","settings.saveError":"No se pudieron guardar los ajustes.","settings.withFortniteError":"Abrir con Fortnite: no es posible aquí, abre el contador desde ChestCounterFortnite.exe.",
     "help.kicker":"Todo en dos minutos","help.title":"Ayuda","help.howTitle":"Cómo funciona","help.howText":"El contador lee las repeticiones que guarda Fortnite y cuenta tus cofres unos segundos después de cada partida. Deja la ventana abierta mientras juegas: puede quedarse en el área de notificación.","help.replayTitle":"¿No se cuenta nada?","help.replayText":"En Fortnite, activa Ajustes → Juego → Repeticiones → Grabar repeticiones. Los cofres aparecen solos.","help.overlayTitle":"El overlay","help.overlayText":"Muéstralo u ocúltalo con","help.overlayText2":"y bloquéalo con","help.overlayText3":"Desbloqueado, mantén el clic izquierdo para moverlo. En el juego, elige «Pantalla completa en ventana».","help.dataTitle":"Tus datos","help.dataText":"Todo se queda en este PC, en %APPDATA%\\ChestCounterFortnite: historial, ajustes e informe. Ninguna actualización en línea reemplaza esta versión.",
@@ -565,8 +582,16 @@ function renderStats(s) {
   byId("action-lock").hidden = !o.show;
   setText("action-lock-text", o.locked ? t("action.overlayUnlock") : t("action.overlayLock"));
   setUse("action-lock-icon", o.locked ? "#i-unlock" : "#i-lock");
-  byId("news-card").hidden = !s.news;
-  byId("action-news").hidden = !s.news;
+  const replay = s.replay || {};
+  const replayWarning = !!replay.warning;
+  byId("replay-alert").hidden = !replayWarning;
+  if (replayWarning) {
+    setText("replay-alert-title", replay.title);
+    setText("replay-alert-text", replay.message);
+    setText("replay-alert-last", replay.last);
+  }
+  byId("news-card").hidden = !s.news || replayWarning;
+  byId("action-news").hidden = !s.news || replayWarning;
   setText("activity-text", s.activity || t("ready"));
   setText("tb-title", "ChestCounterFortnite " + s.version);
   setText("brand-version", "v" + s.version);
@@ -757,6 +782,7 @@ function bind() {
       case "news": post({ type: "news" }); break;
       case "quit": post({ type: "quit" }); break;
       case "browse": post({ type: "browse" }); break;
+      case "demos": post({ type: "demos" }); break;
       case "cancel": S.dirty = false; renderSettings(true); setTab("home"); break;
       case "save": post({ type: "save", settings: collectSettings() }); break;
     }

@@ -23,43 +23,36 @@ public static class OverlayModel
 
     /// <param name="live">Figures of the match in progress, when the replay could be read (null otherwise).</param>
     /// <param name="inProgress">A match is being recorded (even if its figures are not readable yet).</param>
-    public static OverlayView Build(TrackerData d, MatchRecord? live, bool inProgress)
+    public static OverlayView Build(TrackerData d, MatchRecord? live, bool inProgress, int headStart = 0)
     {
         var liveChests = live?.ChestsOpened ?? 0;
         var liveTreasures = live?.TreasureFinds.Count ?? 0;
 
-        var total = d.Matches.Sum(m => m.ChestsOpened) + liveChests;
+        var total = d.Matches.Sum(m => m.ChestsOpened) + liveChests + Math.Max(0, headStart);
         var session = d.Matches.Where(ReportWriter.IsThisSession).ToList();
-        var rows = new List<OverlayRow>();
-
-        // Session: chests, then small grey "n parties · moy. x" (finished matches of this session).
-        string? sessionDetail = null;
-        if (session.Count > 0)
-        {
-            var avg = (double)session.Sum(m => m.ChestsOpened) / session.Count;
-            var avgText = Math.Round(avg, MidpointRounding.AwayFromZero).ToString("0", L.Culture);
-            sessionDetail = $"{L.Count(session.Count, "partie", "parties", "match", "matches", "partida", "partidas")} · {L.T("moy.", "avg.", "media")} {avgText}";
-        }
-        rows.Add(new OverlayRow(L.T("Session", "Session", "Sesión"), L.Count(session.Sum(m => m.ChestsOpened) + liveChests, "coffre", "chest", "cofre"), Detail: sessionDetail));
-
         var last = d.Matches.OrderByDescending(m => m.MatchStartUtc ?? m.AnalyzedAtUtc).FirstOrDefault();
-        if (last != null)
+
+        // In game, only the chests: the total and the match being played. Destroyed chests count too (they are already
+        // in the total); a single small line says how many. Nothing else: no session, no start, no treasures.
+        var destroyed = d.Matches.Sum(m => m.Chests.Count(c => c.Destroyed)) + (live?.Chests.Count(c => c.Destroyed) ?? 0);
+        var rows = new List<OverlayRow>();
+        if (destroyed > 0)
         {
-            rows.Add(new OverlayRow(L.T("Dernière", "Last", "Última"), L.Count(last.ChestsOpened, "coffre", "chest", "cofre")));
+            rows.Add(new OverlayRow(L.T("dont cassés", "incl. destroyed", "incl. destruidos"), L.N(destroyed)));
         }
 
         var treasures = d.Matches.Sum(m => m.TreasureFinds.Count) + liveTreasures;
-        rows.Add(new OverlayRow(L.T("Trésors", "Treasures", "Tesoros"), $"★ {L.N(treasures)}", Treasure: true));
+        var sessionChests = session.Sum(m => m.ChestsOpened) + liveChests;
 
         // Right counter: the match in progress when readable, "…" while it cannot be read yet, else the last match.
         if (live != null)
         {
-            return new OverlayView(L.N(total), L.N(live.ChestsOpened), L.T("partie en cours", "current match", "partida actual"), true, L.T("● EN DIRECT", "● LIVE", "● EN DIRECTO"), rows, L.N(treasures), L.N(session.Sum(m => m.ChestsOpened) + liveChests), last != null ? L.N(last.ChestsOpened) : null);
+            return new OverlayView(L.N(total), L.N(live.ChestsOpened), L.T("partie en cours", "current match", "partida actual"), true, L.T("● EN DIRECT", "● LIVE", "● EN DIRECTO"), rows, L.N(treasures), L.N(sessionChests), last != null ? L.N(last.ChestsOpened) : null);
         }
         if (inProgress)
         {
-            return new OverlayView(L.N(total), "…", L.T("en cours", "in progress", "en curso"), true, L.T("● PARTIE EN COURS", "● MATCH IN PROGRESS", "● PARTIDA EN CURSO"), rows, L.N(treasures), L.N(session.Sum(m => m.ChestsOpened) + liveChests), last != null ? L.N(last.ChestsOpened) : null);
+            return new OverlayView(L.N(total), "…", L.T("en cours", "in progress", "en curso"), true, L.T("● PARTIE EN COURS", "● MATCH IN PROGRESS", "● PARTIDA EN CURSO"), rows, L.N(treasures), L.N(sessionChests), last != null ? L.N(last.ChestsOpened) : null);
         }
-        return new OverlayView(L.N(total), last != null ? L.N(last.ChestsOpened) : null, LastMatchCaption, false, null, rows, L.N(treasures), L.N(session.Sum(m => m.ChestsOpened) + liveChests), last != null ? L.N(last.ChestsOpened) : null);
+        return new OverlayView(L.N(total), last != null ? L.N(last.ChestsOpened) : null, LastMatchCaption, false, null, rows, L.N(treasures), L.N(sessionChests), last != null ? L.N(last.ChestsOpened) : null);
     }
 }

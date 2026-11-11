@@ -1,33 +1,33 @@
-**English** · **ChestCounterFortnite** is a personal build by Emilien: the counter, your history and your settings stay on your PC. Nothing to install.
+## 1.1.0 — Savoir pourquoi rien n'est compté
 
-**What's new in 1.0.0**
-- **New report design**: dark dashboard, clearer figures, chest breakdown and treasures
-- **New name and logo**: ChestCounterFortnite, in your own colours
-- **Chests already opened**: set your season total for classic, rare and sprite chests, even if replays were off at the start
-- **No more online updates**: this build is yours, nothing replaces it
+**Français**
+- **Nouveau diagnostic** : le compteur détecte quand Fortnite refuse d'enregistrer les replays et affiche la marche à suivre exacte.
+- **Dernier replay visible** dans la fenêtre et le rapport : tu vois tout de suite si une nouvelle partie a été enregistrée.
+- **Alerte claire** dans l'accueil et le rapport, avec un bouton pour ouvrir le dossier des replays.
+- **Aucun chiffre inventé** : sans rediffusion, aucun coffre ne peut être compté.
 
-Windows may show *"Windows protected your PC"* (unsigned exe): *More info → Run anyway*.
-
----
-
-**Français** · **ChestCounterFortnite** est une version personnelle d'Emilien : le compteur, ton historique et tes réglages restent sur ton PC. Rien à installer.
-
-**Nouveautés de la 1.0.0**
-- **Nouveau design du rapport** : tableau de bord sombre, chiffres plus lisibles, détail par type de coffre et trésors
-- **Nouveau nom et nouveau logo** : ChestCounterFortnite, à tes couleurs
-- **Coffres déjà ouverts** : règle ton total de la saison pour les coffres classiques, rares et d'esprit, même si les rediffusions étaient coupées au début
-- **Plus de mises à jour en ligne** : cette version est la tienne, rien ne la remplace
-
-Windows peut afficher « Windows a protégé votre ordinateur » (exe non signé) : *Informations complémentaires → Exécuter quand même*.
+Si rien n'est compté : dans Fortnite, `Paramètres → Jeu → Rediffusions`, active **Enregistrer les rediffusions de Battle Royale**, puis clique sur **Appliquer**.
 
 ---
 
-**Español** · **ChestCounterFortnite** es una versión personal de Emilien: el contador, tu historial y tus ajustes se quedan en tu PC. Nada que instalar.
+**English**
+- **New diagnostic**: the counter detects when Fortnite refuses to record replays and shows exactly what to change.
+- **Last replay date** in the window and the report, so you can see whether a new match was recorded.
+- **Clear warning** on the home screen and in the report, with a button to open the replays folder.
+- **No invented figures**: without a replay, no chest can be counted.
 
-**Novedades de la 1.0.0**
-- **Nuevo diseño del informe**: panel oscuro, cifras más claras, desglose por tipo de cofre y tesoros
-- **Nuevo nombre y nuevo logo**: ChestCounterFortnite, con tus colores
-- **Cofres ya abiertos**: ajusta tu total de la temporada para cofres clásicos, raros y de espíritu, aunque las repeticiones estuvieran desactivadas al principio
-- **Sin actualizaciones en línea**: esta versión es tuya, nada la sustituye
+If nothing is counted: in Fortnite, `Settings → Game → Replays`, turn on **Record Battle Royale Replays**, then click **Apply**.
 
-Windows puede mostrar «Windows protegió tu PC» (exe sin firmar): *Más información → Ejecutar de todas formas*.
+---
+
+**Español**
+- **Nuevo diagnóstico**: el contador detecta cuando Fortnite rechaza grabar las repeticiones y muestra exactamente qué cambiar.
+- **Fecha de la última repetición** en la ventana y el informe, para ver si se grabó una partida nueva.
+- **Aviso claro** en el inicio y el informe, con un botón para abrir la carpeta de repeticiones.
+- **Ninguna cifra inventada**: sin repetición, no se puede contar ningún cofre.
+
+Si no se cuenta nada: en Fortnite, `Ajustes → Juego → Repeticiones`, activa **Grabar repeticiones de Battle Royale** y pulsa **Aplicar**.
+
+---
+
+Windows peut afficher « Windows a protégé votre ordinateur » (exe non signé) : **Informations complémentaires → Exécuter quand même**.
