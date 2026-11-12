@@ -68,7 +68,7 @@ Le rapport s’ouvre dans le navigateur et se met à jour automatiquement pendan
 <img src="docs/overlay-fr.png" alt="Carte violette et HUD sur une ligne" width="360">
 
 - **HUD** : une seule ligne, dans l’esprit du HUD Fortnite. Idéal sous la minimap.
-- **Carte violette** : la carte illustrée avec un grand coffre, le total en or, la dernière partie et la ligne « dont cassés ». Le même rendu est utilisé pour la source navigateur OBS/TikTok.
+- **Carte violette** : la carte illustrée avec un grand coffre doré, des bords biseautés, le total en or, la dernière partie et la ligne « dont cassés ». Le même esprit visuel est utilisé pour la source navigateur OBS/TikTok.
 
 La taille se règle de **50 à 175 %** et l’opacité de **30 à 100 %** dans **Réglages → Overlay en jeu**. Pour l’afficher au-dessus du jeu, utilise le mode **Plein écran fenêtré** de Fortnite.
 

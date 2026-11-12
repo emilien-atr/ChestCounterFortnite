@@ -1,5 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using Drawing = System.Drawing;
+using Drawing2D = System.Drawing.Drawing2D;
 
 namespace ChestCounter;
 
@@ -292,12 +294,12 @@ public static class NativeOverlay
         }
         _scale = _dpiScale * _sizePercent / 100f;
         int S(int v) => (int)Math.Round(v * _scale);
-        _fontBig = CreateFontW(-S(46), 0, 0, 0, 800, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI");
-        _fontSmall = CreateFontW(-S(15), 0, 0, 0, 600, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI");
-        _fontHeader = CreateFontW(-S(16), 0, 0, 0, 800, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI");
-        _fontCaption = CreateFontW(-S(11), 0, 0, 0, 600, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI");
-        _fontLabel = CreateFontW(-S(14), 0, 0, 0, 600, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI");
-        _fontIcon = CreateFontW(-S(14), 0, 0, 0, 400, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe MDL2 Assets");
+        _fontBig = CreateFontW(-S(54), 0, 0, 0, 800, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI");
+        _fontSmall = CreateFontW(-S(17), 0, 0, 0, 700, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI");
+        _fontHeader = CreateFontW(-S(19), 0, 0, 0, 800, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI");
+        _fontCaption = CreateFontW(-S(13), 0, 0, 0, 600, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI");
+        _fontLabel = CreateFontW(-S(18), 0, 0, 0, 600, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI");
+        _fontIcon = CreateFontW(-S(16), 0, 0, 0, 400, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe MDL2 Assets");
         // Game-like styles: condensed italic, grayscale anti-aliasing (ClearType would leave colored edges once the
         // background is made transparent).
         _fontHudBig = CreateFontW(-S(40), 0, 0, 0, 700, 1, 0, 0, 1, 0, 0, 4, 0, "Bahnschrift Condensed");
@@ -410,7 +412,9 @@ public static class NativeOverlay
     {
         _locked = locked;
         var alpha = Alpha;
-        var layered = locked || alpha < 255 || Keyed;
+        // Every style is layered now: the HUD has always relied on the key colour, and the classic card
+        // needs it too so the chest and the bevelled corners can sit outside the plate.
+        var layered = true;
         var ex = (long)GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
         ex = layered ? ex | WS_EX_LAYERED : ex & ~(long)WS_EX_LAYERED;
         ex = locked ? ex | WS_EX_TRANSPARENT : ex & ~(long)WS_EX_TRANSPARENT;
@@ -418,7 +422,7 @@ public static class NativeOverlay
         if (layered)
         {
             // Required for a layered window to be drawn; the key color makes the background of the game-like styles invisible.
-            SetLayeredWindowAttributes(hwnd, KeyColor, alpha, Keyed ? LWA_ALPHA | LWA_COLORKEY : LWA_ALPHA);
+            SetLayeredWindowAttributes(hwnd, KeyColor, alpha, LWA_ALPHA | LWA_COLORKEY);
         }
         SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED);
         InvalidateRect(hwnd, IntPtr.Zero, true);
@@ -492,16 +496,16 @@ public static class NativeOverlay
                     + (row.Detail != null ? S(6) + TextWidth(hdc, _fontCaption, row.Detail, out _) : 0));
                 _rowH = Math.Max(_rowH, Math.Max(lh, vh));
             }
-            var rowsW = v.Rows.Count > 0 ? S(22) + _labelW + S(10) + valueW : 0;
-            var countersW = _col1W + S(36) + _col2W;
-            var headerW = S(22) + titleW + S(12) + (v.Badge != null ? TextWidth(hdc, _fontCaption, v.Badge, out _) : 0);
+            var rowsW = v.Rows.Count > 0 ? S(26) + _labelW + S(12) + valueW : 0;
+            var countersW = _col1W + S(44) + _col2W;
+            var headerW = S(32) + titleW + S(14) + (v.Badge != null ? TextWidth(hdc, _fontCaption, v.Badge, out _) : 0);
 
             // Never shrinks: the card keeps the same size between a match in progress and the end of the match.
-            var w = Math.Max(_stableW, Math.Max(S(420), S(112) + Math.Max(Math.Max(countersW, rowsW), headerW) + S(24)));
+            var w = Math.Max(_stableW, Math.Max(S(558), S(193) + Math.Max(Math.Max(countersW, rowsW), headerW) + S(28)));
             _stableW = w;
-            var rowsTop = S(42) + _bigH + _captionH + S(12);
-            var h = Math.Max(S(128), rowsTop + (v.Rows.Count > 0 ? v.Rows.Count * (_rowH + S(4)) + S(10) : 0));
-            _lockRect = new RECT { Left = w - S(40), Top = S(12), Right = w - S(16), Bottom = S(36) };
+            var rowsTop = S(52) + _bigH + _captionH + S(12);
+            var h = Math.Max(S(196), rowsTop + (v.Rows.Count > 0 ? v.Rows.Count * (_rowH + S(4)) + S(12) : 0));
+            _lockRect = new RECT { Left = w - S(42), Top = S(16), Right = w - S(18), Bottom = S(40) };
 
             // Keep it fully on its screen: on the right half of the screen it grows to the left, and it is
             // pushed back inside when it would overflow (a wider overlay used to be cut by the screen edge).
@@ -519,7 +523,9 @@ public static class NativeOverlay
                 ny = Math.Max(work.Top, Math.Min(ny, work.Bottom - h));
             }
             SetWindowPos(hwnd, HWND_TOPMOST, nx, ny, w, h, SWP_NOACTIVATE);
-            SetWindowRgn(hwnd, CreateRoundRectRgn(0, 0, w + 1, h + 1, S(28), S(28)), true); // window owns the region
+            // The classic card uses a color key for its transparent corners and the chest that overhangs
+            // the left edge; no window region (which would clip the chest) is needed.
+            SetWindowRgn(hwnd, IntPtr.Zero, true);
             if (nx != cur.Left || ny != cur.Top)
             {
                 _onMoved?.Invoke(nx, ny);
@@ -562,233 +568,338 @@ public static class NativeOverlay
             PaintStyled(hwnd, hdc);
             return;
         }
-        PaintJewel(hwnd, hdc);
+        PaintJewelNew(hwnd, hdc);
     }
 
-    /// <summary>The photo-inspired card: dark violet plate, gold trim, a large chest and three figures.</summary>
-    private static void PaintJewel(IntPtr hwnd, IntPtr hdc)
+    // ---- Photo-like classic card ----------------------------------------------------------------
+
+    private static void PaintJewelNew(IntPtr hwnd, IntPtr hdc)
     {
         GetClientRect(hwnd, out var rc);
-        PaintJewelBackground(hdc, rc);
+        var keyBrush = CreateSolidBrush(KeyColor);
+        FillRect(hdc, ref rc, keyBrush);
+        DeleteObject(keyBrush);
         SetBkMode(hdc, TRANSPARENT);
-
         int S(int n) => (int)Math.Round(n * _scale);
         var v = _view;
-        var contentX = S(112);
-        var right = rc.Right - S(16);
-        var top = S(18);
-        var headerTextX = contentX + S(22);
 
-        // The large chest overlaps the left edge, like the reference card.
-        JewelChest(hdc, S(10), S(28), S(94), S(82));
+        var plateX = S(28);
+        var plateW = rc.Right - plateX;
+        using (var g = Drawing.Graphics.FromHdc(hdc))
+        {
+            g.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias;
+            g.PixelOffsetMode = Drawing2D.PixelOffsetMode.HighQuality;
+            var state = g.Save();
+            g.TranslateTransform(plateX, 0);
+            PaintJewelPlate(g, plateW, rc.Bottom);
+            g.Restore(state);
+            JewelChestNew(g, S(10), S(22), S(166), S(178));
+            MiniChest(g, plateX + S(140), S(21), S(26), S(19));
+        }
 
-        // Small chest before the title.
-        Chest(hdc, contentX, top + S(2), S(17), S(13), Rgb(246, 183, 60), Rgb(255, 210, 63), Rgb(91, 33, 182), Rgb(26, 10, 45));
-        Text(hdc, _fontHeader, Rgb(247, 239, 255), Header, headerTextX, top, _lockRect.Left - S(8), top + _headerH);
+        var contentX = plateX + S(150);
+        var right = rc.Right - S(20);
+        var top = S(20);
+        var headerTextX = contentX + S(26);
+        Text(hdc, _fontHeader, Rgb(250, 245, 255), Header, headerTextX, top, _lockRect.Left - S(8), top + _headerH);
         if (v.Badge != null)
         {
             Text(hdc, _fontCaption, Rgb(95, 235, 151), v.Badge, contentX, top, _lockRect.Left - S(8), top + _headerH, DT_RIGHT);
         }
 
-        // Lock button (Segoe MDL2 Assets: E785 = open padlock, E72E = closed padlock).
-        SelectObject(hdc, _fontIcon);
-        SetTextColor(hdc, _locked ? Rgb(124, 106, 157) : Rgb(211, 190, 255));
-        var lr = _lockRect;
-        DrawTextW(hdc, _locked ? "" : "", -1, ref lr, DT_SINGLELINE | DT_CENTER | DT_VCENTER | DT_NOPREFIX);
+        // Locked is the normal in-game state: the padlock is hidden to keep the reference's clean header.
+        if (!_locked)
+        {
+            SelectObject(hdc, _fontIcon);
+            SetTextColor(hdc, Rgb(211, 190, 255));
+            var lr = _lockRect;
+            DrawTextW(hdc, "\uE785", -1, ref lr, DT_SINGLELINE | DT_CENTER | DT_VCENTER | DT_NOPREFIX);
+        }
 
-        var col2X = contentX + _col1W + S(36);
-        var bigY = S(42);
-        Text(hdc, _fontBig, Rgb(255, 201, 67), v.Total, contentX - S(1), bigY, contentX + _col1W + S(4), bigY + _bigH);
+        var bigY = S(52);
+        var col2X = contentX + _col1W + S(90);
+        Text(hdc, _fontBig, Rgb(255, 201, 67), v.Total, contentX - S(1), bigY, contentX + _col1W + S(5), bigY + _bigH);
         Text(hdc, _fontBig, v.Current == null ? Rgb(123, 105, 151) : Rgb(249, 245, 255),
             v.Current ?? "—", col2X - S(1), bigY, right + S(4), bigY + _bigH);
 
-        var separatorX = contentX + _col1W + S(18);
-        var sep = new RECT { Left = separatorX, Top = bigY + S(8), Right = separatorX + 1, Bottom = bigY + _bigH + _captionH };
-        FillRect(hdc, ref sep, _brushLine);
+        var separatorX = col2X - S(20);
+        var sep = new RECT { Left = separatorX, Top = bigY + S(10), Right = separatorX + Math.Max(1, Sc(1.5)), Bottom = bigY + _bigH + S(5) };
+        var sepBrush = CreateSolidBrush(Rgb(226, 214, 243));
+        FillRect(hdc, ref sep, sepBrush);
+        DeleteObject(sepBrush);
 
         var captionY = bigY + _bigH - S(1);
-        Text(hdc, _fontCaption, Rgb(185, 168, 214), CaptionTotal, contentX, captionY, contentX + _col1W + S(4), captionY + _captionH);
-        Text(hdc, _fontCaption, Rgb(185, 168, 214), v.CurrentCaption, col2X, captionY, right + S(4), captionY + _captionH);
+        Text(hdc, _fontCaption, Rgb(241, 235, 252), CaptionTotal, contentX, captionY, contentX + _col1W + S(4), captionY + _captionH);
+        Text(hdc, _fontCaption, Rgb(241, 235, 252), v.CurrentCaption, col2X, captionY, right + S(4), captionY + _captionH);
 
         var rowsY = bigY + _bigH + _captionH + S(12);
-        foreach (var row in v.Rows)
+        using (var g = Drawing.Graphics.FromHdc(hdc))
         {
-            ToolIcon(hdc, contentX, rowsY + Math.Max(0, (_rowH - S(16)) / 2), S(16));
-            var labelX = contentX + S(22);
-            Text(hdc, _fontLabel, Rgb(211, 195, 235), row.Label, labelX, rowsY, labelX + _labelW, rowsY + _rowH);
-            var valueX = labelX + _labelW + S(10);
-            Text(hdc, _fontSmall, row.Treasure ? Rgb(196, 181, 253) : Rgb(255, 248, 225), row.Value, valueX, rowsY, right + S(4), rowsY + _rowH);
-            if (row.Detail != null)
+            g.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias;
+            foreach (var row in v.Rows)
             {
-                var detailX = valueX + TextWidth(hdc, _fontSmall, row.Value, out _) + S(6);
-                Text(hdc, _fontCaption, Rgb(185, 168, 214), row.Detail, detailX, rowsY, right + S(4), rowsY + _rowH - S(2), DT_BOTTOM);
+                ToolIconNew(g, contentX - S(16), rowsY + Math.Max(0, (_rowH - S(20)) / 2), S(20));
+                var labelX = contentX + S(14);
+                Text(hdc, _fontLabel, Rgb(244, 238, 255), row.Label, labelX, rowsY, labelX + _labelW, rowsY + _rowH);
+                var valueX = labelX + _labelW + S(12);
+                Text(hdc, _fontSmall, row.Treasure ? Rgb(196, 181, 253) : Rgb(255, 201, 67), row.Value, valueX, rowsY, right + S(4), rowsY + _rowH);
+                if (row.Detail != null)
+                {
+                    var detailX = valueX + TextWidth(hdc, _fontSmall, row.Value, out _) + S(6);
+                    Text(hdc, _fontCaption, Rgb(216, 202, 238), row.Detail, detailX, rowsY, right + S(4), rowsY + _rowH - S(2), DT_BOTTOM);
+                }
+                rowsY += _rowH + S(4);
             }
-            rowsY += _rowH + S(4);
         }
     }
 
-    /// <summary>A layered violet plate with a luminous bevel, behind the photo-like card.</summary>
-    private static void PaintJewelBackground(IntPtr hdc, RECT rc)
+    private static Drawing2D.GraphicsPath CardPath(int w, int h, int inset = 0)
     {
-        var height = Math.Max(1, rc.Bottom - rc.Top);
-        for (var i = 0; i < height; i++)
+        var x0 = inset;
+        var y0 = inset;
+        var x1 = w - inset;
+        var y1 = h - inset;
+        var cx = Math.Max(5, Sc(30) - inset);
+        var cy = Math.Max(4, Sc(22) - inset);
+        var path = new Drawing2D.GraphicsPath();
+        path.AddPolygon(new[]
         {
-            var t = height <= 1 ? 0d : i / (double)(height - 1);
-            var brush = CreateSolidBrush(Blend(Rgb(43, 18, 91), Rgb(14, 5, 30), t));
-            var line = new RECT { Left = rc.Left, Top = rc.Top + i, Right = rc.Right, Bottom = rc.Top + i + 1 };
-            FillRect(hdc, ref line, brush);
-            DeleteObject(brush);
+            new Drawing.PointF(x0 + cx, y0),
+            new Drawing.PointF(x1 - cx, y0),
+            new Drawing.PointF(x1, y0 + cy),
+            new Drawing.PointF(x1, y1 - cy),
+            new Drawing.PointF(x1 - cx, y1),
+            new Drawing.PointF(x0 + cx, y1),
+            new Drawing.PointF(x0, y1 - cy),
+            new Drawing.PointF(x0, y0 + cy),
+        });
+        path.CloseFigure();
+        return path;
+    }
+
+    /// <summary>The bevelled dark-violet plate of the reference, with a soft light behind the chest.</summary>
+    private static void PaintJewelPlate(Drawing.Graphics g, int w, int h)
+    {
+        using var path = CardPath(w, h);
+        using (var bg = new Drawing2D.LinearGradientBrush(
+            new Drawing.RectangleF(0, 0, w, h),
+            Drawing.Color.FromArgb(255, 34, 14, 66),
+            Drawing.Color.FromArgb(255, 8, 3, 18), 90f))
+        {
+            g.FillPath(bg, path);
         }
 
-        // A soft violet glow behind the chest.
-        var glow = CreateSolidBrush(Rgb(52, 23, 105));
-        var old = SelectObject(hdc, glow);
-        Ellipse(hdc, -Sc(18), Sc(34), Sc(142), Sc(182));
-        SelectObject(hdc, old);
-        DeleteObject(glow);
+        var state = g.Save();
+        g.SetClip(path);
+        using (var glow = new Drawing2D.GraphicsPath())
+        {
+            glow.AddEllipse(Sc(-30), Sc(12), Sc(235), Sc(225));
+            using var brush = new Drawing2D.PathGradientBrush(glow)
+            {
+                CenterColor = Drawing.Color.FromArgb(105, 104, 43, 190),
+                SurroundColors = new[] { Drawing.Color.FromArgb(0, 104, 43, 190) },
+            };
+            g.FillPath(brush, glow);
+        }
+        g.Restore(state);
 
-        var topEdge = new RECT { Left = 0, Top = 0, Right = rc.Right, Bottom = Math.Max(1, Sc(2)) };
-        var topBrush = CreateSolidBrush(Rgb(137, 92, 246));
-        FillRect(hdc, ref topEdge, topBrush);
-        DeleteObject(topBrush);
+        using (var top = new Drawing.Pen(Drawing.Color.FromArgb(190, 174, 126, 255), Math.Max(1, Sc(1.6))))
+        {
+            g.DrawLine(top, Sc(36), Sc(2), w - Sc(36), Sc(2));
+        }
 
-        var bottomEdge = new RECT { Left = 0, Top = Math.Max(0, rc.Bottom - Sc(2)), Right = rc.Right, Bottom = rc.Bottom };
-        var bottomBrush = CreateSolidBrush(Rgb(76, 29, 149));
-        FillRect(hdc, ref bottomEdge, bottomBrush);
-        DeleteObject(bottomBrush);
-
-        // Dark outer rim, then the thin violet bevel of the reference card.
-        var outer = CreateRoundRectRgn(0, 0, rc.Right + 1, rc.Bottom + 1, Sc(28), Sc(28));
-        var outerBrush = CreateSolidBrush(Rgb(7, 3, 18));
-        FrameRgn(hdc, outer, outerBrush, Math.Max(1, Sc(3)), Math.Max(1, Sc(3)));
-        DeleteObject(outerBrush);
-        DeleteObject(outer);
-
-        var bevel = CreateRoundRectRgn(Sc(2), Sc(2), rc.Right - Sc(2) + 1, rc.Bottom - Sc(2) + 1, Sc(25), Sc(25));
-        var bevelBrush = CreateSolidBrush(Rgb(124, 58, 237));
-        FrameRgn(hdc, bevel, bevelBrush, Math.Max(1, Sc(1)), Math.Max(1, Sc(1)));
-        DeleteObject(bevelBrush);
-        DeleteObject(bevel);
-
-        var inner = CreateRoundRectRgn(Sc(6), Sc(6), rc.Right - Sc(6) + 1, rc.Bottom - Sc(6) + 1, Sc(21), Sc(21));
-        var innerBrush = CreateSolidBrush(Rgb(74, 33, 135));
-        FrameRgn(hdc, inner, innerBrush, 1, 1);
-        DeleteObject(innerBrush);
-        DeleteObject(inner);
+        using (var outer = new Drawing.Pen(Drawing.Color.FromArgb(255, 5, 2, 12), Math.Max(2, Sc(8))) { LineJoin = Drawing2D.LineJoin.Miter })
+        {
+            g.DrawPath(outer, path);
+        }
+        using (var bevelPath = CardPath(w, h, Sc(4)))
+        using (var bevel = new Drawing.Pen(Drawing.Color.FromArgb(255, 109, 40, 217), Math.Max(2, Sc(3))) { LineJoin = Drawing2D.LineJoin.Miter })
+        {
+            g.DrawPath(bevel, bevelPath);
+        }
+        using (var innerPath = CardPath(w, h, Sc(8)))
+        using (var inner = new Drawing.Pen(Drawing.Color.FromArgb(190, 139, 92, 246), Math.Max(1, Sc(1.2))))
+        {
+            g.DrawPath(inner, innerPath);
+        }
     }
 
-    /// <summary>A purple and gold chest, built from simple GDI shapes so no extra asset is shipped.</summary>
-    private static void JewelChest(IntPtr hdc, int x, int y, int w, int h)
+    /// <summary>A small gold-and-purple chest beside the title.</summary>
+    private static void MiniChest(Drawing.Graphics g, int x, int y, int w, int h)
     {
-        var outline = Rgb(15, 5, 29);
-        var gold = Rgb(246, 183, 60);
-        var goldDark = Rgb(177, 117, 24);
-        var purple = Rgb(88, 32, 164);
-        var purpleDeep = Rgb(49, 17, 104);
-        var purpleLight = Rgb(126, 62, 210);
-
-        var pen = CreatePen(0, Math.Max(1, Sc(2)), outline);
-        var oldPen = SelectObject(hdc, pen);
-
-        var glow = CreateSolidBrush(Rgb(78, 39, 156));
-        var oldBrush = SelectObject(hdc, glow);
-        Ellipse(hdc, x - Sc(5), y + Sc(16), x + w + Sc(7), y + h + Sc(6));
-        SelectObject(hdc, oldBrush);
-        DeleteObject(glow);
-
-        var shadow = CreateSolidBrush(Rgb(12, 4, 25));
-        oldBrush = SelectObject(hdc, shadow);
-        Ellipse(hdc, x + Sc(5), y + h - Sc(2), x + w + Sc(4), y + h + Sc(8));
-        SelectObject(hdc, oldBrush);
-        DeleteObject(shadow);
-
-        var lidH = Math.Max(8, (int)(h * 0.44));
-        var bodyBrush = CreateSolidBrush(purple);
-        oldBrush = SelectObject(hdc, bodyBrush);
-        RoundRect(hdc, x + Sc(3), y + lidH - Sc(2), x + w - Sc(3), y + h - Sc(3), Sc(12), Sc(12));
-        SelectObject(hdc, oldBrush);
-        DeleteObject(bodyBrush);
-
-        var lidBrush = CreateSolidBrush(purpleLight);
-        oldBrush = SelectObject(hdc, lidBrush);
-        Chord(hdc, x, y, x + w, y + 2 * lidH, x + w, y + lidH, x, y + lidH);
-        SelectObject(hdc, oldBrush);
-        DeleteObject(lidBrush);
-
-        var inner = CreateSolidBrush(purpleDeep);
-        oldBrush = SelectObject(hdc, inner);
-        Rectangle(hdc, x + Sc(7), y + lidH + Sc(5), x + w - Sc(7), y + h - Sc(8));
-        SelectObject(hdc, oldBrush);
-        DeleteObject(inner);
-
-        // Gold bands and trim.
-        var band = CreateSolidBrush(gold);
-        oldBrush = SelectObject(hdc, band);
-        var bandW = Math.Max(4, Sc(8));
-        Rectangle(hdc, x + w / 5, y + lidH - Sc(3), x + w / 5 + bandW, y + h - Sc(5));
-        Rectangle(hdc, x + w - w / 5 - bandW, y + lidH - Sc(3), x + w - w / 5, y + h - Sc(5));
-        Rectangle(hdc, x + Sc(3), y + lidH, x + w - Sc(3), y + lidH + Sc(4));
-        Rectangle(hdc, x + Sc(3), y + h - Sc(8), x + w - Sc(3), y + h - Sc(5));
-        SelectObject(hdc, oldBrush);
-        DeleteObject(band);
-
-        // Latch with a dark keyhole.
-        var latchW = Math.Max(8, w / 5);
-        var latchH = Math.Max(8, h / 4);
-        var latchX = x + (w - latchW) / 2;
-        var latchY = y + lidH - Sc(4);
-        var latch = CreateSolidBrush(gold);
-        oldBrush = SelectObject(hdc, latch);
-        RoundRect(hdc, latchX, latchY, latchX + latchW, latchY + latchH, Sc(4), Sc(4));
-        SelectObject(hdc, oldBrush);
-        DeleteObject(latch);
-
-        var keyhole = CreateSolidBrush(outline);
-        oldBrush = SelectObject(hdc, keyhole);
-        Ellipse(hdc, latchX + latchW / 2 - Sc(2), latchY + Sc(4), latchX + latchW / 2 + Sc(2), latchY + Sc(8));
-        SelectObject(hdc, oldBrush);
-        DeleteObject(keyhole);
-
-        // A few crisp highlights keep the icon readable at small overlay sizes.
-        var shine = CreateSolidBrush(Rgb(184, 144, 255));
-        oldBrush = SelectObject(hdc, shine);
-        Rectangle(hdc, x + Sc(11), y + Sc(7), x + Sc(34), y + Sc(9));
-        SelectObject(hdc, oldBrush);
-        DeleteObject(shine);
-
-        var glint = CreateSolidBrush(goldDark);
-        oldBrush = SelectObject(hdc, glint);
-        Rectangle(hdc, x + Sc(10), y + lidH + Sc(9), x + Sc(18), y + lidH + Sc(11));
-        SelectObject(hdc, oldBrush);
-        DeleteObject(glint);
-
-        SelectObject(hdc, oldPen);
-        DeleteObject(pen);
+        var outline = Drawing.Color.FromArgb(255, 20, 7, 35);
+        var gold = Drawing.Color.FromArgb(255, 245, 183, 50);
+        var goldDark = Drawing.Color.FromArgb(255, 171, 105, 17);
+        var purple = Drawing.Color.FromArgb(255, 92, 35, 169);
+        var purpleDark = Drawing.Color.FromArgb(255, 43, 15, 94);
+        using var body = RoundRect(x, y + h * .36f, w, h * .58f, Math.Max(2, Sc(3)));
+        using (var fill = new Drawing2D.LinearGradientBrush(new Drawing.RectangleF(x, y + h * .36f, w, h * .6f), gold, goldDark, 90f))
+        {
+            g.FillPath(fill, body);
+        }
+        using (var pen = new Drawing.Pen(outline, Math.Max(1, Sc(1.5)))) g.DrawPath(pen, body);
+        using var panel = RoundRect(x + w * .16f, y + h * .47f, w * .68f, h * .36f, Math.Max(1, Sc(2)));
+        using (var fill = new Drawing.SolidBrush(purple)) g.FillPath(fill, panel);
+        using var lid = new Drawing2D.GraphicsPath();
+        lid.AddBezier(x + w * .05f, y + h * .39f, x + w * .12f, y + h * .02f, x + w * .88f, y + h * .02f, x + w * .95f, y + h * .39f);
+        lid.AddLine(x + w * .95f, y + h * .39f, x + w * .05f, y + h * .39f);
+        lid.CloseFigure();
+        using (var fill = new Drawing.SolidBrush(purpleDark)) g.FillPath(fill, lid);
+        using (var pen = new Drawing.Pen(gold, Math.Max(1, Sc(2)))) g.DrawPath(pen, lid);
+        using (var band = new Drawing.SolidBrush(gold)) g.FillRectangle(band, x + w * .45f, y + h * .35f, Math.Max(2, w * .12f), h * .38f);
+        using (var key = new Drawing.SolidBrush(outline)) g.FillEllipse(key, x + w * .48f, y + h * .46f, Math.Max(2, w * .08f), Math.Max(2, h * .12f));
     }
 
-    /// <summary>Two crossed tools for the "dont cassés" line.</summary>
-    private static void ToolIcon(IntPtr hdc, int x, int y, int size)
+    /// <summary>A detailed purple/gold chest in the spirit of the reference illustration, drawn with GDI+.</summary>
+    private static void JewelChestNew(Drawing.Graphics g, int x, int y, int w, int h)
     {
-        var brush = CreateSolidBrush(Rgb(246, 183, 60));
-        var old = SelectObject(hdc, brush);
-        var a = new[]
+        float X(float t) => x + t * w;
+        float Y(float t) => y + t * h;
+        float U(float t) => t * w;
+        Drawing.PointF P(float px, float py) => new(X(px), Y(py));
+        var outline = Drawing.Color.FromArgb(255, 10, 3, 22);
+        var gold = Drawing.Color.FromArgb(255, 247, 188, 55);
+        var goldLight = Drawing.Color.FromArgb(255, 255, 226, 139);
+        var goldDark = Drawing.Color.FromArgb(255, 161, 91, 14);
+        var purpleLight = Drawing.Color.FromArgb(255, 139, 76, 224);
+        var purple = Drawing.Color.FromArgb(255, 77, 29, 151);
+        var purpleDark = Drawing.Color.FromArgb(255, 38, 13, 81);
+        var bandWidth = Math.Max(2, Sc(3));
+
+        using (var shadow = new Drawing.SolidBrush(Drawing.Color.FromArgb(145, 3, 1, 8)))
         {
-            new POINT { X = x + Sc(2), Y = y + Sc(13) },
-            new POINT { X = x + Sc(5), Y = y + Sc(15) },
-            new POINT { X = x + Sc(14), Y = y + Sc(2) },
-            new POINT { X = x + Sc(11), Y = y },
-        };
-        var b = new[]
+            g.FillEllipse(shadow, X(-.02f), Y(.84f), U(1.04f), h * .16f);
+        }
+
+        // Dark side and back faces give the chest its three-quarter volume.
+        using (var side = new Drawing.SolidBrush(Drawing.Color.FromArgb(255, 29, 9, 62)))
         {
-            new POINT { X = x + Sc(2), Y = y + Sc(2) },
-            new POINT { X = x + Sc(5), Y = y },
-            new POINT { X = x + Sc(14), Y = y + Sc(13) },
-            new POINT { X = x + Sc(11), Y = y + Sc(15) },
+            g.FillPolygon(side, new[] { P(.10f, .42f), P(.04f, .88f), P(-.02f, .82f), P(.02f, .47f) });
+        }
+        using (var sidePen = new Drawing.Pen(outline, bandWidth)) g.DrawPolygon(sidePen, new[] { P(.10f, .42f), P(.04f, .88f), P(-.02f, .82f), P(.02f, .47f) });
+
+        var body = new[] { P(.10f, .42f), P(.90f, .42f), P(.96f, .88f), P(.04f, .88f) };
+        using (var bodyFill = new Drawing2D.LinearGradientBrush(new Drawing.RectangleF(X(.04f), Y(.40f), U(.92f), h * .5f), purpleLight, purpleDark, 90f))
+        {
+            g.FillPolygon(bodyFill, body);
+        }
+        using (var bodyPen = new Drawing.Pen(outline, Math.Max(2, Sc(3)))) g.DrawPolygon(bodyPen, body);
+        using (var bodyGold = new Drawing.Pen(goldDark, Math.Max(2, Sc(4)))) g.DrawPolygon(bodyGold, body);
+
+        // Purple front panel with an inset gold frame.
+        var panel = new[] { P(.15f, .47f), P(.85f, .47f), P(.90f, .83f), P(.10f, .83f) };
+        using (var panelFill = new Drawing2D.LinearGradientBrush(new Drawing.RectangleF(X(.10f), Y(.46f), U(.8f), h * .38f), purple, purpleDark, 90f))
+        {
+            g.FillPolygon(panelFill, panel);
+        }
+        using (var panelPen = new Drawing.Pen(gold, Math.Max(1, Sc(2)))) g.DrawPolygon(panelPen, panel);
+
+        // Domed lid, gold rim, then a recessed purple top.
+        using var lid = new Drawing2D.GraphicsPath();
+        lid.AddBezier(X(.03f), Y(.43f), X(.10f), Y(.02f), X(.90f), Y(.02f), X(.97f), Y(.43f));
+        lid.AddLine(X(.97f), Y(.43f), X(.03f), Y(.43f));
+        lid.CloseFigure();
+        using (var lidFill = new Drawing2D.LinearGradientBrush(new Drawing.RectangleF(X(.03f), Y(.02f), U(.94f), h * .43f), purpleLight, purpleDark, 90f))
+        {
+            g.FillPath(lidFill, lid);
+        }
+        using (var lidPen = new Drawing.Pen(goldDark, Math.Max(2, Sc(8))) { LineJoin = Drawing2D.LineJoin.Miter }) g.DrawPath(lidPen, lid);
+        using (var lidGold = new Drawing.Pen(gold, Math.Max(1, Sc(4))) { LineJoin = Drawing2D.LineJoin.Miter }) g.DrawPath(lidGold, lid);
+
+        using var lidInner = new Drawing2D.GraphicsPath();
+        lidInner.AddBezier(X(.11f), Y(.39f), X(.16f), Y(.10f), X(.84f), Y(.10f), X(.89f), Y(.39f));
+        lidInner.AddLine(X(.89f), Y(.39f), X(.11f), Y(.39f));
+        lidInner.CloseFigure();
+        using (var lidInnerFill = new Drawing2D.LinearGradientBrush(new Drawing.RectangleF(X(.11f), Y(.10f), U(.78f), h * .3f), purple, purpleDark, 90f))
+        {
+            g.FillPath(lidInnerFill, lidInner);
+        }
+        using (var lidInnerPen = new Drawing.Pen(Drawing.Color.FromArgb(180, 185, 135, 250), Math.Max(1, Sc(1.5)))) g.DrawPath(lidInnerPen, lidInner);
+
+        // Gold straps and the two horizontal metal bands.
+        foreach (var t in new[] { .27f, .73f })
+        {
+            var strap = new[] { P(t - .035f, .10f), P(t + .035f, .10f), P(t + .055f, .87f), P(t - .055f, .87f) };
+            using (var strapFill = new Drawing2D.LinearGradientBrush(new Drawing.RectangleF(X(t - .06f), Y(.10f), U(.12f), h * .78f), goldLight, goldDark, 90f))
+            {
+                g.FillPolygon(strapFill, strap);
+            }
+            using (var strapPen = new Drawing.Pen(outline, Math.Max(1, Sc(1.5)))) g.DrawPolygon(strapPen, strap);
+        }
+        using (var band = new Drawing2D.LinearGradientBrush(new Drawing.RectangleF(X(.04f), Y(.402f), U(.92f), h * .06f), goldLight, goldDark, 90f))
+        {
+            g.FillPolygon(band, new[] { P(.04f, .402f), P(.96f, .402f), P(.96f, .447f), P(.04f, .447f) });
+        }
+        using (var bandPen = new Drawing.Pen(outline, Math.Max(1, Sc(1.5)))) g.DrawPolygon(bandPen, new[] { P(.04f, .402f), P(.96f, .402f), P(.96f, .447f), P(.04f, .447f) });
+        using (var band2 = new Drawing2D.LinearGradientBrush(new Drawing.RectangleF(X(.04f), Y(.845f), U(.92f), h * .05f), goldLight, goldDark, 90f))
+        {
+            g.FillPolygon(band2, new[] { P(.04f, .845f), P(.96f, .845f), P(.96f, .885f), P(.04f, .885f) });
+        }
+
+        // Gold lock plate, keyhole and feet.
+        using (var lockPath = RoundRect(X(.405f), Y(.47f), U(.19f), h * .21f, Math.Max(2, Sc(5))))
+        {
+            using (var lockFill = new Drawing2D.LinearGradientBrush(new Drawing.RectangleF(X(.40f), Y(.47f), U(.2f), h * .21f), goldLight, goldDark, 90f))
+            {
+                g.FillPath(lockFill, lockPath);
+            }
+            using (var lockPen = new Drawing.Pen(outline, Math.Max(2, Sc(2.5)))) g.DrawPath(lockPen, lockPath);
+        }
+        using (var keyhole = new Drawing.SolidBrush(outline))
+        {
+            g.FillEllipse(keyhole, X(.475f), Y(.525f), U(.05f), h * .055f);
+            g.FillRectangle(keyhole, X(.49f), Y(.56f), U(.02f), h * .06f);
+        }
+        foreach (var fx in new[] { .17f, .77f })
+        {
+            using (var foot = new Drawing.SolidBrush(goldDark))
+            {
+                g.FillRectangle(foot, X(fx), Y(.86f), U(.07f), h * .08f);
+            }
+            using (var footPen = new Drawing.Pen(outline, Math.Max(1, Sc(1.5))))
+            {
+                g.DrawRectangle(footPen, X(fx), Y(.86f), U(.07f), h * .08f);
+            }
+        }
+
+        // Crisp highlights keep the illustration readable at the small overlay sizes.
+        using (var shine = new Drawing.Pen(Drawing.Color.FromArgb(170, 218, 188, 255), Math.Max(1, Sc(2))))
+        {
+            g.DrawBezier(shine, X(.16f), Y(.25f), X(.30f), Y(.15f), X(.48f), Y(.13f), X(.62f), Y(.16f));
+            g.DrawLine(shine, X(.17f), Y(.53f), X(.17f), Y(.78f));
+        }
+        using (var goldShine = new Drawing.Pen(goldLight, Math.Max(1, Sc(1.5))))
+        {
+            g.DrawLine(goldShine, X(.30f), Y(.46f), X(.30f), Y(.83f));
+            g.DrawLine(goldShine, X(.76f), Y(.46f), X(.76f), Y(.83f));
+        }
+    }
+
+    private static Drawing2D.GraphicsPath RoundRect(float x, float y, float w, float h, float r)
+    {
+        var path = new Drawing2D.GraphicsPath();
+        r = Math.Max(1, Math.Min(r, Math.Min(w, h) / 2));
+        path.AddArc(x, y, r * 2, r * 2, 180, 90);
+        path.AddArc(x + w - r * 2, y, r * 2, r * 2, 270, 90);
+        path.AddArc(x + w - r * 2, y + h - r * 2, r * 2, r * 2, 0, 90);
+        path.AddArc(x, y + h - r * 2, r * 2, r * 2, 90, 90);
+        path.CloseFigure();
+        return path;
+    }
+
+    private static void ToolIconNew(Drawing.Graphics g, int x, int y, int size)
+    {
+        var width = Math.Max(2, Sc(2.4));
+        using var pen = new Drawing.Pen(Drawing.Color.FromArgb(255, 239, 231, 255), width)
+        {
+            StartCap = Drawing2D.LineCap.Round,
+            EndCap = Drawing2D.LineCap.Round,
         };
-        Polygon(hdc, a, a.Length);
-        Polygon(hdc, b, b.Length);
-        SelectObject(hdc, old);
-        DeleteObject(brush);
+        g.DrawLine(pen, x + Sc(3), y + Sc(15), x + Sc(15), y + Sc(3));
+        g.DrawLine(pen, x + Sc(3), y + Sc(3), x + Sc(15), y + Sc(15));
+        using var gold = new Drawing.Pen(Drawing.Color.FromArgb(255, 247, 188, 55), Math.Max(1, Sc(1.4)));
+        g.DrawLine(gold, x + Sc(5), y + Sc(13), x + Sc(8), y + Sc(16));
+        g.DrawLine(gold, x + Sc(5), y + Sc(5), x + Sc(8), y + Sc(2));
     }
 
     private static uint Blend(uint a, uint b, double t)
