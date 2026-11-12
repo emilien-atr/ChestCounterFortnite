@@ -76,6 +76,7 @@ internal sealed class AppWindow : Form
     private bool _healthWarned;
     private DateTime _nextHealthCheck = DateTime.MinValue;
     private DateTime _nextUpdateCheck = DateTime.UtcNow.AddSeconds(10);
+    private DateTime _nextDiscordUpdate = DateTime.MinValue;
     private bool _checkingUpdate;
 
     private FileSystemWatcher? _watcher;
@@ -195,6 +196,8 @@ internal sealed class AppWindow : Form
             StartOverlay();
         }
         _timer.Start();
+        DiscordPresence.Start();
+        UpdateDiscordPresence(force: true);
         AppendActivity(L.T("Prêt : les coffres sont comptés quelques secondes après chaque partie.",
             "Ready: chests are counted a few seconds after each match.",
             "Listo: los cofres se cuentan unos segundos después de cada partida."));
@@ -485,6 +488,7 @@ internal sealed class AppWindow : Form
                 tray = _config.MinimizeToTray,
                 openReport = _config.OpenReportOnStart,
                 withFortnite = _config.StartWithFortnite,
+                discordPresence = _config.DiscordPresence,
                 classic = counted.Classic + Math.Max(0, _config.HeadStartChests),
                 rare = counted.Rare + Math.Max(0, _config.HeadStartRareChests),
                 sprite = counted.Sprite + Math.Max(0, _config.HeadStartSpriteChests),
@@ -559,6 +563,7 @@ internal sealed class AppWindow : Form
         }
         _config.MinimizeToTray = GetBool(settings, "tray", _config.MinimizeToTray);
         _config.OpenReportOnStart = GetBool(settings, "openReport", _config.OpenReportOnStart);
+        _config.DiscordPresence = GetBool(settings, "discordPresence", _config.DiscordPresence);
 
         var demos = GetString(settings, "demos");
         if (!string.IsNullOrWhiteSpace(demos))
@@ -615,6 +620,8 @@ internal sealed class AppWindow : Form
             ErrorLog.Write("Rapport", ex);
         }
         ApplyOverlayAfterSettings();
+        _nextDiscordUpdate = DateTime.MinValue;
+        UpdateDiscordPresence(force: true);
         _nextScan = DateTime.UtcNow.AddSeconds(2);
         PushState(force: true);
         Post(new { type = "saved" });
@@ -737,6 +744,7 @@ internal sealed class AppWindow : Form
             RefreshHealth();
             RefreshState();
             UpdateOverlay(force: false);
+            UpdateDiscordPresence();
             AutoCloseCheck();
             _ = CheckForUpdateAsync();
         }
@@ -916,6 +924,30 @@ internal sealed class AppWindow : Form
         RefreshState();
     }
 
+    /// <summary>Shares the counter as a Discord activity when the Discord desktop client is running.</summary>
+    private void UpdateDiscordPresence(bool force = false)
+    {
+        if (!force && DateTime.UtcNow < _nextDiscordUpdate)
+        {
+            return;
+        }
+        _nextDiscordUpdate = DateTime.UtcNow.AddSeconds(10);
+
+        var matches = Profiles.View(_data, _config).Matches;
+        var total = matches.Sum(m => m.ChestsOpened) + HeadStart.Total(_config);
+        var session = matches.Where(ReportWriter.IsThisSession).Sum(m => m.ChestsOpened);
+        var inGame = FortniteWatch.IsFortniteRunning();
+        var details = inGame
+            ? "Fortnite"
+            : L.T("Compteur de coffres", "Chest counter", "Contador de cofres");
+        var state = total == 0
+            ? L.T("Aucun coffre compté pour l'instant", "No chest counted yet", "Ningún cofre contado todavía")
+            : L.T($"{L.N(total)} coffres au total · {L.N(session)} cette session",
+                  $"{L.N(total)} chests in total · {L.N(session)} this session",
+                  $"{L.N(total)} cofres en total · {L.N(session)} esta sesión");
+        DiscordPresence.Update(_config.DiscordPresence, details, state);
+    }
+
     private void UpdateOverlay(bool force)
     {
         if (!OperatingSystem.IsWindows() || !_config.ShowOverlay || !NativeOverlay.IsRunning)
@@ -1047,6 +1079,7 @@ internal sealed class AppWindow : Form
     {
         _closing = true;
         _timer.Stop();
+        DiscordPresence.Stop();
         _watcher?.Dispose();
         _tray.Visible = false;
         if (OperatingSystem.IsWindows())

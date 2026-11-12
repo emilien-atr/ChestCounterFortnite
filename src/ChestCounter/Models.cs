@@ -122,6 +122,9 @@ public sealed class Config
     /// <summary>Minimum delay between two readings of the replay in progress (seconds, 10 minimum).</summary>
     public int LiveIntervalSeconds { get; set; } = 30;
 
+    /// <summary>Show the counter as a Discord activity while the Discord desktop client is open.</summary>
+    public bool DiscordPresence { get; set; } = true;
+
     /// <summary>
     /// Chests already opened before the tool started counting (replays turned on late, for example), by kind:
     /// added to the total so that the counter shows the whole season, while the per-match figures stay exact.

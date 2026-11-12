@@ -21,10 +21,11 @@ Un overlay discret, un rapport clair et toutes tes données sur ton PC.
 - Compte les coffres à partir des **rediffusions Fortnite**, quelques secondes après chaque partie.
 - Ne prend en compte que les parties **à partir du 1er novembre 2026**.
 - Affiche un **HUD sur une ligne** ou une carte classique, avec le total, la dernière partie et les coffres cassés.
+- **Activité Discord** : si Discord desktop est ouvert, ton profil affiche le compteur avec le logo et un bouton GitHub.
 - Garde l’historique, les sessions et les trésors dans un **rapport web** local.
 - Français, anglais et espagnol.
 - **Mises à jour automatiques** depuis GitHub.
-- Aucun compte, aucune publicité, aucune donnée de jeu envoyée.
+- Aucun compte, aucune publicité, aucune donnée de jeu envoyée ; l'activité Discord est optionnelle et n'envoie que le total de coffres à Discord.
 
 ## Installation
 
@@ -87,6 +88,6 @@ dotnet publish src/ChestCounter/ChestCounter.csproj -c Release -r win-x64 --self
 
 ## Licence et crédits
 
-[MIT](LICENSE) © 2026 **Emilien Autran**. Projet indépendant inspiré de [LED-N/Fortnite-ChestCounter](https://github.com/LED-N/Fortnite-ChestCounter) (MIT), avec [FortniteReplayReader](https://github.com/Shiqan/FortniteReplayReader), OozSharp, Unreal.Core et la police Pirata One (SIL OFL).
+[MIT](LICENSE) © 2026 **Emilien Autran**. Projet indépendant inspiré de [LED-N/Fortnite-ChestCounter](https://github.com/LED-N/Fortnite-ChestCounter) (MIT), avec [FortniteReplayReader](https://github.com/Shiqan/FortniteReplayReader), OozSharp, Unreal.Core, [DiscordRichPresence](https://github.com/Lachee/discord-rpc-csharp) (MIT) et la police Pirata One (SIL OFL).
 
 Ce projet n’est ni affilié, ni approuvé, ni sponsorisé par Epic Games. Fortnite est une marque d’Epic Games, Inc.

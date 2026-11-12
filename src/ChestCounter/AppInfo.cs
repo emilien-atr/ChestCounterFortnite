@@ -9,6 +9,15 @@ public static class AppInfo
     /// <summary>GitHub project whose latest release is installed automatically.</summary>
     public const string UpdateRepo = "emilien-atr/ChestCounterFortnite";
 
+    /// <summary>Project page, also used by the Discord activity button.</summary>
+    public const string GitHubUrl = "https://github.com/" + UpdateRepo;
+
+    /// <summary>Logo shown in the Discord activity (Discord can load an external image URL).</summary>
+    public const string GitHubIconUrl = "https://raw.githubusercontent.com/" + UpdateRepo + "/main/docs/icon.png";
+
+    /// <summary>Discord application used for Rich Presence. It is a public identifier, not a secret.</summary>
+    public const string DiscordClientId = "1570229470403756103";
+
     /// <summary>Who made this build. Replay reading is based on LED-N's open-source project (MIT licence).</summary>
     public const string Author = "Emilien";
 
