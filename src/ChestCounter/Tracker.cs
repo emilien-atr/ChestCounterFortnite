@@ -339,7 +339,7 @@ public sealed class Tracker
         Console.ResetColor();
         Console.Write(L.T(" : ", ": ", ": "));
         Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.Write($"{L.Count(matches.Count, "partie", "parties", "match", "matches", "partida", "partidas")}, {L.Count(matches.Sum(m => m.ChestsOpened), "coffre", "chest", "cofre")}");
+        Console.Write($"{L.Count(matches.Count, "partie", "parties", "match", "matches", "partida", "partidas")}, {L.Count(matches.Sum(m => m.TotalChests), "coffre", "chest", "cofre")}");
         var treasures = matches.Sum(m => m.TreasureFinds.Count);
         if (treasures > 0)
         {
@@ -505,11 +505,11 @@ public sealed class Tracker
 
         var before = LiveMatch;
         LiveMatch = record;
-        var changed = before?.ChestsOpened != LiveMatch?.ChestsOpened || before?.TreasureFinds.Count != LiveMatch?.TreasureFinds.Count || (before == null) != (LiveMatch == null);
+        var changed = before?.TotalChests != LiveMatch?.TotalChests || before?.TreasureFinds.Count != LiveMatch?.TreasureFinds.Count || (before == null) != (LiveMatch == null);
         if (changed && LiveMatch != null)
         {
             Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {L.T("Partie en cours", "Match in progress", "Partida en curso")}: {L.Count(LiveMatch.ChestsOpened, "coffre", "chest", "cofre")}"
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {L.T("Partie en cours", "Match in progress", "Partida en curso")}: {L.Count(LiveMatch.TotalChests, "coffre", "chest", "cofre")}"
                 + (LiveMatch.TreasureFinds.Count > 0 ? $", {L.Count(LiveMatch.TreasureFinds.Count, "trésor", "treasure", "tesoro")}" : ""));
             Console.ResetColor();
         }
@@ -539,7 +539,7 @@ public sealed class Tracker
 
     private void PrintMatch(MatchRecord m, bool updated)
     {
-        var total = _data.Matches.Where(x => Profiles.Key(x) == Profiles.Key(m)).Sum(x => x.ChestsOpened) + HeadStart.Total(_config);
+        var total = _data.Matches.Where(x => Profiles.Key(x) == Profiles.Key(m)).Sum(x => x.TotalChests) + HeadStart.Total(_config);
         var when = (m.MatchStartUtc ?? m.AnalyzedAtUtc).ToLocalTime();
 
         Console.ForegroundColor = ConsoleColor.Green;
@@ -548,7 +548,7 @@ public sealed class Tracker
         Console.Write($" ({Pretty.Playlist(m.Playlist)}, {Pretty.Placement(m)}){L.T(" : ", ": ", ": ")}");
         Console.ForegroundColor = ConsoleColor.Yellow;
         var destroyed = m.Chests.Count(c => c.Destroyed);
-        Console.Write(L.Count(m.ChestsOpened, "coffre", "chest", "cofre")
+        Console.Write(L.Count(m.TotalChests, "coffre", "chest", "cofre")
             + (destroyed > 0 ? L.T($" (dont {L.Count(destroyed, "détruit", "", "")})", $" ({destroyed} destroyed)", $" ({L.Count(destroyed, "", "", "destruido")})") : ""));
         Console.ResetColor();
         Console.WriteLine($"  →  total{L.T(" : ", ": ", ": ")}{L.N(total)}");
@@ -581,7 +581,7 @@ public sealed class Tracker
     {
         var profile = Profiles.Current(_data, _config);
         var matches = Profiles.View(_data, _config).Matches;
-        var chests = matches.Sum(m => m.ChestsOpened);
+        var chests = matches.Sum(m => m.TotalChests);
         var total = chests + HeadStart.Total(_config);
         var treasures = matches.Sum(m => m.TreasureFinds.Count);
         var sb = new StringBuilder();

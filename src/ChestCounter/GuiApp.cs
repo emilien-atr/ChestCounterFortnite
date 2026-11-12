@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Drawing;
+using System.Net;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -88,6 +90,7 @@ internal sealed class AppWindow : Form
     private DateTime _nextScan = DateTime.UtcNow.AddSeconds(2);
     private DateTime _lastLive = DateTime.MinValue;
     private string _overlaySignature = "";
+    private string? _broadcastUrl;
     private bool _closing;
     private bool _sawFortnite;
     private DateTime? _fortniteClosedAt;
@@ -196,6 +199,7 @@ internal sealed class AppWindow : Form
             Activate();
         }
         LocalizeTray();
+        _broadcastUrl = OverlayServer.Start(_store);
         if (_config.ShowOverlay)
         {
             StartOverlay();
@@ -327,6 +331,12 @@ internal sealed class AppWindow : Form
                 case "overlay":
                     ToggleOverlay();
                     break;
+                case "copyBroadcast":
+                    CopyBroadcastLink();
+                    break;
+                case "openBroadcast":
+                    OpenBroadcastLink();
+                    break;
                 case "lock":
                     if (OperatingSystem.IsWindows() && NativeOverlay.IsRunning)
                     {
@@ -418,8 +428,8 @@ internal sealed class AppWindow : Form
         var view = Profiles.View(_data, _config);
         var matches = view.Matches;
         var head = HeadStart.Total(_config);
-        var total = matches.Sum(m => m.ChestsOpened) + head;
-        var session = matches.Where(ReportWriter.IsThisSession).Sum(m => m.ChestsOpened);
+        var total = matches.Sum(m => m.TotalChests) + head;
+        var session = matches.Where(ReportWriter.IsThisSession).Sum(m => m.TotalChests);
         var last = matches.OrderByDescending(m => m.MatchStartUtc ?? m.AnalyzedAtUtc).FirstOrDefault();
         var current = Profiles.Current(_data, _config);
         var profiles = Profiles.List(_data);
@@ -458,7 +468,7 @@ internal sealed class AppWindow : Form
             {
                 total = L.N(total),
                 session = L.N(session),
-                last = last != null ? L.N(last.ChestsOpened) : "—",
+                last = last != null ? L.N(last.TotalChests) : "—",
                 head = head > 0 ? L.N(head) : "—",
             },
             status,
@@ -481,6 +491,11 @@ internal sealed class AppWindow : Form
                 running = OperatingSystem.IsWindows() && NativeOverlay.IsRunning,
                 visible = OperatingSystem.IsWindows() && NativeOverlay.IsVisible,
                 locked = OperatingSystem.IsWindows() && NativeOverlay.IsLocked,
+            },
+            broadcast = new
+            {
+                url = _broadcastUrl ?? "",
+                running = !string.IsNullOrEmpty(_broadcastUrl),
             },
             replay = new
             {
@@ -731,7 +746,7 @@ internal sealed class AppWindow : Form
     {
         try
         {
-            var total = Profiles.View(_data, _config).Matches.Sum(m => m.ChestsOpened) + HeadStart.Total(_config);
+            var total = Profiles.View(_data, _config).Matches.Sum(m => m.TotalChests) + HeadStart.Total(_config);
             _tray.Text = $"{AppInfo.Name} — {L.N(total)} {L.T("coffres", "chests", "cofres")}";
             PushState(force: false);
         }
@@ -986,8 +1001,8 @@ internal sealed class AppWindow : Form
         _nextDiscordUpdate = DateTime.UtcNow.AddSeconds(10);
 
         var matches = Profiles.View(_data, _config).Matches;
-        var total = matches.Sum(m => m.ChestsOpened) + HeadStart.Total(_config);
-        var session = matches.Where(ReportWriter.IsThisSession).Sum(m => m.ChestsOpened);
+        var total = matches.Sum(m => m.TotalChests) + HeadStart.Total(_config);
+        var session = matches.Where(ReportWriter.IsThisSession).Sum(m => m.TotalChests);
         var inGame = FortniteWatch.IsFortniteRunning();
         var details = inGame
             ? "Fortnite"
@@ -1231,6 +1246,43 @@ internal sealed class AppWindow : Form
         }
     }
 
+    private void CopyBroadcastLink()
+    {
+        if (string.IsNullOrWhiteSpace(_broadcastUrl))
+        {
+            Toast(L.T("Lien de diffusion indisponible : redémarre ChestCounterFortnite.", "Broadcast link unavailable: restart ChestCounterFortnite.", "Enlace de emisión no disponible: reinicia ChestCounterFortnite."), "error");
+            return;
+        }
+        try
+        {
+            Clipboard.SetText(_broadcastUrl);
+            Toast(L.T("Lien copié : colle-le dans une source navigateur OBS ou TikTok Live Studio.", "Link copied: paste it into an OBS or TikTok Live Studio browser source.", "Enlace copiado: pégalo en una fuente de navegador de OBS o TikTok Live Studio."), "ok");
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Broadcast link copy", ex);
+            Toast(L.T("Impossible de copier le lien.", "Could not copy the link.", "No se pudo copiar el enlace."), "error");
+        }
+    }
+
+    private void OpenBroadcastLink()
+    {
+        if (string.IsNullOrWhiteSpace(_broadcastUrl))
+        {
+            Toast(L.T("Lien de diffusion indisponible : redémarre ChestCounterFortnite.", "Broadcast link unavailable: restart ChestCounterFortnite.", "Enlace de emisión no disponible: reinicia ChestCounterFortnite."), "error");
+            return;
+        }
+        try
+        {
+            Process.Start(new ProcessStartInfo(_broadcastUrl) { UseShellExecute = true })?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Broadcast link open", ex);
+            Toast(L.T("Impossible d'ouvrir le lien de diffusion.", "Could not open the broadcast link.", "No se pudo abrir el enlace de emisión."), "error");
+        }
+    }
+
     private void RebuildWatcher()
     {
         _watcher?.Dispose();
@@ -1327,6 +1379,7 @@ internal sealed class AppWindow : Form
         DiscordPresence.Stop();
         _watcher?.Dispose();
         _tray.Visible = false;
+        OverlayServer.Stop();
         if (OperatingSystem.IsWindows())
         {
             NativeOverlay.Stop();
@@ -1418,4 +1471,208 @@ internal sealed class AppWindow : Form
         public int Top;
         public int Bottom;
     }
+}
+
+/// <summary>
+/// Minimal HTTP server for browser sources such as OBS and TikTok Live Studio. It listens only on the loopback
+/// interface and serves the overlay.html page that the counter already writes, so no URL ACL, admin rights or
+/// external hosting are needed. Kept beside the window code to avoid another source file.
+/// </summary>
+internal static class OverlayServer
+{
+    private static readonly object Gate = new();
+    private static readonly int[] CandidatePorts = { 8765, 8766, 8767, 8768, 8769, 8770, 8771, 8772, 8773, 8774, 8775 };
+    private static TcpListener? _listener;
+    private static CancellationTokenSource? _stopper;
+    private static string? _url;
+
+    public static string? Url
+    {
+        get
+        {
+            lock (Gate)
+            {
+                return _url;
+            }
+        }
+    }
+
+    /// <summary>Starts the loopback server and returns the URL to paste into a browser source.</summary>
+    public static string? Start(Store store)
+    {
+        lock (Gate)
+        {
+            if (_url != null)
+            {
+                return _url;
+            }
+
+            foreach (var port in CandidatePorts.Concat(new[] { 0 }))
+            {
+                var listener = TryListen(port);
+                if (listener == null)
+                {
+                    continue;
+                }
+
+                var actualPort = ((IPEndPoint)listener.LocalEndpoint).Port;
+                var stopper = new CancellationTokenSource();
+                _listener = listener;
+                _stopper = stopper;
+                _url = $"http://127.0.0.1:{actualPort}/overlay";
+                _ = Task.Run(() => AcceptLoopAsync(listener, store.OverlayPath, stopper.Token));
+                return _url;
+            }
+
+            ErrorLog.Write("Overlay server", new Exception("No loopback port could be opened for the browser source."));
+            return null;
+        }
+    }
+
+    public static void Stop()
+    {
+        lock (Gate)
+        {
+            var stopper = _stopper;
+            var listener = _listener;
+            _stopper = null;
+            _listener = null;
+            _url = null;
+
+            try { stopper?.Cancel(); } catch { /* best effort */ }
+            try { listener?.Stop(); } catch { /* best effort */ }
+        }
+    }
+
+    private static TcpListener? TryListen(int port)
+    {
+        var listener = new TcpListener(IPAddress.Loopback, port);
+        try
+        {
+            listener.Start();
+            return listener;
+        }
+        catch (SocketException)
+        {
+            try { listener.Stop(); } catch { /* best effort */ }
+            return null;
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write($"Overlay server: cannot listen on port {port}", ex);
+            try { listener.Stop(); } catch { /* best effort */ }
+            return null;
+        }
+    }
+
+    private static async Task AcceptLoopAsync(TcpListener listener, string overlayPath, CancellationToken token)
+    {
+        while (!token.IsCancellationRequested)
+        {
+            TcpClient client;
+            try
+            {
+                client = await listener.AcceptTcpClientAsync(token);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (ObjectDisposedException)
+            {
+                break;
+            }
+            catch (SocketException)
+            {
+                break;
+            }
+            _ = HandleAsync(client, overlayPath, token);
+        }
+    }
+
+    private static async Task HandleAsync(TcpClient client, string overlayPath, CancellationToken token)
+    {
+        using (client)
+        {
+            try
+            {
+                using var stream = client.GetStream();
+                var buffer = new byte[8192];
+                var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), token);
+                if (read == 0)
+                {
+                    return;
+                }
+
+                var request = Encoding.ASCII.GetString(buffer, 0, read);
+                var firstLine = request.Split("\r\n", 2, StringSplitOptions.None)[0];
+                var parts = firstLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2 || !string.Equals(parts[0], "GET", StringComparison.OrdinalIgnoreCase))
+                {
+                    await WriteResponseAsync(stream, 405, "Method Not Allowed", "text/plain; charset=utf-8",
+                        Encoding.UTF8.GetBytes("GET only"), token);
+                    return;
+                }
+
+                var path = parts[1].Split('?', 2)[0];
+                if (path == "/favicon.ico")
+                {
+                    await WriteResponseAsync(stream, 204, "No Content", "text/plain", Array.Empty<byte>(), token);
+                    return;
+                }
+                if (path is not ("/" or "/overlay" or "/overlay.html"))
+                {
+                    await WriteResponseAsync(stream, 404, "Not Found", "text/plain; charset=utf-8",
+                        Encoding.UTF8.GetBytes("Not found"), token);
+                    return;
+                }
+
+                byte[] body;
+                try
+                {
+                    body = await File.ReadAllBytesAsync(overlayPath, token);
+                }
+                catch
+                {
+                    body = Encoding.UTF8.GetBytes(FallbackPage);
+                }
+                await WriteResponseAsync(stream, 200, "OK", "text/html; charset=utf-8", body, token);
+            }
+            catch (OperationCanceledException)
+            {
+                // The application is closing or the server was stopped.
+            }
+            catch (Exception ex)
+            {
+                ErrorLog.Write("Overlay server request", ex);
+            }
+        }
+    }
+
+    private static async Task WriteResponseAsync(
+        NetworkStream stream, int status, string reason, string contentType, byte[] body, CancellationToken token)
+    {
+        var head = $"HTTP/1.1 {status} {reason}\r\n"
+            + $"Content-Type: {contentType}\r\n"
+            + $"Content-Length: {body.Length}\r\n"
+            + "Cache-Control: no-store, no-cache, must-revalidate\r\n"
+            + "Pragma: no-cache\r\n"
+            + "Connection: close\r\n\r\n";
+        var headBytes = Encoding.ASCII.GetBytes(head);
+        await stream.WriteAsync(headBytes.AsMemory(0, headBytes.Length), token);
+        if (body.Length > 0)
+        {
+            await stream.WriteAsync(body.AsMemory(0, body.Length), token);
+        }
+    }
+
+    private static string FallbackPage => $$"""
+        <!doctype html><html lang="{{L.Code}}"><head><meta charset="utf-8">
+        <meta http-equiv="refresh" content="2">
+        <title>{{L.T("Overlay coffres", "Chest overlay", "Overlay de cofres")}}</title>
+        <style>html,body{margin:0;background:transparent;color:#e2e2e8;font:500 16px/1.4 "Segoe UI",system-ui,sans-serif}
+        .box{display:inline-block;margin:8px;padding:14px 18px;border-radius:14px;background:rgba(18,18,22,.86);border:1px solid #3a3a42}
+        b{color:#f2b84b}</style></head><body><div class="box"><b>{{L.T("Overlay en préparation…", "Overlay is starting…", "Overlay en preparación…")}}</b>
+        <div>{{L.T("Garde ChestCounterFortnite ouvert.", "Keep ChestCounterFortnite open.", "Mantén ChestCounterFortnite abierto.")}}</div></div></body></html>
+        """;
 }

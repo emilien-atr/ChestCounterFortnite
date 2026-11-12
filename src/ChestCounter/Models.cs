@@ -65,6 +65,12 @@ public sealed class MatchRecord
     public int? TotalPlayers { get; set; }
     public int? Eliminations { get; set; }
     public int ChestsOpened { get; set; }
+    /// <summary>
+    /// Every chest recorded for the match, including the ones broken instead of opened. Older histories have no
+    /// chest detail list: they keep the saved <see cref="ChestsOpened"/> figure.
+    /// </summary>
+    [JsonIgnore]
+    public int TotalChests => Math.Max(ChestsOpened, Chests.Count);
     public int AmmoBoxesOpened { get; set; }
     public int OtherContainersOpened { get; set; }
     /// <summary>Non-chest interactions by kind (loot cannons, ammo boxes, food boxes...).</summary>
@@ -102,7 +108,7 @@ public sealed class Config
     /// <summary>Version whose "what's new" card the player dismissed with "OK, masquer les nouveautés".</summary>
     public string? NewsDismissed { get; set; }
 
-    /// <summary>Look of the overlay: "hud" (figures only, like the game's HUD) or "classic" (dark card).</summary>
+    /// <summary>Look of the overlay: "hud" (figures only, like the game's HUD) or "classic" (purple card).</summary>
     public string OverlayStyle { get; set; } = "hud";
     public int? OverlayX { get; set; }
     public int? OverlayY { get; set; }

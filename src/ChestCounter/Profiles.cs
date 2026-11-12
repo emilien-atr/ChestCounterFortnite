@@ -47,7 +47,7 @@ public static class Profiles
         {
             var latest = g.OrderByDescending(When).First();
             var name = g.OrderByDescending(When).Select(m => m.PlayerName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n));
-            return new Profile(g.Key, name ?? L.T("Compte inconnu", "Unknown account", "Cuenta desconocida"), g.Count(), g.Sum(m => m.ChestsOpened), When(latest));
+            return new Profile(g.Key, name ?? L.T("Compte inconnu", "Unknown account", "Cuenta desconocida"), g.Count(), g.Sum(m => m.TotalChests), When(latest));
         })
         .OrderByDescending(p => p.LastPlayed)
         .ToList();

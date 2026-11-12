@@ -16,7 +16,7 @@ public static class ReportSite
         var now = DateTimeOffset.Now;
         health ??= ReplayHealth.Inspect(config);
         var matches = data.Matches.OrderByDescending(When).ToList();
-        var counted = matches.Sum(m => m.ChestsOpened);
+        var counted = matches.Sum(m => m.TotalChests);
         var head = HeadStart.Total(config);
         var total = counted + head;
         var avg = matches.Count > 0 ? (double)counted / matches.Count : 0;
@@ -33,7 +33,7 @@ public static class ReportSite
             firstDay = lastDay.AddDays(-2000);
         }
 
-        var daily = matches.GroupBy(m => When(m).Date).ToDictionary(g => g.Key, g => g.Sum(m => m.ChestsOpened));
+        var daily = matches.GroupBy(m => When(m).Date).ToDictionary(g => g.Key, g => g.Sum(m => m.TotalChests));
         var series = new List<(string Date, int Count)>();
         for (var d = firstDay; d <= lastDay; d = d.AddDays(1))
         {
@@ -41,8 +41,8 @@ public static class ReportSite
         }
 
         var trendStart = lastDay.AddDays(-6);
-        var current7 = matches.Where(m => When(m).Date >= trendStart && When(m).Date <= lastDay).Sum(m => m.ChestsOpened);
-        var previous7 = matches.Where(m => When(m).Date >= trendStart.AddDays(-7) && When(m).Date < trendStart).Sum(m => m.ChestsOpened);
+        var current7 = matches.Where(m => When(m).Date >= trendStart && When(m).Date <= lastDay).Sum(m => m.TotalChests);
+        var previous7 = matches.Where(m => When(m).Date >= trendStart.AddDays(-7) && When(m).Date < trendStart).Sum(m => m.TotalChests);
         string trend;
         var trendClass = "";
         if (previous7 > 0)
@@ -147,7 +147,7 @@ public static class ReportSite
                         <div><span class="date-main">{DateLabel(When(m))}</span><span class="match-sub">{H(detail)}</span></div>
                       </div>
                     </td>
-                    <td class="count-cell">{N(m.ChestsOpened)}</td>
+                    <td class="count-cell">{N(m.TotalChests)}</td>
                   </tr>
                 """);
         }
@@ -173,7 +173,7 @@ public static class ReportSite
         SetRow(L.T("Dernier replay", "Last replay", "Última repetición"), H(health.LastReplayLabel));
         SetRow(L.T("Enregistrement Fortnite", "Fortnite recording", "Grabación de Fortnite"), H(health.Status));
         SetRow(L.T("Overlay", "Overlay", "Overlay"),
-            $"{L.T("Activé", "On", "Activado")} · {(config.OverlayStyle == "classic" ? L.T("Classique", "Classic", "Clásico") : "HUD")} · {config.OverlaySize} % · {config.OverlayOpacity} %");
+            $"{L.T("Activé", "On", "Activado")} · {(config.OverlayStyle == "classic" ? L.T("Carte violette", "Purple card", "Tarjeta violeta") : "HUD")} · {config.OverlaySize} % · {config.OverlayOpacity} %");
 
         var generatedDisplay = now.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture);
         var generatedLabel = L.T("Rapport généré le", "Report generated on", "Informe generado el") + " " + generatedDisplay;

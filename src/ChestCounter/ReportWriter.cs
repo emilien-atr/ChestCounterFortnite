@@ -279,16 +279,16 @@ public static class ReportWriter
     {
         var progress = Progress;
         var matches = data.Matches.OrderByDescending(When).ToList();
-        var countedChests = matches.Sum(m => m.ChestsOpened);
+        var countedChests = matches.Sum(m => m.TotalChests);
         // Chests opened before the tool started following the replays (set in the settings): added to the total, but
         // kept out of the per-match figures (average, best match, one treasure every N chests).
         var headStart = HeadStart.Total(config);
         var totalChests = countedChests + headStart;
         var avg = matches.Count > 0 ? (double)countedChests / matches.Count : 0;
-        var best = matches.Count > 0 ? matches.Max(m => m.ChestsOpened) : 0;
+        var best = matches.Count > 0 ? matches.Max(m => m.TotalChests) : 0;
         var treasures = matches.Sum(m => m.TreasureFinds.Count);
         var teamTreasures = matches.Sum(m => m.TeamTreasureFinds.Count);
-        var session = matches.Where(IsThisSession).Sum(m => m.ChestsOpened);
+        var session = matches.Where(IsThisSession).Sum(m => m.TotalChests);
         var player = matches.Select(m => m.PlayerName).FirstOrDefault(n => !string.IsNullOrEmpty(n)) ?? "";
         // Own treasures only: the team's are found with chests that are not counted here.
         var every = treasures > 0 ? (int)Math.Round((double)countedChests / treasures) : 0;
@@ -376,11 +376,11 @@ public static class ReportWriter
         // Last matches, one bar per match (the best one stands out): the chart always shows something, even after a
         // long break between two seasons.
         var chartMatches = matches.Take(20).OrderBy(When).ToList();
-        var max = Math.Max(1, chartMatches.Count > 0 ? chartMatches.Max(m => m.ChestsOpened) : 1);
-        var topMatch = chartMatches.MaxBy(m => m.ChestsOpened);
+        var max = Math.Max(1, chartMatches.Count > 0 ? chartMatches.Max(m => m.TotalChests) : 1);
+        var topMatch = chartMatches.MaxBy(m => m.TotalChests);
         string ChartDate(DateTime d) => d.ToString(L.T("dd/MM/yyyy", "d MMM yyyy", "dd/MM/yyyy"), Fr);
         var topText = topMatch != null
-            ? $"{L.T("meilleure partie", "best match", "mejor partida")} : {ChartDate(When(topMatch))} · {L.Count(topMatch.ChestsOpened, "coffre", "chest", "cofre")}"
+            ? $"{L.T("meilleure partie", "best match", "mejor partida")} : {ChartDate(When(topMatch))} · {L.Count(topMatch.TotalChests, "coffre", "chest", "cofre")}"
             : "";
         sb.Append($"""
             <section>
@@ -396,7 +396,7 @@ public static class ReportWriter
             sb.Append($"""<div class="bars">""");
             foreach (var m in chartMatches)
             {
-                var v = m.ChestsOpened;
+                var v = m.TotalChests;
                 var h = (int)Math.Round(100.0 * v / max);
                 var tip = $"{When(m).ToString(L.T("ddd dd/MM", "ddd d MMM", "ddd dd/MM"), Fr)}{L.T(" : ", ": ", ": ")}{L.Count(v, "coffre", "chest", "cofre")}";
                 var cls = v == 0 ? " zero" : v == max ? " top" : "";
@@ -510,7 +510,7 @@ public static class ReportWriter
             var treasure = string.Join("<br>", m.TreasureFinds.Select(f => $"<span class=\"{(f.FromGoldenChest ? "gold" : "star")}\">{(f.FromGoldenChest ? "★★" : "★")} {H(f.DisplayName)}</span>"))
                 + string.Concat(m.TeamTreasureFinds.Select((f, i) => $"<span class=\"team\">{(i == 0 && m.TreasureFinds.Count == 0 ? "" : "<br>")}{TeamIcon} ★ {H(f.DisplayName)}</span>"));
             var win = m.Placement == 1;
-            sb.Append($"<tr><td class=\"nw num items\">{L.DateTimeShort(When(m))}</td><td>{H(Pretty.Playlist(m.Playlist))}</td><td class=\"nw num{(win ? " win" : "")}\">{H(Pretty.Placement(m))}</td><td class=\"n num big\">{m.ChestsOpened}</td><td class=\"items\">{treasure}</td></tr>");
+            sb.Append($"<tr><td class=\"nw num items\">{L.DateTimeShort(When(m))}</td><td>{H(Pretty.Playlist(m.Playlist))}</td><td class=\"nw num{(win ? " win" : "")}\">{H(Pretty.Placement(m))}</td><td class=\"n num big\">{m.TotalChests}</td><td class=\"items\">{treasure}</td></tr>");
         }
         sb.Append("</table></div></section>");
 
@@ -563,36 +563,66 @@ public static class ReportWriter
 
     public static string Overlay(OverlayView v)
     {
-        var rows = new StringBuilder();
+        var rowsHtml = new StringBuilder();
         foreach (var r in v.Rows)
         {
-            rows.Append($"<div class=\"row{(r.Treasure ? " t" : "")}\"><span>{H(r.Label)}</span><b>{H(r.Value)}{(r.Detail != null ? $" <small>{H(r.Detail)}</small>" : "")}</b></div>");
+            var rowClass = r.Treasure ? "detail treasure" : "detail";
+            rowsHtml.Append($"""
+                <div class="{rowClass}">
+                  <span class="tools" aria-hidden="true">⚒</span>
+                  <span class="detail-label">{H(r.Label)}</span>
+                  <b>{H(r.Value)}</b>
+                  {(r.Detail != null ? $"<small>{H(r.Detail)}</small>" : "")}
+                </div>
+                """);
         }
+        var badgeHtml = v.Badge != null ? $"<span class=\"live\">{H(v.Badge)}</span>" : "";
         return $$"""
-            <!doctype html><html lang="{{L.Code}}"><head><meta charset="utf-8"><meta http-equiv="refresh" content="10">
+            <!doctype html><html lang="{{L.Code}}"><head><meta charset="utf-8"><meta http-equiv="refresh" content="2">
             <title>{{L.T("Overlay coffres", "Chest overlay", "Overlay de cofres")}}</title>
             <style>
-            html,body{margin:0;background:transparent;color:#e2e2e8;font:500 16px/1.3 "Segoe UI",system-ui,sans-serif}
-            .box{display:inline-block;min-width:260px;padding:14px 18px 12px;border-radius:16px;background:rgba(18,18,22,.86);border:1px solid #3a3a42;text-shadow:0 1px 3px rgba(0,0,0,.6)}
-            .head{display:flex;justify-content:space-between;gap:16px;font:700 12px "Segoe UI",sans-serif;letter-spacing:.08em;color:#9696a2}
-            .live{color:#60d680}
-            .counters{display:flex;align-items:stretch;gap:18px;margin:4px 0 10px}
-            .counters>div{display:flex;flex-direction:column}
-            .sep{width:1px;background:#2c2c34;margin:8px 0 2px}
-            .big{font-size:40px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
-            .total{color:#f2b84b}.cur{color:#6ee096}.none{color:#50505c}
-            .cap{font-size:11px;font-weight:600;color:#82828e}
-            .rows{border-top:1px solid #2c2c34;padding-top:8px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
-            .row{display:contents}.row span{font-size:13px;font-weight:600;color:#82828e}.row b{font-weight:500}
-            .row.t b{color:#c4a0ff}.row small{font-size:11px;font-weight:600;color:#82828e}
-            </style></head><body><div class="box">
-            <div class="head"><span>{{L.T("COFFRES", "CHESTS", "COFRES")}}</span>{{(v.Badge != null ? $"<span class=\"live\">{H(v.Badge)}</span>" : "")}}</div>
-            <div class="counters">
-              <div><span class="big total">{{H(v.Total)}}</span><span class="cap">total</span></div>
-              <div class="sep"></div>
-              <div><span class="big {{(v.Current == null ? "none" : v.CurrentLive ? "cur" : "")}}">{{H(v.Current ?? "—")}}</span><span class="cap">{{H(v.CurrentCaption)}}</span></div>
-            </div>
-            {{(v.Rows.Count > 0 ? $"<div class=\"rows\">{rows}</div>" : "")}}
+            *{box-sizing:border-box}html,body{margin:0;background:transparent;color:#f4efff;font:500 15px/1.25 "Segoe UI",system-ui,sans-serif}
+            body{padding:10px}
+            .overlay{position:relative;display:inline-flex;align-items:flex-end;filter:drop-shadow(0 13px 20px rgba(0,0,0,.55))}
+            .chest{position:relative;z-index:2;width:124px;height:108px;flex:none;margin-right:-32px;margin-bottom:-3px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
+            .plate{position:relative;z-index:1;padding:2px;clip-path:polygon(7% 0,95% 0,100% 20%,100% 80%,95% 100%,5% 100%,0 80%,0 20%);background:linear-gradient(135deg,#b18cff,#6d28d9 30%,#4c1d95 65%,#a78bfa)}
+            .inner{clip-path:polygon(7% 0,95% 0,100% 20%,100% 80%,95% 100%,5% 100%,0 80%,0 20%);padding:13px 18px 11px 48px;min-width:300px;background:radial-gradient(420px 160px at 8% 10%,rgba(139,92,246,.25),transparent 70%),linear-gradient(180deg,#2b125a,#140624 82%)}
+            .head{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:19px}
+            .title{font-size:15px;font-weight:800;letter-spacing:.02em;color:#fbf7ff;text-shadow:0 1px 2px #10051e}
+            .live{font-size:11px;font-weight:700;color:#6ee7a0;white-space:nowrap}
+            .figures{display:flex;align-items:stretch;gap:17px;margin-top:2px}
+            .stat{display:flex;flex-direction:column;min-width:0}
+            .stat b{font:800 50px/1.05 "Segoe UI",system-ui,sans-serif;letter-spacing:-.03em;font-variant-numeric:tabular-nums;text-shadow:0 2px 5px rgba(0,0,0,.35)}
+            .total b{color:#ffc943}.last b{color:#fff}
+            .stat span{margin-top:1px;font-size:12px;font-weight:600;color:#baa8d6;white-space:nowrap}
+            .rule{width:1px;align-self:stretch;margin:5px 0 1px;background:rgba(207,183,255,.38)}
+            .detail{display:flex;align-items:center;gap:7px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(167,139,250,.28);color:#d8c7f2;font-size:13px;font-weight:600}
+            .detail .tools{color:#ffc943;font-size:17px;line-height:1}
+            .detail b{margin-left:2px;color:#fff8e1;font-size:14px;font-weight:700}
+            .detail small{color:#baa8d6;font-size:11px;font-weight:600}
+            .detail.treasure b{color:#d8b4fe}
+            </style></head><body><div class="overlay">
+            <svg class="chest" viewBox="0 0 140 120" aria-hidden="true">
+              <defs><linearGradient id="lid" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9b6bff"/><stop offset=".55" stop-color="#6527c7"/><stop offset="1" stop-color="#3b1580"/></linearGradient><linearGradient id="body" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#3b1580"/></linearGradient></defs>
+              <ellipse cx="70" cy="108" rx="53" ry="9" fill="#0b0418" opacity=".75"/>
+              <path d="M16 52V40C16 22 32 10 50 10h40c18 0 34 12 34 30v12Z" fill="url(#lid)" stroke="#16062c" stroke-width="4" stroke-linejoin="round"/>
+              <path d="M21 56h98v42c0 8-6 14-14 14H35c-8 0-14-6-14-14Z" fill="url(#body)" stroke="#16062c" stroke-width="4" stroke-linejoin="round"/>
+              <path d="M21 54h98v12H21Z" fill="#f6b93b" stroke="#16062c" stroke-width="3"/>
+              <path d="M39 17h12v84H39ZM89 17h12v84H89Z" fill="#f6b93b" stroke="#16062c" stroke-width="3"/>
+              <path d="M25 58h90" stroke="#ffd875" stroke-width="2" opacity=".7"/>
+              <rect x="57" y="54" width="26" height="29" rx="5" fill="#ffd15c" stroke="#16062c" stroke-width="3"/>
+              <circle cx="70" cy="65" r="4" fill="#291044"/><path d="M70 68v7" stroke="#291044" stroke-width="3" stroke-linecap="round"/>
+              <path d="M34 25c9-8 22-11 38-11" fill="none" stroke="#e6d4ff" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+            </svg>
+            <div class="plate"><div class="inner">
+              <div class="head"><span class="title">{{L.T("COFFRES", "CHESTS", "COFRES")}}</span>{{badgeHtml}}</div>
+              <div class="figures">
+                <div class="stat total"><b>{{H(v.Total)}}</b><span>{{L.T("total", "total", "total")}}</span></div>
+                <div class="rule"></div>
+                <div class="stat last"><b>{{H(v.Current ?? "—")}}</b><span>{{H(v.CurrentCaption)}}</span></div>
+              </div>
+              {{(rowsHtml.Length > 0 ? rowsHtml.ToString() : "")}}
+            </div></div>
             </div></body></html>
             """;
     }
@@ -608,7 +638,7 @@ public static class ReportWriter
             sb.AppendLine(string.Join(";",
                 When(m).ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
                 Pretty.Playlist(m.Playlist), m.PlayerName, m.Placement, m.TotalPlayers,
-                m.ChestsOpened, m.AmmoBoxesOpened, t, m.ReplayFile));
+                m.TotalChests, m.AmmoBoxesOpened, t, m.ReplayFile));
         }
         return sb.ToString();
     }

@@ -1,15 +1,21 @@
 **Français**
-- **HUD animé** : le total des coffres progresse en douceur, un petit « +1 » doré apparaît et la pastille live respire au rythme de la partie. Les animations restent sobres et s'arrêtent dès que l'overlay est masqué.
+- **Lien de diffusion** : un nouveau lien local est disponible dans **Réglages → OBS / TikTok Live Studio**. Colle-le dans une source navigateur pour afficher le compteur dans ton live, sans compte ni réglage réseau. La page se rafraîchit toutes les 2 secondes.
+- **Carte violette** : l’overlay en jeu reprend le style illustré de la photo, avec un grand coffre, le total en or, la dernière partie et la ligne « dont cassés ».
+- **Total complet** : le nombre affiché additionne désormais tous les coffres enregistrés, y compris ceux qui ont été cassés au lieu d’être ouverts.
 
 ---
 
 **English**
-- **Animated HUD**: the chest total counts up smoothly, a small gold "+1" appears, and the live dot breathes with the match. Motion stays subtle and stops as soon as the overlay is hidden.
+- **Broadcast link**: a new local link is available in **Settings → OBS / TikTok Live Studio**. Paste it into a browser source to show the counter in your live stream, with no account or network setup. The page refreshes every 2 seconds.
+- **Purple card**: the in-game overlay now uses the illustrated look, with a large chest, the gold total, the last match and the “incl. destroyed” line.
+- **Complete total**: the displayed number now adds every recorded chest, including chests that were destroyed instead of opened.
 
 ---
 
 **Español**
-- **HUD animado**: el total de cofres sube suavemente, aparece un pequeño «+1» dorado y el punto live respira al ritmo de la partida. El movimiento es discreto y se detiene al ocultar el overlay.
+- **Enlace de emisión**: hay un nuevo enlace local en **Ajustes → OBS / TikTok Live Studio**. Pégalo en una fuente de navegador para mostrar el contador en tu directo, sin cuenta ni configuración de red. La página se actualiza cada 2 segundos.
+- **Tarjeta violeta**: el overlay del juego usa ahora el estilo ilustrado, con un cofre grande, el total en dorado, la última partida y la línea «incl. destruidos».
+- **Total completo**: la cifra mostrada suma ahora todos los cofres registrados, incluidos los que se destruyeron en lugar de abrirse.
 
 ---
 

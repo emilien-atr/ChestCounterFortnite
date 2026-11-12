@@ -20,7 +20,8 @@ Un overlay discret, un rapport clair et toutes tes données sur ton PC.
 
 - Compte les coffres à partir des **rediffusions Fortnite**, quelques secondes après chaque partie.
 - Ne prend en compte que les parties **à partir du 1er novembre 2026**.
-- Affiche un **HUD sur une ligne** ou une carte classique, avec le total, la dernière partie et les coffres cassés.
+- Affiche un **HUD sur une ligne** ou la **carte violette illustrée**, avec le total, la dernière partie et les coffres cassés.
+- Fournit un **lien de source navigateur** pour afficher le compteur dans OBS ou TikTok Live Studio.
 - **Activité Discord** : si Discord desktop est ouvert, ton profil affiche le compteur avec le logo et un bouton GitHub.
 - Garde l’historique, les sessions et les trésors dans un **rapport web** local.
 - Français, anglais et espagnol.
@@ -43,10 +44,14 @@ Une version antérieure à la 1.2 (sans updater) doit être remplacée **une seu
 
 Seules les parties **commencées le 1er novembre 2026 ou après** sont comptées et affichées dans le compteur, l’overlay et le rapport. Les replays plus anciens restent dans `data.json` mais ne participent plus aux statistiques.
 
+## Calcul des coffres
+
+Le total additionne **tous les coffres trouvés dans les replays** : coffres classiques, rares, enterrés, coffres d’esprit, coffres des affiches et autres coffres. Les coffres **cassés au lieu d’être ouverts** sont inclus, et la ligne **« dont cassés »** indique leur part dans le total. Les caisses de munitions, caisses de nourriture et autres conteneurs restent suivis séparément dans le rapport.
+
 ## Interface
 
 - **Accueil** : total, session, dernière partie, profil et actions rapides (rapport, overlay, verrouillage).
-- **Réglages** : langue, overlay, dossier des replays, totaux de saison et comportement.
+- **Réglages** : langue, overlay, lien OBS/TikTok Live Studio, dossier des replays, totaux de saison et comportement.
 - **Aide** : rappels, raccourcis et dossier de données.
 
 Le rapport s’ouvre dans le navigateur et se met à jour automatiquement pendant l’analyse.
@@ -60,12 +65,22 @@ Le rapport s’ouvre dans le navigateur et se met à jour automatiquement pendan
 
 ## Overlay
 
-<img src="docs/overlay-fr.png" alt="Overlay classique et HUD sur une ligne" width="360">
+<img src="docs/overlay-fr.png" alt="Carte violette et HUD sur une ligne" width="360">
 
 - **HUD** : une seule ligne, dans l’esprit du HUD Fortnite. Idéal sous la minimap.
-- **Classique** : une carte compacte avec le coffre doré.
+- **Carte violette** : la carte illustrée avec un grand coffre, le total en or, la dernière partie et la ligne « dont cassés ». Le même rendu est utilisé pour la source navigateur OBS/TikTok.
 
 La taille se règle de **50 à 175 %** et l’opacité de **30 à 100 %** dans **Réglages → Overlay en jeu**. Pour l’afficher au-dessus du jeu, utilise le mode **Plein écran fenêtré** de Fortnite.
+
+## OBS / TikTok Live Studio
+
+Pour afficher le compteur dans un live :
+
+1. Ouvre **Réglages → OBS / TikTok Live Studio** et clique sur **Copier le lien**.
+2. Dans OBS, ajoute une source **Navigateur** et colle le lien. Dans TikTok Live Studio, utilise sa source navigateur si ta version en propose une.
+3. Règle la taille de la source sur **1920 × 1080** (ou la taille de ton canvas) : le fond de la page est transparent.
+
+Le lien est servi uniquement sur ce PC, à l’adresse `127.0.0.1` affichée dans les réglages. Le compteur doit rester ouvert pendant le live ; aucun réglage réseau, compte ou hébergement externe n’est nécessaire. Le port peut changer si le port préféré est déjà occupé : utilise toujours le lien affiché dans l’application.
 
 ## Données
 
@@ -77,7 +92,7 @@ Tout reste sur le PC, dans `%APPDATA%\ChestCounterFortnite` :
 - `matches.csv` : parties exportables ;
 - `replay-archive/` : `replays.zip`, une archive ZIP unique contenant les replays déjà analysés déplacés depuis le dossier Fortnite (optionnel).
 
-Le compteur ne modifie jamais Fortnite et ne lit pas sa mémoire. Le seul accès réseau sert à vérifier et télécharger les mises à jour GitHub.
+Le compteur ne modifie jamais Fortnite et ne lit pas sa mémoire. Aucune donnée n’est envoyée sur Internet, hors vérification des mises à jour GitHub et activité Discord optionnelle. Le lien de diffusion est servi uniquement en local sur `127.0.0.1`.
 
 ## Compiler
 

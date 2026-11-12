@@ -769,16 +769,16 @@ List<(string Label, Action Run, string? About)> Items()
                 if (config.ShowOverlay)
                 {
                     string StyleName(string s) => s == "classic"
-                        ? L.T("classique (carte sombre)", "classic (dark card)", "clásico (tarjeta oscura)")
+                        ? L.T("carte violette", "purple card", "tarjeta violeta")
                         : L.T("HUD (intégré au jeu)", "HUD (blends into the game)", "HUD (integrado en el juego)");
                     list.Add(Item($"{L.T("Style de l'overlay", "Overlay style", "Estilo del overlay")} : {StyleName(config.OverlayStyle)}", () =>
                     {
                         var styles = NativeOverlay.Styles;
                         config.OverlayStyle = styles[(Array.IndexOf(styles, config.OverlayStyle) + 1) % styles.Length];
                         NativeOverlay.SetStyle(config.OverlayStyle);
-                    }, L.T("HUD : seuls les chiffres restent, sans fond, comme ceux du jeu (place-le sous la minimap ; un fond apparaît quand il est déverrouillé, pour le déplacer). Classique : la carte sombre des versions précédentes. Entrée pour changer, appliqué tout de suite.",
-                        "HUD: only the figures remain, with no background, like the game's (put it under the minimap; a background shows while it is unlocked, to move it). Classic: the dark card of earlier versions. Enter to switch, applied at once.",
-                        "HUD: solo quedan las cifras, sin fondo, como las del juego (ponlo bajo el minimapa; aparece un fondo al desbloquearlo, para moverlo). Clásico: la tarjeta oscura de versiones anteriores. Intro para cambiar, se aplica al instante.")));
+                    }, L.T("HUD : seuls les chiffres restent, sans fond, comme ceux du jeu (place-le sous la minimap ; un fond apparaît quand il est déverrouillé, pour le déplacer). Carte violette : la carte illustrée avec le grand coffre, le total et la dernière partie. Entrée pour changer, appliqué tout de suite.",
+                        "HUD: only the figures remain, with no background, like the game's (put it under the minimap; a background shows while it is unlocked, to move it). Purple card: the illustrated card with the large chest, the total and the last match. Enter to switch, applied at once.",
+                        "HUD: solo quedan las cifras, sin fondo, como las del juego (ponlo bajo el minimapa; aparece un fondo al desbloquearlo, para moverlo). Tarjeta violeta: la tarjeta ilustrada con el cofre grande, el total y la última partida. Intro para cambiar, se aplica al instante.")));
                     list.Add(Item($"{L.T("Taille de l'overlay", "Overlay size", "Tamaño del overlay")} : {Percent(config.OverlaySize)}", () =>
                     {
                         config.OverlaySize = OverlayAppearance.Next(OverlayAppearance.Sizes, config.OverlaySize);
@@ -944,7 +944,7 @@ void DrawHome(Frame f, int noteRoom)
     var matches = view.Matches;
     var profile = Profiles.Current(data, config);
     var profiles = Profiles.List(data);
-    var chests = matches.Sum(m => m.ChestsOpened);
+    var chests = matches.Sum(m => m.TotalChests);
     var headStart = HeadStart.Total(config);
     var totalChests = chests + headStart;
     var session = matches.Where(ReportWriter.IsThisSession).ToList();
@@ -954,8 +954,8 @@ void DrawHome(Frame f, int noteRoom)
     var cards = new (string Value, string Label, ConsoleColor Color)[]
     {
         (L.N(totalChests), L.T("Total", "Total", "Total"), ConsoleColor.Yellow),
-        (L.N(session.Sum(m => m.ChestsOpened)), L.T("Session", "Session", "Sesión"), ConsoleColor.Green),
-        (last != null ? L.N(last.ChestsOpened) : "—", L.T("Dernière", "Last", "Última"), ConsoleColor.White),
+        (L.N(session.Sum(m => m.TotalChests)), L.T("Session", "Session", "Sesión"), ConsoleColor.Green),
+        (last != null ? L.N(last.TotalChests) : "—", L.T("Dernière", "Last", "Última"), ConsoleColor.White),
         (headStart > 0 ? L.N(headStart) : "—", L.T("Départ", "Start", "Inicio"), ConsoleColor.DarkYellow),
     };
     var perRow = ConsoleUi.Width >= 84 ? 4 : 2;
@@ -996,7 +996,7 @@ void DrawHome(Frame f, int noteRoom)
         var live = tracker.LiveMatch;
         Info(L.T("État", "Status", "Estado"), new Seg("● " + L.T("Partie en cours", "Match in progress", "Partida en curso"), ConsoleColor.Red),
             new Seg(live != null
-                ? L.T($"  ·  {L.Count(live.ChestsOpened, "coffre", "chest", "cofre")} pour l'instant", $"  ·  {L.Count(live.ChestsOpened, "coffre", "chest", "cofre")} so far", $"  ·  {L.Count(live.ChestsOpened, "cofre", "chest", "cofre")} por ahora")
+                ? L.T($"  ·  {L.Count(live.TotalChests, "coffre", "chest", "cofre")} pour l'instant", $"  ·  {L.Count(live.TotalChests, "coffre", "chest", "cofre")} so far", $"  ·  {L.Count(live.TotalChests, "cofre", "chest", "cofre")} por ahora")
                 : L.T("  ·  comptés à la fin", "  ·  counted at the end", "  ·  se cuentan al final"), ConsoleColor.Gray));
     }
     else if (tracker.IsFinishing || tracker.HasPending)
