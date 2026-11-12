@@ -9,8 +9,8 @@ public sealed class Tracker
 {
     private static readonly TimeSpan QuietPeriod = TimeSpan.FromSeconds(10);
 
-    /// <summary>Replay finalized by Fortnite (no longer live, real key written): only a few quiet seconds are needed.</summary>
-    private static readonly TimeSpan FinalizedQuietPeriod = TimeSpan.FromSeconds(4);
+    /// <summary>Replay finalized by Fortnite (no longer live, real key written): one quiet second is enough.</summary>
+    private static readonly TimeSpan FinalizedQuietPeriod = TimeSpan.FromSeconds(1);
 
     /// <summary>A finished replay not modified for this long is complete for sure (replays left from earlier).</summary>
     private static readonly TimeSpan OldReplayAge = TimeSpan.FromMinutes(1);
@@ -435,6 +435,15 @@ public sealed class Tracker
     /// </summary>
     public bool UpdateLive()
     {
+        // Fortnite just wrote the key and cleared the live flag: stop waiting and let the scan read it now.
+        if (_liveFile != null
+            && ReplayHeaderProbe.IsLive(_liveFile) == false
+            && !ReplayHeaderProbe.KeyMissing(_liveFile))
+        {
+            IsFinishing = true;
+            return true;
+        }
+
         // The newest replay still flagged "live" and written recently (an old one left by a crash is ignored).
         var file = UnprocessedFiles()
             .Where(f => DateTime.UtcNow - f.LastWriteTimeUtc < TimeSpan.FromMinutes(3))

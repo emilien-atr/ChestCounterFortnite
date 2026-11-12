@@ -718,12 +718,21 @@ internal sealed class AppWindow : Form
                 {
                     ReportWriter.WriteAll(_store, _config, _data);
                 }
-                _nextScan = DateTime.UtcNow.AddSeconds(_tracker.IsFinishing ? 2 : _tracker.HasPending ? 15 : 10);
+                _nextScan = DateTime.UtcNow.AddSeconds(_tracker.IsFinishing ? 1 : _tracker.HasPending ? 15 : 10);
             }
             else if ((DateTime.UtcNow - _lastLive).TotalSeconds >= 2)
             {
                 _tracker.UpdateLive();
                 _lastLive = DateTime.UtcNow;
+            }
+            // The replay was just finalized: read it on the next tick instead of waiting for the 10 s scan.
+            if (_tracker.IsFinishing)
+            {
+                var soon = DateTime.UtcNow.AddSeconds(1);
+                if (soon < _nextScan)
+                {
+                    _nextScan = soon;
+                }
             }
             RefreshHealth();
             RefreshState();
