@@ -1056,7 +1056,8 @@ internal sealed class AppWindow : Form
             return;
         }
         _nextReplayMaintenance = DateTime.UtcNow.AddMinutes(10);
-        if (!_config.ReplayArchiveEnabled && _config.ReplayArchiveRetentionDays <= 0)
+        if (!_config.ReplayArchiveEnabled && _config.ReplayArchiveRetentionDays <= 0
+            && !ReplayMaintenance.HasUncompressedArchive(_store))
         {
             return;
         }
@@ -1075,22 +1076,30 @@ internal sealed class AppWindow : Form
         {
             var result = await Task.Run(() =>
             {
+                var compressed = ReplayMaintenance.CompressArchive(_store);
                 var archived = ReplayMaintenance.ArchiveFiles(_store, archivePlan.Files);
                 var deleted = retention > 0
                     ? ReplayMaintenance.DeleteExpired(_store, retention)
                     : new ReplayMaintenanceResult(0, 0, 0, 0, 0);
                 return new ReplayMaintenanceResult(archived.Archived, archived.ArchivedBytes,
-                    deleted.Deleted, deleted.DeletedBytes, archived.Failed + deleted.Failed);
+                    deleted.Deleted, deleted.DeletedBytes,
+                    compressed.Failed + archived.Failed + deleted.Failed,
+                    compressed.Compressed, compressed.CompressedBytes);
             });
             if (!result.Changed)
             {
                 return;
             }
             RefreshReplayStorage(force: true);
+            if (result.Compressed > 0)
+            {
+                var compressed = L.Count(result.Compressed, "replay archivé", "replays archivés", "archived replay", "archived replays", "repetición archivada", "repeticiones archivadas");
+                AppendActivity(L.T($"{compressed} compressé(s) en ZIP ({L.Size(result.CompressedBytes)}).", $"{compressed} compressed to ZIP ({L.Size(result.CompressedBytes)}).", $"{compressed} comprimida(s) en ZIP ({L.Size(result.CompressedBytes)})."));
+            }
             if (result.Archived > 0)
             {
                 var moved = L.Count(result.Archived, "replay analysé", "replays analysés", "analyzed replay", "analyzed replays", "repetición analizada", "repeticiones analizadas");
-                AppendActivity(L.T($"{moved} déplacé(s) dans l'archive.", $"{moved} moved to the archive.", $"{moved} movida(s) al archivo."));
+                AppendActivity(L.T($"{moved} archivé(s) en ZIP.", $"{moved} archived as ZIP.", $"{moved} archivada(s) en ZIP."));
             }
             if (result.Deleted > 0)
             {
@@ -1125,9 +1134,9 @@ internal sealed class AppWindow : Form
 
         var count = L.Count(plan.Count, "replay analysé", "replays analysés", "analyzed replay", "analyzed replays", "repetición analizada", "repeticiones analizadas");
         var message = L.T(
-            $"Déplacer {count} ({L.Size(plan.Bytes)}) vers l'archive ?\n\nIls quitteront le dossier Fortnite mais resteront dans l'archive. Tu pourras les supprimer plus tard depuis les réglages.",
-            $"Move {count} ({L.Size(plan.Bytes)}) to the archive?\n\nThey will leave the Fortnite folder but stay in the archive. You can delete them later from the settings.",
-            $"¿Mover {count} ({L.Size(plan.Bytes)}) al archivo?\n\nSaldrán de la carpeta de Fortnite pero se quedarán en el archivo. Podrás eliminarlas más tarde desde los ajustes.");
+            $"Déplacer {count} ({L.Size(plan.Bytes)}) vers l'archive ZIP ?\n\nIls quitteront le dossier Fortnite et seront compressés en ZIP. Tu pourras les supprimer plus tard depuis les réglages.",
+            $"Move {count} ({L.Size(plan.Bytes)}) to the ZIP archive?\n\nThey will leave the Fortnite folder and be compressed to ZIP. You can delete them later from the settings.",
+            $"¿Mover {count} ({L.Size(plan.Bytes)}) al archivo ZIP?\n\nSaldrán de la carpeta de Fortnite y se comprimirán en ZIP. Podrás eliminarlas más tarde desde los ajustes.");
         if (MessageBox.Show(this, message, AppInfo.Name, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
         {
             return;
@@ -1136,13 +1145,20 @@ internal sealed class AppWindow : Form
         _replayBusy = true;
         try
         {
-            var result = await Task.Run(() => ReplayMaintenance.ArchiveFiles(_store, plan.Files));
+            var result = await Task.Run(() =>
+            {
+                var compressed = ReplayMaintenance.CompressArchive(_store);
+                var archived = ReplayMaintenance.ArchiveFiles(_store, plan.Files);
+                return new ReplayMaintenanceResult(archived.Archived, archived.ArchivedBytes,
+                    0, 0, compressed.Failed + archived.Failed,
+                    compressed.Compressed, compressed.CompressedBytes);
+            });
             RefreshReplayStorage(force: true);
             PushState(force: true);
             if (result.Archived > 0)
             {
                 var moved = L.Count(result.Archived, "replay", "replays", "replay", "replays", "repetición", "repeticiones");
-                Toast(L.T($"{moved} archivé(s) ({L.Size(result.ArchivedBytes)}).", $"{moved} archived ({L.Size(result.ArchivedBytes)}).", $"{moved} archivada(s) ({L.Size(result.ArchivedBytes)})."), result.Failed > 0 ? "error" : "ok");
+                Toast(L.T($"{moved} archivé(s) en ZIP ({L.Size(result.ArchivedBytes)}).", $"{moved} archived as ZIP ({L.Size(result.ArchivedBytes)}).", $"{moved} archivada(s) en ZIP ({L.Size(result.ArchivedBytes)})."), result.Failed > 0 ? "error" : "ok");
             }
             else
             {
@@ -1150,7 +1166,7 @@ internal sealed class AppWindow : Form
             }
             if (result.Failed > 0)
             {
-                ErrorLog.Write("Replay archive", new Exception($"{result.Failed} replay(s) could not be moved"));
+                ErrorLog.Write("Replay archive", new Exception($"{result.Failed} replay(s) could not be archived"));
             }
         }
         catch (Exception ex)

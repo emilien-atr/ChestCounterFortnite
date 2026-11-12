@@ -1,3 +1,5 @@
+using System.IO.Compression;
+
 namespace ChestCounter;
 
 /// <summary>Disk usage of the Fortnite replays folder and of the archive made by the counter.</summary>
@@ -9,15 +11,20 @@ public sealed record ReplayStorageStats(int FolderCount, long FolderBytes, int A
 /// <summary>What an archive action would move. The file list is captured on the UI thread before any background work.</summary>
 public sealed record ReplayArchivePlan(int Count, long Bytes, IReadOnlyList<FileInfo> Files);
 
-/// <summary>Outcome of an archive or cleanup pass.</summary>
-public sealed record ReplayMaintenanceResult(int Archived, long ArchivedBytes, int Deleted, long DeletedBytes, int Failed)
+/// <summary>Outcome of an archive, compression or cleanup pass.</summary>
+public sealed record ReplayMaintenanceResult(
+    int Archived, long ArchivedBytes,
+    int Deleted, long DeletedBytes,
+    int Failed,
+    int Compressed = 0, long CompressedBytes = 0)
 {
-    public bool Changed => Archived > 0 || Deleted > 0;
+    public bool Changed => Archived > 0 || Deleted > 0 || Compressed > 0;
 }
 
 /// <summary>
-/// Moves replays that have already been analyzed into a local archive. Only matches present in the history are
-/// touched, never a replay still being recorded, and deletion only ever happens inside the archive.
+/// Moves replays that have already been analyzed into a local archive, compressed as individual ZIP files. Only
+/// matches present in the history are touched, never a replay still being recorded, and deletion only ever happens
+/// inside the archive. Existing uncompressed archive entries from the first version are compressed automatically.
 /// </summary>
 public static class ReplayMaintenance
 {
@@ -26,26 +33,29 @@ public static class ReplayMaintenance
 
     public static int NormalizeRetention(int days) => RetentionDays.Contains(days) ? days : 0;
 
-    /// <summary>Counts and sizes of every .replay file in the Fortnite folder and in the archive.</summary>
+    /// <summary>Counts and sizes of every replay in the Fortnite folder and of every ZIP/legacy archive entry.</summary>
     public static ReplayStorageStats Inspect(Store store, Config config)
     {
-        var folder = Measure(config.DemosFolder);
-        var archive = Measure(store.ReplayArchivePath);
+        var folder = Measure(config.DemosFolder, "*.replay");
+        var archive = MeasureArchive(store.ReplayArchivePath);
         return new ReplayStorageStats(folder.Count, folder.Bytes, archive.Count, archive.Bytes);
     }
+
+    /// <summary>True when an earlier version left uncompressed replays in the archive.</summary>
+    public static bool HasUncompressedArchive(Store store) => Enumerate(store.ReplayArchivePath, "*.replay").Count > 0;
 
     /// <summary>Files that can be archived now: analyzed, not live, and still in the Fortnite folder.</summary>
     public static ReplayArchivePlan PlanArchive(Config config, TrackerData data)
     {
         var analyzed = AnalyzedNames(data);
-        var files = Enumerate(config.DemosFolder)
+        var files = Enumerate(config.DemosFolder, "*.replay")
             .Where(f => analyzed.Contains(f.Name))
             .Where(f => ReplayHeaderProbe.IsLive(f.FullName) != true)
             .ToList();
         return new ReplayArchivePlan(files.Count, files.Sum(SafeLength), files);
     }
 
-    /// <summary>Archived replays older than the given retention period. 0 keeps everything.</summary>
+    /// <summary>Archived ZIPs or legacy replays older than the given retention period. 0 keeps everything.</summary>
     public static ReplayArchivePlan PlanDelete(Store store, int days)
     {
         days = NormalizeRetention(days);
@@ -54,7 +64,7 @@ public static class ReplayMaintenance
             return new ReplayArchivePlan(0, 0, Array.Empty<FileInfo>());
         }
         var cutoff = DateTime.UtcNow.AddDays(-days);
-        var files = Enumerate(store.ReplayArchivePath)
+        var files = EnumerateArchive(store.ReplayArchivePath)
             .Where(f => ArchivedAt(f) <= cutoff)
             .ToList();
         return new ReplayArchivePlan(files.Count, files.Sum(SafeLength), files);
@@ -63,7 +73,7 @@ public static class ReplayMaintenance
     public static ReplayMaintenanceResult ArchiveAnalyzed(Store store, Config config, TrackerData data) =>
         ArchiveFiles(store, PlanArchive(config, data).Files);
 
-    /// <summary>Moves the files captured by <see cref="PlanArchive"/>; safe to run on a background thread.</summary>
+    /// <summary>Compresses the files captured by <see cref="PlanArchive"/>; safe to run on a background thread.</summary>
     public static ReplayMaintenanceResult ArchiveFiles(Store store, IReadOnlyList<FileInfo> files)
     {
         if (files.Count == 0)
@@ -86,14 +96,12 @@ public static class ReplayMaintenance
 
         foreach (var file in files)
         {
-            var length = SafeLength(file);
             try
             {
-                var destination = UniqueDestination(store.ReplayArchivePath, file.Name);
-                MoveFile(file.FullName, destination);
-                try { File.SetCreationTimeUtc(destination, DateTime.UtcNow); } catch { /* retention falls back to the last write time */ }
+                var destination = UniqueArchiveDestination(store.ReplayArchivePath, file.Name);
+                CompressReplay(file.FullName, destination, DateTime.UtcNow);
                 archived++;
-                bytes += length;
+                bytes += SafeLength(new FileInfo(destination));
             }
             catch (Exception ex)
             {
@@ -102,6 +110,31 @@ public static class ReplayMaintenance
             }
         }
         return new ReplayMaintenanceResult(archived, bytes, 0, 0, failed);
+    }
+
+    /// <summary>Compresses legacy .replay files already sitting in the archive folder, preserving their archive date.</summary>
+    public static ReplayMaintenanceResult CompressArchive(Store store)
+    {
+        var compressed = 0;
+        long bytes = 0;
+        var failed = 0;
+        foreach (var file in Enumerate(store.ReplayArchivePath, "*.replay"))
+        {
+            try
+            {
+                var createdAt = ArchivedAt(file);
+                var destination = UniqueArchiveDestination(store.ReplayArchivePath, file.Name);
+                CompressReplay(file.FullName, destination, createdAt);
+                compressed++;
+                bytes += SafeLength(new FileInfo(destination));
+            }
+            catch (Exception ex)
+            {
+                failed++;
+                ErrorLog.Write($"Replay archive: cannot compress {file.FullName}", ex);
+            }
+        }
+        return new ReplayMaintenanceResult(0, 0, 0, 0, failed, compressed, bytes);
     }
 
     public static ReplayMaintenanceResult DeleteExpired(Store store, int days)
@@ -115,7 +148,7 @@ public static class ReplayMaintenance
         var deleted = 0;
         long bytes = 0;
         var failed = 0;
-        foreach (var file in Enumerate(store.ReplayArchivePath))
+        foreach (var file in EnumerateArchive(store.ReplayArchivePath))
         {
             if (ArchivedAt(file) > cutoff)
             {
@@ -137,9 +170,10 @@ public static class ReplayMaintenance
         return new ReplayMaintenanceResult(0, 0, deleted, bytes, failed);
     }
 
-    /// <summary>Automatic pass: archive analyzed replays when enabled, then apply the retention period.</summary>
+    /// <summary>Automatic pass: compress legacy entries, archive analyzed replays when enabled, then apply retention.</summary>
     public static ReplayMaintenanceResult Maintain(Store store, Config config, TrackerData data)
     {
+        var compressed = CompressArchive(store);
         var archive = config.ReplayArchiveEnabled
             ? ArchiveAnalyzed(store, config, data)
             : new ReplayMaintenanceResult(0, 0, 0, 0, 0);
@@ -149,7 +183,8 @@ public static class ReplayMaintenance
         return new ReplayMaintenanceResult(
             archive.Archived, archive.ArchivedBytes,
             delete.Deleted, delete.DeletedBytes,
-            archive.Failed + delete.Failed);
+            compressed.Failed + archive.Failed + delete.Failed,
+            compressed.Compressed, compressed.CompressedBytes);
     }
 
     /// <summary>Replay names that belong to a match in the history (including skipped duplicates of a match).</summary>
@@ -184,13 +219,13 @@ public static class ReplayMaintenance
         return separator < 0 ? key : key[..separator];
     }
 
-    private static List<FileInfo> Enumerate(string folder)
+    private static List<FileInfo> Enumerate(string folder, string pattern)
     {
         try
         {
             var directory = new DirectoryInfo(folder);
             return directory.Exists
-                ? directory.EnumerateFiles("*.replay", SearchOption.TopDirectoryOnly).ToList()
+                ? directory.EnumerateFiles(pattern, SearchOption.TopDirectoryOnly).ToList()
                 : new List<FileInfo>();
         }
         catch (Exception ex)
@@ -200,9 +235,18 @@ public static class ReplayMaintenance
         }
     }
 
-    private static (int Count, long Bytes) Measure(string folder)
+    private static List<FileInfo> EnumerateArchive(string folder) =>
+        Enumerate(folder, "*.zip").Concat(Enumerate(folder, "*.replay")).ToList();
+
+    private static (int Count, long Bytes) Measure(string folder, string pattern)
     {
-        var files = Enumerate(folder);
+        var files = Enumerate(folder, pattern);
+        return (files.Count, files.Sum(SafeLength));
+    }
+
+    private static (int Count, long Bytes) MeasureArchive(string folder)
+    {
+        var files = EnumerateArchive(folder);
         return (files.Count, files.Sum(SafeLength));
     }
 
@@ -228,18 +272,18 @@ public static class ReplayMaintenance
         }
     }
 
-    private static string UniqueDestination(string archive, string name)
+    private static string UniqueArchiveDestination(string archive, string replayName)
     {
+        var name = replayName + ".zip";
         var destination = Path.Combine(archive, name);
         if (!File.Exists(destination))
         {
             return destination;
         }
         var stem = Path.GetFileNameWithoutExtension(name);
-        var extension = Path.GetExtension(name);
         for (var i = 2; ; i++)
         {
-            destination = Path.Combine(archive, $"{stem}-{i}{extension}");
+            destination = Path.Combine(archive, $"{stem}-{i}.zip");
             if (!File.Exists(destination))
             {
                 return destination;
@@ -247,17 +291,45 @@ public static class ReplayMaintenance
         }
     }
 
-    private static void MoveFile(string source, string destination)
+    /// <summary>
+    /// Writes a temporary ZIP next to its destination, then removes the original replay only once the ZIP exists.
+    /// A failed compression leaves the replay untouched.
+    /// </summary>
+    private static void CompressReplay(string source, string destination, DateTime archivedAt)
     {
+        var temporary = destination + ".tmp";
         try
         {
-            File.Move(source, destination);
+            using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            using (var zip = new ZipArchive(output, ZipArchiveMode.Create))
+            {
+                var entry = zip.CreateEntry(Path.GetFileName(source), CompressionLevel.SmallestSize);
+                entry.LastWriteTime = DateTimeOffset.Now;
+                using var input = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                using var target = entry.Open();
+                input.CopyTo(target);
+            }
+            File.Move(temporary, destination);
+            try { File.SetCreationTimeUtc(destination, archivedAt); } catch { /* retention falls back to the last write time */ }
+            try
+            {
+                File.Delete(source);
+            }
+            catch
+            {
+                TryDelete(destination);
+                throw;
+            }
         }
-        catch (IOException)
+        catch
         {
-            // The archive can be on another drive: copy it, then remove the original only after the copy succeeded.
-            File.Copy(source, destination, overwrite: false);
-            File.Delete(source);
+            TryDelete(temporary);
+            throw;
         }
+    }
+
+    private static void TryDelete(string path)
+    {
+        try { File.Delete(path); } catch { /* best effort */ }
     }
 }

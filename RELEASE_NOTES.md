@@ -1,15 +1,15 @@
 **Français**
-- **Gestion des replays** : archive les replays déjà analysés, affiche l'espace disque utilisé et permet de supprimer les archives après 7, 30 ou 90 jours. Désactivé par défaut, avec confirmation avant chaque action manuelle.
+- **Archives ZIP** : les replays déjà analysés sont maintenant compressés en fichiers ZIP. Les anciennes archives sont compressées automatiquement, avec l'espace disque utilisé toujours visible.
 
 ---
 
 **English**
-- **Replay storage**: archive already analyzed replays, show disk usage and delete archived replays after 7, 30 or 90 days. Off by default, with confirmation before every manual action.
+- **ZIP archives**: already analyzed replays are now compressed into ZIP files. Existing archives are compressed automatically, with disk usage still visible.
 
 ---
 
 **Español**
-- **Gestión de repeticiones**: archiva las repeticiones ya analizadas, muestra el espacio en disco y permite eliminar las archivadas después de 7, 30 o 90 días. Desactivado por defecto, con confirmación antes de cada acción manual.
+- **Archivos ZIP**: las repeticiones ya analizadas ahora se comprimen en archivos ZIP. Los archivos existentes se comprimen automáticamente y el espacio en disco sigue visible.
 
 ---
 
