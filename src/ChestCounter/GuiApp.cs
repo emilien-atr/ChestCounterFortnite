@@ -1057,7 +1057,7 @@ internal sealed class AppWindow : Form
         }
         _nextReplayMaintenance = DateTime.UtcNow.AddMinutes(10);
         if (!_config.ReplayArchiveEnabled && _config.ReplayArchiveRetentionDays <= 0
-            && !ReplayMaintenance.HasUncompressedArchive(_store))
+            && !ReplayMaintenance.HasLegacyArchive(_store))
         {
             return;
         }
@@ -1075,17 +1075,7 @@ internal sealed class AppWindow : Form
         try
         {
             var result = await Task.Run(() =>
-            {
-                var compressed = ReplayMaintenance.CompressArchive(_store);
-                var archived = ReplayMaintenance.ArchiveFiles(_store, archivePlan.Files);
-                var deleted = retention > 0
-                    ? ReplayMaintenance.DeleteExpired(_store, retention)
-                    : new ReplayMaintenanceResult(0, 0, 0, 0, 0);
-                return new ReplayMaintenanceResult(archived.Archived, archived.ArchivedBytes,
-                    deleted.Deleted, deleted.DeletedBytes,
-                    compressed.Failed + archived.Failed + deleted.Failed,
-                    compressed.Compressed, compressed.CompressedBytes);
-            });
+                ReplayMaintenance.Maintain(_store, archivePlan.Files, _config.ReplayArchiveEnabled, retention));
             if (!result.Changed)
             {
                 return;
@@ -1134,9 +1124,9 @@ internal sealed class AppWindow : Form
 
         var count = L.Count(plan.Count, "replay analysé", "replays analysés", "analyzed replay", "analyzed replays", "repetición analizada", "repeticiones analizadas");
         var message = L.T(
-            $"Déplacer {count} ({L.Size(plan.Bytes)}) vers l'archive ZIP ?\n\nIls quitteront le dossier Fortnite et seront compressés en ZIP. Tu pourras les supprimer plus tard depuis les réglages.",
-            $"Move {count} ({L.Size(plan.Bytes)}) to the ZIP archive?\n\nThey will leave the Fortnite folder and be compressed to ZIP. You can delete them later from the settings.",
-            $"¿Mover {count} ({L.Size(plan.Bytes)}) al archivo ZIP?\n\nSaldrán de la carpeta de Fortnite y se comprimirán en ZIP. Podrás eliminarlas más tarde desde los ajustes.");
+            $"Déplacer {count} ({L.Size(plan.Bytes)}) vers l'archive ZIP unique ?\n\nIls quitteront le dossier Fortnite et seront ajoutés à replays.zip. Tu pourras les supprimer plus tard depuis les réglages.",
+            $"Move {count} ({L.Size(plan.Bytes)}) to the single ZIP archive?\n\nThey will leave the Fortnite folder and be added to replays.zip. You can delete them later from the settings.",
+            $"¿Mover {count} ({L.Size(plan.Bytes)}) al único archivo ZIP?\n\nSaldrán de la carpeta de Fortnite y se añadirán a replays.zip. Podrás eliminarlas más tarde desde los ajustes.");
         if (MessageBox.Show(this, message, AppInfo.Name, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
         {
             return;
@@ -1145,14 +1135,7 @@ internal sealed class AppWindow : Form
         _replayBusy = true;
         try
         {
-            var result = await Task.Run(() =>
-            {
-                var compressed = ReplayMaintenance.CompressArchive(_store);
-                var archived = ReplayMaintenance.ArchiveFiles(_store, plan.Files);
-                return new ReplayMaintenanceResult(archived.Archived, archived.ArchivedBytes,
-                    0, 0, compressed.Failed + archived.Failed,
-                    compressed.Compressed, compressed.CompressedBytes);
-            });
+            var result = await Task.Run(() => ReplayMaintenance.ArchiveFiles(_store, plan.Files));
             RefreshReplayStorage(force: true);
             PushState(force: true);
             if (result.Archived > 0)

@@ -1,15 +1,15 @@
 **Français**
-- **Archives ZIP** : les replays déjà analysés sont maintenant compressés en fichiers ZIP. Les anciennes archives sont compressées automatiquement, avec l'espace disque utilisé toujours visible.
+- **Archive ZIP unique** : les replays analysés sont maintenant regroupés dans un seul fichier `replays.zip`. Les archives existantes sont fusionnées automatiquement, et la suppression des plus anciens replays continue de fonctionner.
 
 ---
 
 **English**
-- **ZIP archives**: already analyzed replays are now compressed into ZIP files. Existing archives are compressed automatically, with disk usage still visible.
+- **Single ZIP archive**: analyzed replays are now grouped into one `replays.zip` file. Existing archives are merged automatically, and deleting the oldest replays still works.
 
 ---
 
 **Español**
-- **Archivos ZIP**: las repeticiones ya analizadas ahora se comprimen en archivos ZIP. Los archivos existentes se comprimen automáticamente y el espacio en disco sigue visible.
+- **Archivo ZIP único**: las repeticiones analizadas ahora se agrupan en un solo archivo `replays.zip`. Los archivos existentes se fusionan automáticamente y la eliminación de las repeticiones más antiguas sigue funcionando.
 
 ---
 
