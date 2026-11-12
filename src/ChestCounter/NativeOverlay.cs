@@ -44,6 +44,21 @@ public static class NativeOverlay
     private static volatile int _sizePercent = 100;
     private static volatile int _opacityPercent = 100;
 
+    // Motion state. All reads/writes go through _animationLock because the counter updates the view from the UI
+    // thread while the overlay paints on its own thread.
+    private static readonly object _animationLock = new();
+    private static bool _hasTotal;
+    private static long _shownTotal, _targetTotal, _totalFrom;
+    private static long _totalStartedMs;
+    private static bool _totalAnimating;
+    private static long _plusAmount;
+    private static long _plusStartedMs;
+    private static bool _animationTimerRunning;
+    private const int AnimationTimerId = 1;
+    private const int AnimationTimerMs = 33;
+    private const double TotalAnimationMs = 480;
+    private const double PlusAnimationMs = 900;
+
     /// <summary>"hud" (figures only, under the minimap, like the game's HUD) or "classic" (dark card).</summary>
     private static volatile string _style = "classic";
     private static IntPtr _fontHudBig, _fontHudSmall;
@@ -100,6 +115,7 @@ public static class NativeOverlay
             PostMessageW(_hwnd, WM_APP_STOP, IntPtr.Zero, IntPtr.Zero);
         }
         thread.Join(TimeSpan.FromSeconds(3));
+        _animationTimerRunning = false;
     }
 
     /// <summary>True when the global Ctrl+Shift+O shortcut could be registered.</summary>
@@ -118,6 +134,7 @@ public static class NativeOverlay
             return;
         }
 
+        ResetTotalAnimation();
         _onMoved = onMoved;
         _offscreen = x <= -10000; // --overlay-preview: never brought back on screen
         _onLockChanged = onLockChanged;
@@ -153,6 +170,7 @@ public static class NativeOverlay
     /// <summary>Replaces what is shown. The window resizes itself to fit.</summary>
     public static void Update(OverlayView view)
     {
+        SetTotalTarget(ParseTotal(view.Total));
         _view = view;
         if (_hwnd != IntPtr.Zero)
         {
@@ -250,8 +268,9 @@ public static class NativeOverlay
         ApplyLock(_hwnd, _locked, notify: false);
         Relayout(_hwnd);
         ShowWindow(_hwnd, SW_SHOWNOACTIVATE);
-        // No timer at all: the thread sleeps in GetMessage and only wakes up when the counter changes,
-        // when you drag/hide the window or press the shortcut.
+        EnsureAnimationTimer(_hwnd);
+        // The timer only runs while the HUD is visible and has something to animate. Otherwise the thread sleeps in
+        // GetMessage and wakes up for counter changes, dragging, hiding or the shortcut.
         // Global shortcut, works even when the game has the focus.
         HotkeyRegistered = RegisterHotKey(_hwnd, 1, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, VK_O);
         LockHotkeyRegistered = RegisterHotKey(_hwnd, 2, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, VK_L);
@@ -357,6 +376,14 @@ public static class NativeOverlay
                 Relayout(hwnd);
                 return IntPtr.Zero;
 
+            case WM_TIMER:
+                if ((long)wParam == AnimationTimerId)
+                {
+                    TickAnimation(hwnd);
+                    return IntPtr.Zero;
+                }
+                break;
+
             case WM_PAINT:
                 Paint(hwnd);
                 return IntPtr.Zero;
@@ -366,6 +393,7 @@ public static class NativeOverlay
                 return IntPtr.Zero;
 
             case WM_DESTROY:
+                StopAnimationTimer(hwnd);
                 UnregisterHotKey(hwnd, 1);
                 UnregisterHotKey(hwnd, 2);
                 PostQuitMessage(0);
@@ -414,10 +442,12 @@ public static class NativeOverlay
         {
             ShowWindow(hwnd, SW_SHOWNOACTIVATE);
             SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+            EnsureAnimationTimer(hwnd);
         }
         else
         {
             ShowWindow(hwnd, SW_HIDE);
+            StopAnimationTimer(hwnd);
             Console.WriteLine(HotkeyRegistered
                 ? L.T("Overlay masqué : Ctrl+Maj+O (n'importe où) pour le réafficher.", "Overlay hidden: Ctrl+Shift+O (anywhere) to show it again.", "Overlay oculto: Ctrl+Mayús+O (desde cualquier sitio) para volver a mostrarlo.")
                 : L.T("Overlay masqué : « Afficher l'overlay » dans le compteur pour le réafficher.", "Overlay hidden: \"Show the overlay\" in the counter to show it again.", "Overlay oculto: «Mostrar el overlay» en el contador para volver a mostrarlo."));
@@ -506,7 +536,8 @@ public static class NativeOverlay
             ReleaseDC(hwnd, hdc);
         }
         InvalidateRect(hwnd, IntPtr.Zero, true);
-        UpdateWindow(hwnd); // paint now (one repaint per update, no timer)
+        UpdateWindow(hwnd); // paint now; the optional motion timer is started when the HUD needs it
+        EnsureAnimationTimer(hwnd);
     }
 
     private static void Text(IntPtr hdc, IntPtr font, uint color, string text, int left, int top, int right, int bottom, uint align = DT_LEFT)
@@ -704,6 +735,7 @@ public static class NativeOverlay
         }
         InvalidateRect(hwnd, IntPtr.Zero, true);
         UpdateWindow(hwnd);
+        EnsureAnimationTimer(hwnd);
     }
 
     /// <summary>Text outlined in near black, like the game's own HUD figures (readable on any background).</summary>
@@ -834,13 +866,16 @@ public static class NativeOverlay
         var left = _lockRect.Right;
         var state = StateRow(v);
         var live = v.CurrentLive && state.Value.Length > 0;
+        var totalText = L.N((int)Math.Clamp(GetShownTotal(), 0, int.MaxValue));
+        // Reserve the width of the destination number, not the intermediate one: the live caption and rows must
+        // stay perfectly still while the total counts up.
         var bigW = TextWidth(hdc, _fontHudBig, v.Total, out _);
         var iw = Sc(26);
         var ih = Sc(22);
         var stateText = state.Label + (state.Value.Length > 0 ? Sep + state.Value : "");
         var stateTextW = TextWidth(hdc, _fontHudSmall, stateText, out _);
         var rowParts = v.Rows.Select(r => new { Row = r, W = TextWidth(hdc, _fontHudSmall, r.Label + Sep + r.Value, out _) }).ToList();
-        var contentW = iw + Sc(8) + bigW + Sc(18) + (state.Dot ? Sc(18) : 0) + stateTextW
+        var contentW = iw + Sc(8) + bigW + Sc(30) + (state.Dot ? Sc(18) : 0) + stateTextW
             + rowParts.Sum(r => Sc(18) + r.W);
         var lineH = Math.Max(_hudBigH, _hudSmallH);
         var x = Math.Max(left, right - contentW);
@@ -849,12 +884,29 @@ public static class NativeOverlay
         // One horizontal row, like the game's own HUD.
         Chest(hdc, x, pad + Math.Max(0, (lineH - ih) / 2), iw, ih, gold, Rgb(224, 165, 38), ink, ink);
         var totalX = x + iw + Sc(8);
-        Outlined(hdc, _fontHudBig, live ? gold : white, v.Total, totalX, pad, totalX + bigW + Sc(4), pad + lineH, DT_LEFT);
+        Outlined(hdc, _fontHudBig, live ? gold : white, totalText, totalX, pad, totalX + bigW + Sc(4), pad + lineH, DT_LEFT);
 
-        var stateX = totalX + bigW + Sc(18);
+        // A short gold "+1" rises out of the total when the counter gains chests. It fades by moving away from the
+        // baseline; the gap is reserved in RelayoutStyled so the live caption never moves while it is visible.
+        var plus = GetPlusInfo();
+        if (plus.Amount > 0)
+        {
+            var plusText = "+" + plus.Amount;
+            var plusW = TextWidth(hdc, _fontHudSmall, plusText, out _);
+            var rise = Sc(5) * (1 - plus.Progress);
+            var plusTop = Math.Max(0, smallTop - (int)Math.Round(rise));
+            Outlined(hdc, _fontHudSmall, Blend(gold, white, 0.35 * plus.Progress), plusText,
+                totalX + bigW + Sc(2), plusTop, totalX + bigW + Sc(2) + plusW + Sc(2), plusTop + _hudSmallH, DT_LEFT, thin: true);
+        }
+
+        var stateX = totalX + bigW + Sc(30);
         if (state.Dot)
         {
-            Disc(hdc, stateX, pad + lineH / 2 - Sc(4), Sc(9), Rgb(255, 59, 48), ink, 1);
+            // A slow breath on the live dot, never a flashing effect.
+            var pulse = 0.5 + 0.5 * Math.Sin(Environment.TickCount64 / 1000.0 * Math.PI * 2 / 2.2);
+            var dotD = Sc(9) + (int)Math.Round(Sc(2) * pulse);
+            Disc(hdc, stateX + (Sc(18) - dotD) / 2, pad + lineH / 2 - dotD / 2, dotD,
+                Blend(Rgb(255, 59, 48), Rgb(255, 143, 111), pulse * 0.65), ink, 1);
             stateX += Sc(18);
         }
         LabelValue(hdc, state.Label, state.Value, stateX, stateX + stateTextW, smallTop, _hudSmallH, live ? gold : white);
@@ -865,6 +917,164 @@ public static class NativeOverlay
             LabelValue(hdc, row.Row.Label, row.Row.Value, rowX, rowX + row.W, smallTop, _hudSmallH, white);
             rowX += row.W + Sc(18);
         }
+    }
+
+    // ---- Motion ------------------------------------------------------------------------------
+
+    private static long ParseTotal(string? text)
+    {
+        long value = 0;
+        var found = false;
+        foreach (var ch in text ?? "")
+        {
+            if (!char.IsDigit(ch)) continue;
+            found = true;
+            value = value * 10 + (ch - '0');
+            if (value > 9_999_999_999L) return 9_999_999_999L;
+        }
+        return found ? value : 0;
+    }
+
+    private static void ResetTotalAnimation()
+    {
+        lock (_animationLock)
+        {
+            _hasTotal = false;
+            _shownTotal = _targetTotal = _totalFrom = 0;
+            _totalAnimating = false;
+            _plusAmount = 0;
+            _plusStartedMs = 0;
+        }
+    }
+
+    private static void SetTotalTarget(long target)
+    {
+        target = Math.Max(0, target);
+        lock (_animationLock)
+        {
+            if (!_hasTotal)
+            {
+                _hasTotal = true;
+                _shownTotal = _targetTotal = target;
+                _totalAnimating = false;
+                _plusAmount = 0;
+                return;
+            }
+            if (target == _targetTotal) return;
+
+            var now = Environment.TickCount64;
+            var current = AdvanceTotalLocked(now);
+            if (target <= current)
+            {
+                _shownTotal = _targetTotal = target;
+                _totalAnimating = false;
+                _plusAmount = 0;
+                return;
+            }
+
+            _totalFrom = current;
+            _targetTotal = target;
+            _totalStartedMs = now;
+            _totalAnimating = true;
+            _plusAmount = target - current;
+            _plusStartedMs = now;
+        }
+    }
+
+    private static long AdvanceTotalLocked(long now)
+    {
+        if (!_totalAnimating)
+        {
+            return _shownTotal;
+        }
+        var elapsed = now - _totalStartedMs;
+        if (elapsed >= TotalAnimationMs)
+        {
+            _shownTotal = _targetTotal;
+            _totalAnimating = false;
+            return _shownTotal;
+        }
+        var progress = Math.Clamp(elapsed / TotalAnimationMs, 0, 1);
+        var eased = 1 - Math.Pow(1 - progress, 3);
+        _shownTotal = _totalFrom + (long)Math.Round((_targetTotal - _totalFrom) * eased);
+        return _shownTotal;
+    }
+
+    private static long GetShownTotal()
+    {
+        lock (_animationLock)
+        {
+            return AdvanceTotalLocked(Environment.TickCount64);
+        }
+    }
+
+    private static (long Amount, double Progress) GetPlusInfo()
+    {
+        lock (_animationLock)
+        {
+            if (_plusAmount <= 0) return (0, 1);
+            var elapsed = Environment.TickCount64 - _plusStartedMs;
+            if (elapsed >= PlusAnimationMs)
+            {
+                _plusAmount = 0;
+                return (0, 1);
+            }
+            return (_plusAmount, Math.Clamp(elapsed / PlusAnimationMs, 0, 1));
+        }
+    }
+
+    private static bool AnyMotion()
+    {
+        lock (_animationLock)
+        {
+            return _totalAnimating
+                || (_plusAmount > 0 && Environment.TickCount64 - _plusStartedMs < PlusAnimationMs);
+        }
+    }
+
+    private static void EnsureAnimationTimer(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero || !IsWindowVisible(hwnd) || !Keyed)
+        {
+            StopAnimationTimer(hwnd);
+            return;
+        }
+        var needed = _view.CurrentLive || _view.Badge != null || AnyMotion();
+        if (!needed)
+        {
+            StopAnimationTimer(hwnd);
+            return;
+        }
+        if (!_animationTimerRunning)
+        {
+            _animationTimerRunning = SetTimer(hwnd, (UIntPtr)AnimationTimerId, AnimationTimerMs, IntPtr.Zero) != UIntPtr.Zero;
+        }
+    }
+
+    private static void StopAnimationTimer(IntPtr hwnd)
+    {
+        if (!_animationTimerRunning) return;
+        _animationTimerRunning = false;
+        if (hwnd != IntPtr.Zero)
+        {
+            KillTimer(hwnd, (UIntPtr)AnimationTimerId);
+        }
+    }
+
+    private static void TickAnimation(IntPtr hwnd)
+    {
+        lock (_animationLock)
+        {
+            var now = Environment.TickCount64;
+            AdvanceTotalLocked(now);
+            if (_plusAmount > 0 && now - _plusStartedMs >= PlusAnimationMs)
+            {
+                _plusAmount = 0;
+            }
+        }
+        InvalidateRect(hwnd, IntPtr.Zero, false);
+        UpdateWindow(hwnd);
+        EnsureAnimationTimer(hwnd);
     }
 
     private static uint Rgb(byte r, byte g, byte b) => (uint)(r | (g << 8) | (b << 16));
@@ -951,6 +1161,7 @@ public static class NativeOverlay
     [DllImport("user32.dll")] private static extern int FillRect(IntPtr hdc, ref RECT rect, IntPtr brush);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int DrawTextW(IntPtr hdc, string text, int count, ref RECT rect, uint format);
     [DllImport("user32.dll")] private static extern UIntPtr SetTimer(IntPtr hwnd, UIntPtr id, uint ms, IntPtr proc);
+    [DllImport("user32.dll")] private static extern bool KillTimer(IntPtr hwnd, UIntPtr id);
     [DllImport("user32.dll")] private static extern IntPtr LoadCursorW(IntPtr instance, IntPtr name);
     [DllImport("user32.dll")] private static extern IntPtr GetDC(IntPtr hwnd);
     [DllImport("user32.dll")] private static extern int ReleaseDC(IntPtr hwnd, IntPtr hdc);

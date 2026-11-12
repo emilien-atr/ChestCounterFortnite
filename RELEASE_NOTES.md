@@ -1,15 +1,15 @@
 **Français**
-- **Archive ZIP unique** : les replays analysés sont maintenant regroupés dans un seul fichier `replays.zip`. Les archives existantes sont fusionnées automatiquement, et la suppression des plus anciens replays continue de fonctionner.
+- **HUD animé** : le total des coffres progresse en douceur, un petit « +1 » doré apparaît et la pastille live respire au rythme de la partie. Les animations restent sobres et s'arrêtent dès que l'overlay est masqué.
 
 ---
 
 **English**
-- **Single ZIP archive**: analyzed replays are now grouped into one `replays.zip` file. Existing archives are merged automatically, and deleting the oldest replays still works.
+- **Animated HUD**: the chest total counts up smoothly, a small gold "+1" appears, and the live dot breathes with the match. Motion stays subtle and stops as soon as the overlay is hidden.
 
 ---
 
 **Español**
-- **Archivo ZIP único**: las repeticiones analizadas ahora se agrupan en un solo archivo `replays.zip`. Los archivos existentes se fusionan automáticamente y la eliminación de las repeticiones más antiguas sigue funcionando.
+- **HUD animado**: el total de cofres sube suavemente, aparece un pequeño «+1» dorado y el punto live respira al ritmo de la partida. El movimiento es discreto y se detiene al ocultar el overlay.
 
 ---
 
