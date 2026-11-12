@@ -1,18 +1,15 @@
 **Français**
-- **Rapport au démarrage** : il ne s'ouvre plus automatiquement. Le bouton « Ouvrir le rapport » reste disponible.
-- **Nouveautés** : la carte n'affiche plus que les changements de la version installée, pas ceux des versions précédentes.
+- **Gestion des replays** : archive les replays déjà analysés, affiche l'espace disque utilisé et permet de supprimer les archives après 7, 30 ou 90 jours. Désactivé par défaut, avec confirmation avant chaque action manuelle.
 
 ---
 
 **English**
-- **Report at startup**: it no longer opens automatically. The “Open report” button is still available.
-- **What's new**: the card now shows only the changes in the installed version, not older releases.
+- **Replay storage**: archive already analyzed replays, show disk usage and delete archived replays after 7, 30 or 90 days. Off by default, with confirmation before every manual action.
 
 ---
 
 **Español**
-- **Informe al iniciar**: ya no se abre automáticamente. El botón «Abrir el informe» sigue disponible.
-- **Novedades**: la tarjeta solo muestra los cambios de la versión instalada, no los de versiones anteriores.
+- **Gestión de repeticiones**: archiva las repeticiones ya analizadas, muestra el espacio en disco y permite eliminar las archivadas después de 7, 30 o 90 días. Desactivado por defecto, con confirmación antes de cada acción manual.
 
 ---
 

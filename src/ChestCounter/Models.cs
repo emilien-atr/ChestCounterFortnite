@@ -124,6 +124,12 @@ public sealed class Config
     /// <summary>Show the counter as a Discord activity while the Discord desktop client is open.</summary>
     public bool DiscordPresence { get; set; } = true;
 
+    /// <summary>Move replays that have already been analyzed into the local archive. Off by default.</summary>
+    public bool ReplayArchiveEnabled { get; set; }
+
+    /// <summary>Days before an archived replay is deleted (0 = never). Only applies inside the archive.</summary>
+    public int ReplayArchiveRetentionDays { get; set; }
+
     /// <summary>
     /// Chests already opened before the tool started counting (replays turned on late, for example), by kind:
     /// added to the total so that the counter shows the whole season, while the per-match figures stay exact.
@@ -206,6 +212,9 @@ public sealed class Store
     public string OverlayPath => Path.Combine(Folder, "overlay.html");
     public string CsvPath => Path.Combine(Folder, "matches.csv");
     public string ErrorLogPath => Path.Combine(Folder, "errors.log");
+
+    /// <summary>Replays moved out of the Fortnite folder after being analyzed.</summary>
+    public string ReplayArchivePath => Path.Combine(Folder, "replay-archive");
 
     public Store(string folder)
     {

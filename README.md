@@ -74,7 +74,8 @@ Tout reste sur le PC, dans `%APPDATA%\ChestCounterFortnite` :
 - `data.json` : historique ;
 - `config.json` : réglages et position de l’overlay ;
 - `report.html` : rapport web ;
-- `matches.csv` : parties exportables.
+- `matches.csv` : parties exportables ;
+- `replay-archive/` : replays déjà analysés déplacés depuis le dossier Fortnite (optionnel).
 
 Le compteur ne modifie jamais Fortnite et ne lit pas sa mémoire. Le seul accès réseau sert à vérifier et télécharger les mises à jour GitHub.
 

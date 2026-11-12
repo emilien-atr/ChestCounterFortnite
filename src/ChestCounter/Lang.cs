@@ -74,6 +74,21 @@ public static class L
     /// <summary>Short date + time of a match ("05/11 22:54" / "5 Nov 22:54").</summary>
     public static string DateTimeShort(DateTime d) => d.ToString(En ? "d MMM HH:mm" : "dd/MM HH:mm", Culture);
 
+    /// <summary>File size for the replay storage card ("1,4 Go" / "1.4 GB").</summary>
+    public static string Size(long bytes)
+    {
+        var value = bytes < 0 ? 0 : bytes;
+        if (value >= 1L << 30)
+        {
+            return $"{(value / (double)(1L << 30)).ToString("0.#", Culture)} {T("Go", "GB", "GB")}";
+        }
+        if (value >= 1L << 20)
+        {
+            return $"{(value / (double)(1L << 20)).ToString("0.#", Culture)} {T("Mo", "MB", "MB")}";
+        }
+        return $"{(value / 1024.0).ToString("0.#", Culture)} {T("Ko", "KB", "KB")}";
+    }
+
     // French names stored in data.json -> English / Spanish display names.
     private static readonly Dictionary<string, (string En, string Es)> Names = new(StringComparer.OrdinalIgnoreCase)
     {

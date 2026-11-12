@@ -78,6 +78,10 @@ internal sealed class AppWindow : Form
     private DateTime _nextUpdateCheck = DateTime.UtcNow.AddSeconds(10);
     private DateTime _nextDiscordUpdate = DateTime.MinValue;
     private bool _checkingUpdate;
+    private ReplayStorageStats _replayStorage = ReplayStorageStats.Empty;
+    private DateTime _nextReplayStorage = DateTime.MinValue;
+    private DateTime _nextReplayMaintenance = DateTime.UtcNow.AddSeconds(30);
+    private bool _replayBusy;
 
     private FileSystemWatcher? _watcher;
     private volatile bool _dirty;
@@ -157,6 +161,7 @@ internal sealed class AppWindow : Form
         Console.SetOut(new UiLog(AppendActivity));
         RebuildWatcher();
         LocalizeTray();
+        RefreshReplayStorage(force: true);
     }
 
     protected override void OnHandleCreated(EventArgs e)
@@ -338,6 +343,18 @@ internal sealed class AppWindow : Form
                 case "demos":
                     OpenDemosFolder();
                     break;
+                case "replayArchive":
+                    _ = ArchiveReplaysAsync();
+                    break;
+                case "replayCleanup":
+                    if (root.TryGetProperty("days", out var daysElement) && daysElement.TryGetInt32(out var days))
+                    {
+                        _ = CleanupReplaysAsync(days);
+                    }
+                    break;
+                case "replayOpenArchive":
+                    OpenReplayArchive();
+                    break;
                 case "save":
                     if (root.TryGetProperty("settings", out var settings))
                     {
@@ -475,6 +492,17 @@ internal sealed class AppWindow : Form
             },
             news = _config.NewsDismissed != AppInfo.VersionText && newsBullets.Count > 0,
             newsBullets,
+            replayStorage = new
+            {
+                folderCount = L.N(_replayStorage.FolderCount),
+                folderCountValue = _replayStorage.FolderCount,
+                folderSize = L.Size(_replayStorage.FolderBytes),
+                archiveCount = L.N(_replayStorage.ArchiveCount),
+                archiveCountValue = _replayStorage.ArchiveCount,
+                archiveSize = L.Size(_replayStorage.ArchiveBytes),
+                archiveEnabled = _config.ReplayArchiveEnabled,
+                retention = _config.ReplayArchiveRetentionDays,
+            },
             activity = _activity.Count > 0 ? _activity[^1] : "",
             settings = new
             {
@@ -486,6 +514,8 @@ internal sealed class AppWindow : Form
                 tray = _config.MinimizeToTray,
                 withFortnite = _config.StartWithFortnite,
                 discordPresence = _config.DiscordPresence,
+                replayArchive = _config.ReplayArchiveEnabled,
+                replayRetention = _config.ReplayArchiveRetentionDays,
                 classic = counted.Classic + Math.Max(0, _config.HeadStartChests),
                 rare = counted.Rare + Math.Max(0, _config.HeadStartRareChests),
                 sprite = counted.Sprite + Math.Max(0, _config.HeadStartSpriteChests),
@@ -560,6 +590,24 @@ internal sealed class AppWindow : Form
         }
         _config.MinimizeToTray = GetBool(settings, "tray", _config.MinimizeToTray);
         _config.DiscordPresence = GetBool(settings, "discordPresence", _config.DiscordPresence);
+        var previousRetention = _config.ReplayArchiveRetentionDays;
+        _config.ReplayArchiveEnabled = GetBool(settings, "replayArchive", _config.ReplayArchiveEnabled);
+        if (GetInt(settings, "replayRetention", out var retention))
+        {
+            _config.ReplayArchiveRetentionDays = ReplayMaintenance.NormalizeRetention(retention);
+        }
+        if (previousRetention == 0 && _config.ReplayArchiveRetentionDays > 0)
+        {
+            var days = _config.ReplayArchiveRetentionDays;
+            var confirm = L.T(
+                $"Activer la suppression automatique des replays archivés après {days} jours ?\n\nElle est définitive et ne touche que l'archive. Tu pourras la désactiver à tout moment.",
+                $"Enable automatic deletion of archived replays after {days} days?\n\nIt is permanent and only affects the archive. You can turn it off at any time.",
+                $"¿Activar la eliminación automática de las repeticiones archivadas después de {days} días?\n\nEs definitiva y solo afecta al archivo. Puedes desactivarla en cualquier momento.");
+            if (MessageBox.Show(this, confirm, AppInfo.Name, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+            {
+                _config.ReplayArchiveRetentionDays = 0;
+            }
+        }
 
         var demos = GetString(settings, "demos");
         if (!string.IsNullOrWhiteSpace(demos))
@@ -619,6 +667,8 @@ internal sealed class AppWindow : Form
         _nextDiscordUpdate = DateTime.MinValue;
         UpdateDiscordPresence(force: true);
         _nextScan = DateTime.UtcNow.AddSeconds(2);
+        _nextReplayMaintenance = DateTime.UtcNow.AddSeconds(2);
+        _nextReplayStorage = DateTime.MinValue;
         PushState(force: true);
         Post(new { type = "saved" });
         Toast(L.T("Réglages enregistrés.", "Settings saved.", "Ajustes guardados."), "ok");
@@ -720,6 +770,10 @@ internal sealed class AppWindow : Form
                 if (added > 0)
                 {
                     ReportWriter.WriteAll(_store, _config, _data);
+                    if (_config.ReplayArchiveEnabled)
+                    {
+                        _nextReplayMaintenance = DateTime.UtcNow.AddSeconds(2);
+                    }
                 }
                 _nextScan = DateTime.UtcNow.AddSeconds(_tracker.IsFinishing ? 1 : _tracker.HasPending ? 15 : 10);
             }
@@ -738,6 +792,8 @@ internal sealed class AppWindow : Form
                 }
             }
             RefreshHealth();
+            RefreshReplayStorage();
+            MaintainReplays();
             RefreshState();
             UpdateOverlay(force: false);
             UpdateDiscordPresence();
@@ -979,6 +1035,200 @@ internal sealed class AppWindow : Form
         if (_fortniteClosedAt is { } closed && DateTime.UtcNow - closed > TimeSpan.FromSeconds(60))
         {
             Close();
+        }
+    }
+
+    private void RefreshReplayStorage(bool force = false)
+    {
+        if (!force && DateTime.UtcNow < _nextReplayStorage)
+        {
+            return;
+        }
+        _nextReplayStorage = DateTime.UtcNow.AddSeconds(10);
+        _replayStorage = ReplayMaintenance.Inspect(_store, _config);
+    }
+
+    /// <summary>Automatic archive/retention pass, disabled by default and run periodically.</summary>
+    private void MaintainReplays()
+    {
+        if (_replayBusy || _closing || DateTime.UtcNow < _nextReplayMaintenance)
+        {
+            return;
+        }
+        _nextReplayMaintenance = DateTime.UtcNow.AddMinutes(10);
+        if (!_config.ReplayArchiveEnabled && _config.ReplayArchiveRetentionDays <= 0)
+        {
+            return;
+        }
+        _replayBusy = true;
+        _ = MaintainReplaysAsync();
+    }
+
+    private async Task MaintainReplaysAsync()
+    {
+        // Capture the replay list on the UI thread: the tracker may add matches while the files are moved.
+        var archivePlan = _config.ReplayArchiveEnabled
+            ? ReplayMaintenance.PlanArchive(_config, _data)
+            : new ReplayArchivePlan(0, 0, Array.Empty<FileInfo>());
+        var retention = _config.ReplayArchiveRetentionDays;
+        try
+        {
+            var result = await Task.Run(() =>
+            {
+                var archived = ReplayMaintenance.ArchiveFiles(_store, archivePlan.Files);
+                var deleted = retention > 0
+                    ? ReplayMaintenance.DeleteExpired(_store, retention)
+                    : new ReplayMaintenanceResult(0, 0, 0, 0, 0);
+                return new ReplayMaintenanceResult(archived.Archived, archived.ArchivedBytes,
+                    deleted.Deleted, deleted.DeletedBytes, archived.Failed + deleted.Failed);
+            });
+            if (!result.Changed)
+            {
+                return;
+            }
+            RefreshReplayStorage(force: true);
+            if (result.Archived > 0)
+            {
+                var moved = L.Count(result.Archived, "replay analysé", "replays analysés", "analyzed replay", "analyzed replays", "repetición analizada", "repeticiones analizadas");
+                AppendActivity(L.T($"{moved} déplacé(s) dans l'archive.", $"{moved} moved to the archive.", $"{moved} movida(s) al archivo."));
+            }
+            if (result.Deleted > 0)
+            {
+                var deleted = L.Count(result.Deleted, "replay archivé", "replays archivés", "archived replay", "archived replays", "repetición archivada", "repeticiones archivadas");
+                AppendActivity(L.T($"{deleted} supprimé(s) de l'archive ({L.Size(result.DeletedBytes)}).", $"{deleted} deleted from the archive ({L.Size(result.DeletedBytes)}).", $"{deleted} eliminada(s) del archivo ({L.Size(result.DeletedBytes)})."));
+            }
+            PushState(force: true);
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Replay maintenance", ex);
+        }
+        finally
+        {
+            _replayBusy = false;
+            _nextReplayStorage = DateTime.MinValue;
+        }
+    }
+
+    private async Task ArchiveReplaysAsync()
+    {
+        if (_replayBusy || _closing)
+        {
+            return;
+        }
+        var plan = ReplayMaintenance.PlanArchive(_config, _data);
+        if (plan.Count == 0)
+        {
+            Toast(L.T("Aucun replay déjà analysé à archiver pour l'instant.", "No already analyzed replay to archive yet.", "Todavía no hay ninguna repetición analizada para archivar."), "ok");
+            return;
+        }
+
+        var count = L.Count(plan.Count, "replay analysé", "replays analysés", "analyzed replay", "analyzed replays", "repetición analizada", "repeticiones analizadas");
+        var message = L.T(
+            $"Déplacer {count} ({L.Size(plan.Bytes)}) vers l'archive ?\n\nIls quitteront le dossier Fortnite mais resteront dans l'archive. Tu pourras les supprimer plus tard depuis les réglages.",
+            $"Move {count} ({L.Size(plan.Bytes)}) to the archive?\n\nThey will leave the Fortnite folder but stay in the archive. You can delete them later from the settings.",
+            $"¿Mover {count} ({L.Size(plan.Bytes)}) al archivo?\n\nSaldrán de la carpeta de Fortnite pero se quedarán en el archivo. Podrás eliminarlas más tarde desde los ajustes.");
+        if (MessageBox.Show(this, message, AppInfo.Name, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+        {
+            return;
+        }
+
+        _replayBusy = true;
+        try
+        {
+            var result = await Task.Run(() => ReplayMaintenance.ArchiveFiles(_store, plan.Files));
+            RefreshReplayStorage(force: true);
+            PushState(force: true);
+            if (result.Archived > 0)
+            {
+                var moved = L.Count(result.Archived, "replay", "replays", "replay", "replays", "repetición", "repeticiones");
+                Toast(L.T($"{moved} archivé(s) ({L.Size(result.ArchivedBytes)}).", $"{moved} archived ({L.Size(result.ArchivedBytes)}).", $"{moved} archivada(s) ({L.Size(result.ArchivedBytes)})."), result.Failed > 0 ? "error" : "ok");
+            }
+            else
+            {
+                Toast(L.T("Aucun replay n'a pu être archivé.", "No replay could be archived.", "No se pudo archivar ninguna repetición."), "error");
+            }
+            if (result.Failed > 0)
+            {
+                ErrorLog.Write("Replay archive", new Exception($"{result.Failed} replay(s) could not be moved"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Replay archive", ex);
+            Toast(L.T("Impossible d'archiver les replays.", "Could not archive the replays.", "No se pudieron archivar las repeticiones."), "error");
+        }
+        finally
+        {
+            _replayBusy = false;
+            _nextReplayStorage = DateTime.MinValue;
+        }
+    }
+
+    private async Task CleanupReplaysAsync(int days)
+    {
+        if (_replayBusy || _closing)
+        {
+            return;
+        }
+        days = ReplayMaintenance.NormalizeRetention(days);
+        if (days <= 0)
+        {
+            Toast(L.T("Choisis d'abord une durée de conservation.", "Choose a retention period first.", "Elige primero un período de conservación."), "error");
+            return;
+        }
+        var plan = ReplayMaintenance.PlanDelete(_store, days);
+        if (plan.Count == 0)
+        {
+            Toast(L.T($"Aucun replay archivé n'a plus de {days} jours.", $"No archived replay is older than {days} days.", $"Ninguna repetición archivada tiene más de {days} días."), "ok");
+            return;
+        }
+
+        var count = L.Count(plan.Count, "replay archivé", "replays archivés", "archived replay", "archived replays", "repetición archivada", "repeticiones archivadas");
+        var message = L.T(
+            $"Supprimer définitivement {count} ({L.Size(plan.Bytes)}) ?\n\nSeuls les replays archivés depuis plus de {days} jours sont concernés. Les replays du dossier Fortnite ne sont pas touchés.",
+            $"Permanently delete {count} ({L.Size(plan.Bytes)})?\n\nOnly replays archived for more than {days} days are affected. Replays in the Fortnite folder are not touched.",
+            $"¿Eliminar definitivamente {count} ({L.Size(plan.Bytes)})?\n\nSolo se verán afectadas las repeticiones archivadas hace más de {days} días. Las de la carpeta de Fortnite no se tocan.");
+        if (MessageBox.Show(this, message, AppInfo.Name, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+        {
+            return;
+        }
+
+        _replayBusy = true;
+        try
+        {
+            var result = await Task.Run(() => ReplayMaintenance.DeleteExpired(_store, days));
+            RefreshReplayStorage(force: true);
+            PushState(force: true);
+            var deleted = L.Count(result.Deleted, "replay", "replays", "replay", "replays", "repetición", "repeticiones");
+            Toast(L.T($"{deleted} supprimé(s) ({L.Size(result.DeletedBytes)}).", $"{deleted} deleted ({L.Size(result.DeletedBytes)}).", $"{deleted} eliminada(s) ({L.Size(result.DeletedBytes)})."), result.Failed > 0 ? "error" : "ok");
+            if (result.Failed > 0)
+            {
+                ErrorLog.Write("Replay cleanup", new Exception($"{result.Failed} replay(s) could not be deleted"));
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Replay cleanup", ex);
+            Toast(L.T("Impossible de supprimer les anciens replays.", "Could not delete the old replays.", "No se pudieron eliminar las repeticiones antiguas."), "error");
+        }
+        finally
+        {
+            _replayBusy = false;
+            _nextReplayStorage = DateTime.MinValue;
+        }
+    }
+
+    private void OpenReplayArchive()
+    {
+        try
+        {
+            Directory.CreateDirectory(_store.ReplayArchivePath);
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{_store.ReplayArchivePath}\"") { UseShellExecute = true })?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Toast(ex.Message, "error");
         }
     }
 
