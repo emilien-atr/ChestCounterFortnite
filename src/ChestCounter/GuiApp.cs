@@ -224,10 +224,6 @@ internal sealed class AppWindow : Form
             {
                 ErrorLog.Write("Rapport", ex);
             }
-            if (_config.OpenReportOnStart && !_auto)
-            {
-                OpenReport();
-            }
         }));
         await InitializeWebAsync();
     }
@@ -411,6 +407,7 @@ internal sealed class AppWindow : Form
         var current = Profiles.Current(_data, _config);
         var profiles = Profiles.List(_data);
         var counted = CountedByKind(_data, _config);
+        var newsBullets = ReleaseNotes.WhatsNew(ReleaseNotes.Embedded, L.Code);
 
         var parts = new List<object>();
         if (_config.HeadStartChests > 0)
@@ -476,7 +473,8 @@ internal sealed class AppWindow : Form
                 last = _health.LastLine,
                 action = _health.ActionLabel,
             },
-            news = _config.NewsDismissed != AppInfo.VersionText,
+            news = _config.NewsDismissed != AppInfo.VersionText && newsBullets.Count > 0,
+            newsBullets,
             activity = _activity.Count > 0 ? _activity[^1] : "",
             settings = new
             {
@@ -486,7 +484,6 @@ internal sealed class AppWindow : Form
                 size = _config.OverlaySize,
                 opacity = _config.OverlayOpacity,
                 tray = _config.MinimizeToTray,
-                openReport = _config.OpenReportOnStart,
                 withFortnite = _config.StartWithFortnite,
                 discordPresence = _config.DiscordPresence,
                 classic = counted.Classic + Math.Max(0, _config.HeadStartChests),
@@ -562,7 +559,6 @@ internal sealed class AppWindow : Form
             _config.OverlayOpacity = Nearest(OverlayAppearance.Opacities, opacity);
         }
         _config.MinimizeToTray = GetBool(settings, "tray", _config.MinimizeToTray);
-        _config.OpenReportOnStart = GetBool(settings, "openReport", _config.OpenReportOnStart);
         _config.DiscordPresence = GetBool(settings, "discordPresence", _config.DiscordPresence);
 
         var demos = GetString(settings, "demos");

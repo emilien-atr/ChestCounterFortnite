@@ -234,8 +234,6 @@ if (guiMode)
     return GuiApp.Run(store, config, data, tracker, auto, dataDir, reanalyzing);
 }
 
-var reportOpened = false;
-
 // ---- First launch: setup screens ----------------------------------------------------------
 if (firstRun && interactive)
 {
@@ -304,17 +302,12 @@ if (firstRun && interactive)
     {
         ConsoleUi.Screen(appName, L.T("analyse", "analysis", "análisis"));
         ConsoleUi.Text(L.T("Analyse de tes replays…", "Analyzing your replays…", "Analizando tus repeticiones…"), ConsoleColor.White);
-        ConsoleUi.Hint(L.T("Le rapport s'ouvre dans ton navigateur et se remplit au fur et à mesure.",
-            "The report opens in your browser and fills in as the replays are read.",
-            "El informe se abre en tu navegador y se completa al leer las repeticiones."));
+        ConsoleUi.Hint(L.T("Le rapport se remplit au fur et à mesure.",
+            "The report fills in as the replays are read.",
+            "El informe se completa al leer las repeticiones."));
         ConsoleUi.Blank();
         ReportWriter.Progress = new ScanProgress(0, existing.Count);
         ReportWriter.WriteAll(store, config, data);
-        if (config.OpenReportOnStart)
-        {
-            Open(store.ReportPath);
-            reportOpened = true;
-        }
         tracker.Scan();
         tracker.NewProfilesFound = false;
         ConsoleUi.Blank();
@@ -524,10 +517,6 @@ if (backlog > 1)
     ReportWriter.Progress = new ScanProgress(0, backlog);
 }
 ReportWriter.WriteAll(store, config, data);
-if (config.OpenReportOnStart && !reportOpened && !auto)
-{
-    Open(store.ReportPath);
-}
 if (backlog > 0)
 {
     tracker.Scan();
@@ -810,9 +799,6 @@ List<(string Label, Action Run, string? About)> Items()
                         "Yes: minimizing the window puts it next to the clock (chest icon) instead of the taskbar. A click on the icon opens it again.",
                         "Sí: minimizar la ventana la coloca junto al reloj (icono del cofre) en lugar de la barra de tareas. Un clic en el icono la vuelve a abrir.")));
             }
-            list.Add(Item($"{L.T("Ouvrir le rapport au démarrage", "Open the report at startup", "Abrir el informe al iniciar")} : {YesNo(config.OpenReportOnStart)}",
-                () => config.OpenReportOnStart = !config.OpenReportOnStart,
-                L.T("Ouvre le rapport dans ton navigateur à chaque lancement du compteur.", "Opens the report in your browser each time the counter starts.", "Abre el informe en tu navegador cada vez que se inicia el contador.")));
             if (OperatingSystem.IsWindows())
             {
                 list.Add(Item($"{L.T("Ouvrir avec Fortnite", "Open with Fortnite", "Abrir con Fortnite")} : {YesNo(config.StartWithFortnite)}", ToggleStartWithFortnite,

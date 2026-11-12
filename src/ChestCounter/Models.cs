@@ -91,7 +91,6 @@ public sealed class Config
 
     /// <summary>"auto" (install new versions) or "off" (never check GitHub). Installed builds force auto.</summary>
     public string UpdateMode { get; set; } = "auto";
-    public bool OpenReportOnStart { get; set; } = true;
     public bool ShowOverlay { get; set; } = true;
 
     /// <summary>Minimizing the window sends the counter to the notification area (system tray) instead of the taskbar.</summary>
