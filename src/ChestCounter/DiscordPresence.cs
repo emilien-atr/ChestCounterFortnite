@@ -153,7 +153,16 @@ internal static class DiscordPresence
                                     },
                                     Buttons = new[]
                                     {
-                                        new DiscordRPC.Button { Label = "GitHub", Url = AppInfo.GitHubUrl },
+                                        new DiscordRPC.Button
+                                        {
+                                            Label = L.T("Suivre sur GitHub", "Follow on GitHub", "Seguir en GitHub"),
+                                            Url = AppInfo.GitHubUrl,
+                                        },
+                                        new DiscordRPC.Button
+                                        {
+                                            Label = L.T("Télécharger", "Download", "Descargar"),
+                                            Url = AppInfo.ReleasesUrl,
+                                        },
                                     },
                                     Timestamps = new Timestamps { Start = StartedAt },
                                 });

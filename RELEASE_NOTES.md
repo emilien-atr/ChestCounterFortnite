@@ -1,21 +1,21 @@
 **Français**
-- **Lien de diffusion** : un nouveau lien local est disponible dans **Réglages → OBS / TikTok Live Studio**. Colle-le dans une source navigateur pour afficher le compteur dans ton live, sans compte ni réglage réseau. La page se rafraîchit toutes les 2 secondes.
-- **Carte violette affinée** : l’overlay en jeu reprend le style illustré de la photo, avec un grand coffre doré, des bords biseautés, le total en or, la dernière partie et la ligne « dont cassés ».
-- **Total complet** : le nombre affiché additionne désormais tous les coffres enregistrés, y compris ceux qui ont été cassés au lieu d’être ouverts.
+- **Carte violette d'origine** : retour de la carte compacte que tu préfères, avec le petit coffre dans l'en-tête, le total en or, la dernière partie et la ligne « dont cassés ». Une animation légère fait respirer la bordure et le coffre, et le total monte à chaque nouveau coffre.
+- **Statut Discord** : deux lignes, minuteur de session et deux boutons (GitHub / téléchargement), dans le même esprit que l'activité Medal. L'activité reste publiée même quand Fortnite est lancé.
+- **Fonctions conservées** : lien OBS/TikTok Live Studio, total complet avec les coffres cassés, archives ZIP des replays et réglages existants.
 
 ---
 
 **English**
-- **Broadcast link**: a new local link is available in **Settings → OBS / TikTok Live Studio**. Paste it into a browser source to show the counter in your live stream, with no account or network setup. The page refreshes every 2 seconds.
-- **Refined purple card**: the in-game overlay now matches the illustrated reference, with a large gold chest, bevelled edges, the gold total, the last match and the “incl. destroyed” line.
-- **Complete total**: the displayed number now adds every recorded chest, including chests that were destroyed instead of opened.
+- **Original purple card**: the compact card you preferred is back, with the small chest in the header, the gold total, the last match and the “incl. destroyed” line. A light animation makes the border and chest breathe, and the total counts up with every new chest.
+- **Discord activity**: two lines, a session timer and two buttons (GitHub / download), in the same spirit as the Medal activity. It stays published even when Fortnite is open.
+- **Kept features**: OBS/TikTok Live Studio link, complete total including destroyed chests, replay ZIP archives and existing settings.
 
 ---
 
 **Español**
-- **Enlace de emisión**: hay un nuevo enlace local en **Ajustes → OBS / TikTok Live Studio**. Pégalo en una fuente de navegador para mostrar el contador en tu directo, sin cuenta ni configuración de red. La página se actualiza cada 2 segundos.
-- **Tarjeta violeta refinada**: el overlay del juego se acerca a la referencia ilustrada, con un cofre dorado grande, bordes biselados, el total en dorado, la última partida y la línea «incl. destruidos».
-- **Total completo**: la cifra mostrada suma ahora todos los cofres registrados, incluidos los que se destruyeron en lugar de abrirse.
+- **Tarjeta violeta original**: vuelve la tarjeta compacta que prefieres, con el cofre pequeño en el encabezado, el total en dorado, la última partida y la línea «incl. destruidos». Una animación ligera hace respirar el borde y el cofre, y el total sube con cada cofre nuevo.
+- **Actividad de Discord**: dos líneas, temporizador de sesión y dos botones (GitHub / descarga), en el mismo espíritu que la actividad Medal. Sigue publicada aunque Fortnite esté abierto.
+- **Funciones conservadas**: enlace OBS/TikTok Live Studio, total completo con cofres destruidos, archivos ZIP de repeticiones y ajustes existentes.
 
 ---
 

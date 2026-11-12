@@ -1003,15 +1003,14 @@ internal sealed class AppWindow : Form
         var matches = Profiles.View(_data, _config).Matches;
         var total = matches.Sum(m => m.TotalChests) + HeadStart.Total(_config);
         var session = matches.Where(ReportWriter.IsThisSession).Sum(m => m.TotalChests);
-        var inGame = FortniteWatch.IsFortniteRunning();
-        var details = inGame
-            ? "Fortnite"
-            : L.T("Compteur de coffres", "Chest counter", "Contador de cofres");
+        // Keep the counter activity visible whether Fortnite is open or not. Discord shows the activity name
+        // from the registered application; these two lines mirror the Medal layout and stay the same in game.
+        var details = L.T("Comptage Fortnite", "Counting Fortnite", "Contando Fortnite");
         var state = total == 0
-            ? L.T("Aucun coffre compté pour l'instant", "No chest counted yet", "Ningún cofre contado todavía")
-            : L.T($"{L.N(total)} coffres au total · {L.N(session)} cette session",
-                  $"{L.N(total)} chests in total · {L.N(session)} this session",
-                  $"{L.N(total)} cofres en total · {L.N(session)} esta sesión");
+            ? L.T("avec ChestCounter", "with ChestCounter", "con ChestCounter")
+            : L.T($"avec ChestCounter · {L.N(total)} coffres · {L.N(session)} cette session",
+                  $"with ChestCounter · {L.N(total)} chests · {L.N(session)} this session",
+                  $"con ChestCounter · {L.N(total)} cofres · {L.N(session)} esta sesión");
         DiscordPresence.Update(_config.DiscordPresence, details, state);
     }
 

@@ -776,7 +776,7 @@ List<(string Label, Action Run, string? About)> Items()
                         var styles = NativeOverlay.Styles;
                         config.OverlayStyle = styles[(Array.IndexOf(styles, config.OverlayStyle) + 1) % styles.Length];
                         NativeOverlay.SetStyle(config.OverlayStyle);
-                    }, L.T("HUD : seuls les chiffres restent, sans fond, comme ceux du jeu (place-le sous la minimap ; un fond apparaît quand il est déverrouillé, pour le déplacer). Carte violette : la carte illustrée avec le grand coffre, le total et la dernière partie. Entrée pour changer, appliqué tout de suite.",
+                    }, L.T("HUD : seuls les chiffres restent, sans fond, comme ceux du jeu (place-le sous la minimap ; un fond apparaît quand il est déverrouillé, pour le déplacer). Carte violette : la carte compacte avec le petit coffre, le total et la dernière partie. Entrée pour changer, appliqué tout de suite.",
                         "HUD: only the figures remain, with no background, like the game's (put it under the minimap; a background shows while it is unlocked, to move it). Purple card: the illustrated card with the large chest, the total and the last match. Enter to switch, applied at once.",
                         "HUD: solo quedan las cifras, sin fondo, como las del juego (ponlo bajo el minimapa; aparece un fondo al desbloquearlo, para moverlo). Tarjeta violeta: la tarjeta ilustrada con el cofre grande, el total y la última partida. Intro para cambiar, se aplica al instante.")));
                     list.Add(Item($"{L.T("Taille de l'overlay", "Overlay size", "Tamaño del overlay")} : {Percent(config.OverlaySize)}", () =>

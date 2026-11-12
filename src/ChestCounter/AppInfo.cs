@@ -9,8 +9,11 @@ public static class AppInfo
     /// <summary>GitHub project whose latest release is installed automatically.</summary>
     public const string UpdateRepo = "emilien-atr/ChestCounterFortnite";
 
-    /// <summary>Project page, also used by the Discord activity button.</summary>
+    /// <summary>Project page, also used by the Discord activity buttons.</summary>
     public const string GitHubUrl = "https://github.com/" + UpdateRepo;
+
+    /// <summary>Latest release page: second Discord activity button.</summary>
+    public const string ReleasesUrl = GitHubUrl + "/releases/latest";
 
     /// <summary>Logo shown in the Discord activity (Discord can load an external image URL).</summary>
     public const string GitHubIconUrl = "https://raw.githubusercontent.com/" + UpdateRepo + "/main/docs/icon.png";

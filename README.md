@@ -20,9 +20,9 @@ Un overlay discret, un rapport clair et toutes tes données sur ton PC.
 
 - Compte les coffres à partir des **rediffusions Fortnite**, quelques secondes après chaque partie.
 - Ne prend en compte que les parties **à partir du 1er novembre 2026**.
-- Affiche un **HUD sur une ligne** ou la **carte violette illustrée**, avec le total, la dernière partie et les coffres cassés.
+- Affiche un **HUD sur une ligne** ou la **carte violette**, avec le total, la dernière partie et les coffres cassés.
 - Fournit un **lien de source navigateur** pour afficher le compteur dans OBS ou TikTok Live Studio.
-- **Activité Discord** : si Discord desktop est ouvert, ton profil affiche le compteur avec le logo et un bouton GitHub.
+- **Activité Discord** : si Discord desktop est ouvert, ton profil affiche le compteur avec un minuteur de session et deux boutons (GitHub / téléchargement), même quand Fortnite est lancé. La première ligne (« Joue à … ») reprend le nom de l'application Discord ; les deux lignes suivantes et les boutons sont ceux du compteur.
 - Garde l’historique, les sessions et les trésors dans un **rapport web** local.
 - Français, anglais et espagnol.
 - **Mises à jour automatiques** depuis GitHub.
@@ -68,7 +68,7 @@ Le rapport s’ouvre dans le navigateur et se met à jour automatiquement pendan
 <img src="docs/overlay-fr.png" alt="Carte violette et HUD sur une ligne" width="360">
 
 - **HUD** : une seule ligne, dans l’esprit du HUD Fortnite. Idéal sous la minimap.
-- **Carte violette** : la carte illustrée avec un grand coffre doré, des bords biseautés, le total en or, la dernière partie et la ligne « dont cassés ». Le même esprit visuel est utilisé pour la source navigateur OBS/TikTok.
+- **Carte violette** : la carte compacte d'origine, avec le petit coffre dans l'en-tête, le total en or, la dernière partie et la ligne « dont cassés ». Une animation discrète fait respirer la bordure et le coffre, et le total monte quand un nouveau coffre est ajouté. Le même esprit visuel est utilisé pour la source navigateur OBS/TikTok.
 
 La taille se règle de **50 à 175 %** et l’opacité de **30 à 100 %** dans **Réglages → Overlay en jeu**. Pour l’afficher au-dessus du jeu, utilise le mode **Plein écran fenêtré** de Fortnite.
 
