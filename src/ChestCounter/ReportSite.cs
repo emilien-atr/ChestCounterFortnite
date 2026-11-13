@@ -20,7 +20,6 @@ public static class ReportSite
         var head = HeadStart.Total(config);
         var total = counted + head;
         var avg = matches.Count > 0 ? (double)counted / matches.Count : 0;
-        var destroyed = matches.Sum(m => m.Chests.Count(c => c.Destroyed));
         var player = matches.Select(m => m.PlayerName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n))
                      ?? profiles.FirstOrDefault()?.Name
                      ?? "";
@@ -103,10 +102,6 @@ public static class ReportSite
         {
             typeNotes.Add(L.T($"Les {N(head)} coffres avant le suivi sont inclus.", $"The {N(head)} chests from before tracking are included.", $"Los {N(head)} cofres anteriores al seguimiento están incluidos."));
         }
-        if (destroyed > 0)
-        {
-            typeNotes.Add(L.T($"dont {N(destroyed)} cassés au lieu d'être ouverts.", $"{N(destroyed)} of them broken instead of opened.", $"{N(destroyed)} de ellos rotos en vez de abiertos."));
-        }
         var typeNote = typeNotes.Count > 0 ? $"<div class=\"card-note\">{string.Join("<br>", typeNotes)}</div>" : "";
 
         var totalMeta = matches.Count > 0
@@ -135,11 +130,6 @@ public static class ReportSite
             var m = matches[i];
             var extra = i >= 5;
             var detail = Pretty.Playlist(m.Playlist) + " · " + Pretty.Placement(m);
-            var broken = m.Chests.Count(c => c.Destroyed);
-            if (broken > 0)
-            {
-                detail += " · " + L.T($"{N(broken)} cassés", $"{N(broken)} broken", $"{N(broken)} rotos");
-            }
             matchRows.Append($"""
                   <tr{(extra ? " class=\"extra\" hidden" : "")}>
                     <td>

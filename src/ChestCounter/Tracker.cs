@@ -547,9 +547,7 @@ public sealed class Tracker
         Console.ResetColor();
         Console.Write($" ({Pretty.Playlist(m.Playlist)}, {Pretty.Placement(m)}){L.T(" : ", ": ", ": ")}");
         Console.ForegroundColor = ConsoleColor.Yellow;
-        var destroyed = m.Chests.Count(c => c.Destroyed);
-        Console.Write(L.Count(m.TotalChests, "coffre", "chest", "cofre")
-            + (destroyed > 0 ? L.T($" (dont {L.Count(destroyed, "détruit", "", "")})", $" ({destroyed} destroyed)", $" ({L.Count(destroyed, "", "", "destruido")})") : ""));
+        Console.Write(L.Count(m.TotalChests, "coffre", "chest", "cofre"));
         Console.ResetColor();
         Console.WriteLine($"  →  total{L.T(" : ", ": ", ": ")}{L.N(total)}");
 

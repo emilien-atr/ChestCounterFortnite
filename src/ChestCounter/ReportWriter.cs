@@ -317,12 +317,6 @@ public static class ReportWriter
             .Where(x => x.Count > 0)
             .OrderByDescending(x => x.Count)
             .ToList();
-        var destroyedTotal = matches.Sum(m => m.Chests.Count(c => c.Destroyed));
-        var notes = new List<string>();
-        if (destroyedTotal > 0)
-        {
-            notes.Add(L.T($"dont {destroyedTotal.ToString("N0", Fr)} détruits (cassés au lieu d'être ouverts)", $"of which {destroyedTotal.ToString("N0", Fr)} destroyed (broken instead of opened)", $"de ellos, {destroyedTotal.ToString("N0", Fr)} destruidos (rotos en lugar de abiertos)"));
-        }
         var treasureRows = matches.SelectMany(m => m.TreasureFinds.Select(f => (m, f, Team: false))).ToList();
         var teamRows = matches.SelectMany(m => m.TeamTreasureFinds.Select(f => (m, f, Team: true))).ToList();
         var unusual = treasureRows.Where(r => !r.f.SourceIsChest).ToList();
@@ -356,7 +350,7 @@ public static class ReportWriter
               <div>
                 <div class="eyebrow">{L.T("Coffres au total", "Chests in total", "Cofres en total")}</div>
                 <div class="hero-value num" aria-live="polite">{totalChests.ToString("N0", Fr)}</div>
-                <div class="hero-sub">{L.T("ouverts ou détruits par toi, d'après tes replays", "opened or destroyed by you, from your replays", "abiertos o destruidos por ti, según tus repeticiones")}</div>
+                <div class="hero-sub">{L.T("tous les coffres comptés, cassés inclus, d'après tes replays", "all counted chests, broken ones included, from your replays", "todos los cofres contados, incluidos los rotos, según tus repeticiones")}</div>
               </div>
               <div class="hero-side">
                 <div class="stat"><span>{L.T("Cette session", "This session", "Esta sesión")}</span><b class="num">{session.ToString("N0", Fr)}</b></div>
@@ -432,7 +426,6 @@ public static class ReportWriter
         }
         sb.Append($"""
                   </div>
-                  {(notes.Count > 0 ? $"<div class=\"items\" style=\"margin-top:12px\">{string.Join(" · ", notes)}</div>" : "")}
                 </div>
               </section>
               <section>
@@ -563,67 +556,154 @@ public static class ReportWriter
 
     public static string Overlay(OverlayView v)
     {
-        var rowsHtml = new StringBuilder();
-        foreach (var r in v.Rows)
+        var objects = v.Objects ?? Array.Empty<OverlayObject>();
+        var objectsHtml = new StringBuilder();
+        var objectCount = objects.Count > 0 ? objects.Count : OverlayObjects.Count;
+        for (var i = 0; i < objectCount; i++)
         {
-            var rowClass = r.Treasure ? "detail treasure" : "detail";
-            rowsHtml.Append($"""
-                <div class="{rowClass}">
-                  <span class="tools" aria-hidden="true">⚒</span>
-                  <span class="detail-label">{H(r.Label)}</span>
-                  <b>{H(r.Value)}</b>
-                  {(r.Detail != null ? $"<small>{H(r.Detail)}</small>" : "")}
+            var o = i < objects.Count ? objects[i] : null;
+            var cls = o?.Found == true ? "obj found" : "obj";
+            var label = o?.Label ?? "";
+            objectsHtml.Append($"""
+                <div class="{cls}" title="{H(label)}" aria-label="{H(label)}" role="img">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#coin"/></svg>
+                  <span class="strike" aria-hidden="true"></span>
                 </div>
                 """);
         }
-        var badgeHtml = v.Badge != null ? $"<span class=\"live\">{H(v.Badge)}</span>" : "";
+        var live = v.CurrentLive
+            ? $"<span class=\"live\"><i></i>{L.T("LIVE", "LIVE", "LIVE")}</span>"
+            : "";
+        var currentLabel = v.CurrentLive
+            ? L.T("CETTE PARTIE", "THIS MATCH", "ESTA PARTIDA")
+            : L.T("DERNIÈRE PARTIE", "LAST MATCH", "ÚLTIMA PARTIDA");
+        var totalLabel = L.T("COFFRES OUVERTS", "CHESTS OPENED", "COFRES ABIERTOS");
+        var objectsLabel = L.T("Objets trouvés", "Objects found", "Objetos encontrados");
         return $$"""
             <!doctype html><html lang="{{L.Code}}"><head><meta charset="utf-8"><meta http-equiv="refresh" content="2">
             <title>{{L.T("Overlay coffres", "Chest overlay", "Overlay de cofres")}}</title>
             <style>
-            *{box-sizing:border-box}html,body{margin:0;background:transparent;color:#f4efff;font:500 15px/1.25 "Segoe UI",system-ui,sans-serif}
-            body{padding:10px}
-            .overlay{position:relative;display:inline-flex;align-items:flex-end;filter:drop-shadow(0 13px 20px rgba(0,0,0,.55))}
-            .chest{position:relative;z-index:2;width:124px;height:108px;flex:none;margin-right:-32px;margin-bottom:-3px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
-            .plate{position:relative;z-index:1;padding:2px;clip-path:polygon(7% 0,95% 0,100% 20%,100% 80%,95% 100%,5% 100%,0 80%,0 20%);background:linear-gradient(135deg,#b18cff,#6d28d9 30%,#4c1d95 65%,#a78bfa)}
-            .inner{clip-path:polygon(7% 0,95% 0,100% 20%,100% 80%,95% 100%,5% 100%,0 80%,0 20%);padding:13px 18px 11px 48px;min-width:300px;background:radial-gradient(420px 160px at 8% 10%,rgba(139,92,246,.25),transparent 70%),linear-gradient(180deg,#2b125a,#140624 82%)}
-            .head{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:19px}
-            .title{font-size:15px;font-weight:800;letter-spacing:.02em;color:#fbf7ff;text-shadow:0 1px 2px #10051e}
-            .live{font-size:11px;font-weight:700;color:#6ee7a0;white-space:nowrap}
-            .figures{display:flex;align-items:stretch;gap:17px;margin-top:2px}
-            .stat{display:flex;flex-direction:column;min-width:0}
-            .stat b{font:800 50px/1.05 "Segoe UI",system-ui,sans-serif;letter-spacing:-.03em;font-variant-numeric:tabular-nums;text-shadow:0 2px 5px rgba(0,0,0,.35)}
-            .total b{color:#ffc943}.last b{color:#fff}
-            .stat span{margin-top:1px;font-size:12px;font-weight:600;color:#baa8d6;white-space:nowrap}
-            .rule{width:1px;align-self:stretch;margin:5px 0 1px;background:rgba(207,183,255,.38)}
-            .detail{display:flex;align-items:center;gap:7px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(167,139,250,.28);color:#d8c7f2;font-size:13px;font-weight:600}
-            .detail .tools{color:#ffc943;font-size:17px;line-height:1}
-            .detail b{margin-left:2px;color:#fff8e1;font-size:14px;font-weight:700}
-            .detail small{color:#baa8d6;font-size:11px;font-weight:600}
-            .detail.treasure b{color:#d8b4fe}
-            </style></head><body><div class="overlay">
-            <svg class="chest" viewBox="0 0 140 120" aria-hidden="true">
-              <defs><linearGradient id="lid" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9b6bff"/><stop offset=".55" stop-color="#6527c7"/><stop offset="1" stop-color="#3b1580"/></linearGradient><linearGradient id="body" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#3b1580"/></linearGradient></defs>
-              <ellipse cx="70" cy="108" rx="53" ry="9" fill="#0b0418" opacity=".75"/>
-              <path d="M16 52V40C16 22 32 10 50 10h40c18 0 34 12 34 30v12Z" fill="url(#lid)" stroke="#16062c" stroke-width="4" stroke-linejoin="round"/>
-              <path d="M21 56h98v42c0 8-6 14-14 14H35c-8 0-14-6-14-14Z" fill="url(#body)" stroke="#16062c" stroke-width="4" stroke-linejoin="round"/>
-              <path d="M21 54h98v12H21Z" fill="#f6b93b" stroke="#16062c" stroke-width="3"/>
-              <path d="M39 17h12v84H39ZM89 17h12v84H89Z" fill="#f6b93b" stroke="#16062c" stroke-width="3"/>
-              <path d="M25 58h90" stroke="#ffd875" stroke-width="2" opacity=".7"/>
-              <rect x="57" y="54" width="26" height="29" rx="5" fill="#ffd15c" stroke="#16062c" stroke-width="3"/>
-              <circle cx="70" cy="65" r="4" fill="#291044"/><path d="M70 68v7" stroke="#291044" stroke-width="3" stroke-linecap="round"/>
-              <path d="M34 25c9-8 22-11 38-11" fill="none" stroke="#e6d4ff" stroke-width="3" stroke-linecap="round" opacity=".55"/>
-            </svg>
-            <div class="plate"><div class="inner">
-              <div class="head"><span class="title">{{L.T("COFFRES", "CHESTS", "COFRES")}}</span>{{badgeHtml}}</div>
-              <div class="figures">
-                <div class="stat total"><b>{{H(v.Total)}}</b><span>{{L.T("total", "total", "total")}}</span></div>
-                <div class="rule"></div>
-                <div class="stat last"><b>{{H(v.Current ?? "—")}}</b><span>{{H(v.CurrentCaption)}}</span></div>
+            {{FontFace}}
+            *{box-sizing:border-box}
+            html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden}
+            body{display:grid;place-items:center;padding:2vh 2vw;color:#f8e7b0;font-family:"Segoe UI",system-ui,sans-serif}
+            .card{position:relative;width:min(96vw,calc(96vh * 1.957));aspect-ratio:920/470;border-radius:30px;padding:3px;
+              background:linear-gradient(135deg,#ff8df4 0%,#b15cff 25%,#5b21b6 63%,#38bdf8 100%);
+              box-shadow:0 0 0 2px rgba(255,120,245,.24),0 0 46px rgba(139,92,246,.55),0 20px 55px rgba(0,0,0,.72)}
+            .inner{position:relative;width:100%;height:100%;overflow:hidden;border-radius:27px;container-type:inline-size;
+              border:1px solid rgba(181,124,255,.78);
+              background:
+                radial-gradient(38% 55% at 9% 8%,rgba(239,114,255,.32),transparent 70%),
+                radial-gradient(35% 50% at 95% 8%,rgba(80,190,255,.2),transparent 70%),
+                radial-gradient(55% 65% at 62% 115%,rgba(94,35,170,.55),transparent 72%),
+                linear-gradient(145deg,#2b0f55 0%,#1b0a3c 42%,#130631 100%)}
+            .inner:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.7;
+              background-image:radial-gradient(circle at 18% 26%,rgba(255,239,175,.8) 0 1px,transparent 1.8px),
+                radial-gradient(circle at 76% 18%,rgba(255,255,255,.6) 0 1px,transparent 1.6px),
+                radial-gradient(circle at 88% 72%,rgba(255,214,108,.6) 0 1px,transparent 1.7px),
+                radial-gradient(circle at 36% 82%,rgba(205,180,255,.5) 0 1px,transparent 1.5px);
+              background-size:170px 150px,230px 190px,280px 210px,310px 240px}
+            .inner:after{content:"";position:absolute;inset:0;pointer-events:none;
+              box-shadow:inset 0 0 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.12)}
+            .objects{position:absolute;top:2.2%;right:21%;z-index:4;display:grid;grid-template-columns:repeat(5,4.2cqw);gap:.55cqw}
+            .obj{position:relative;aspect-ratio:1;display:grid;place-items:center;border-radius:.9cqw;color:#492900;
+              border:.16cqw solid #ffdd7a;
+              background:linear-gradient(145deg,#ffe89a 0%,#e6a91c 54%,#8a4d05 100%);
+              box-shadow:inset 0 .2cqw .25cqw rgba(255,255,255,.36),inset 0 -.25cqw .35cqw rgba(77,32,0,.55),0 .45cqw .85cqw rgba(0,0,0,.45)}
+            .obj svg{width:66%;height:66%;filter:drop-shadow(0 1px 0 rgba(255,255,255,.3))}
+            .obj.found{color:#5e2728;border-color:#a82a3c;background:linear-gradient(145deg,#68101e 0%,#360710 55%,#1d0308 100%);
+              box-shadow:inset 0 0 1cqw rgba(255,45,65,.2),0 .4cqw .8cqw rgba(0,0,0,.5)}
+            .obj.found svg{opacity:.32}
+            .obj .strike{display:none}
+            .obj.found .strike{display:block;position:absolute;inset:7%;pointer-events:none;filter:drop-shadow(0 0 4px rgba(255,0,40,.8))}
+            .obj.found .strike:before,.obj.found .strike:after{content:"";position:absolute;left:47%;top:-4%;width:11%;height:108%;border-radius:2px;
+              background:linear-gradient(180deg,#ff8a92,#ff2038 40%,#c40021);transform-origin:center}
+            .obj.found .strike:before{transform:translateX(-50%) rotate(45deg)}
+            .obj.found .strike:after{transform:translateX(-50%) rotate(-45deg)}
+            .live{position:absolute;top:4.8%;right:2.7%;z-index:5;display:inline-flex;align-items:center;gap:.7cqw;
+              padding:.65cqw 1.45cqw;border-radius:999px;border:1px solid rgba(255,166,225,.8);
+              background:linear-gradient(135deg,#ff4f9a,#da1d74);box-shadow:0 0 1.8cqw rgba(255,44,142,.65);
+              color:#fff;font-size:1.45cqw;font-weight:800;letter-spacing:.12em;line-height:1}
+            .live i{width:.95cqw;height:.95cqw;border-radius:50%;background:#fff;box-shadow:0 0 0 .25cqw rgba(255,255,255,.18)}
+            .chest{position:absolute;left:3%;top:13%;z-index:2;width:27%;height:auto;overflow:visible;
+              filter:drop-shadow(0 1.2cqw 1.2cqw rgba(0,0,0,.55)) drop-shadow(0 0 1.8cqw rgba(255,178,42,.28))}
+            .figures{position:absolute;left:31.5%;right:5.5%;top:23%;bottom:15%;z-index:3;display:grid;
+              grid-template-columns:1.35fr 1px .9fr;gap:3.2%;align-items:start}
+            .stat{min-width:0;display:flex;flex-direction:column;align-items:flex-start}
+            .label{color:#ffd37a;font:400 2.55cqw/1 "Pirata One","Segoe UI",sans-serif;letter-spacing:.045em;white-space:nowrap;
+              text-shadow:0 .2cqw 0 #5b2a00,0 0 1.1cqw rgba(255,191,64,.35)}
+            .value{margin-top:1.15cqw;font:800 8.15cqw/.92 "Bahnschrift","Arial Black",sans-serif;font-variant-numeric:tabular-nums;
+              letter-spacing:.015em;color:#ffd45e;
+              background:linear-gradient(180deg,#fff8c7 0%,#ffe07d 28%,#ffc12d 55%,#f59e0b 78%,#b45309 100%);
+              -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+              filter:drop-shadow(0 .35cqw 0 #612d00) drop-shadow(0 0 1.25cqw rgba(255,177,36,.42))}
+            .sep{width:1px;height:78%;align-self:center;background:linear-gradient(180deg,transparent,rgba(255,211,122,.9) 18%,rgba(255,211,122,.9) 82%,transparent)}
+            .live,.label,.value{white-space:nowrap}
+            </style></head><body>
+            <section class="card">
+              <div class="inner">
+                <div class="objects" aria-label="{{objectsLabel}}">{{objectsHtml}}</div>
+                {{live}}
+                <svg class="chest" viewBox="0 0 260 230" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0a6"/><stop offset=".22" stop-color="#ffc93c"/><stop offset=".58" stop-color="#d68a0b"/><stop offset="1" stop-color="#7b3d04"/></linearGradient>
+                    <linearGradient id="gold2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6c5"/><stop offset=".35" stop-color="#ffd45e"/><stop offset=".75" stop-color="#c77a08"/><stop offset="1" stop-color="#6f3602"/></linearGradient>
+                    <linearGradient id="wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7b2b19"/><stop offset="1" stop-color="#2b0807"/></linearGradient>
+                    <radialGradient id="ruby"><stop offset="0" stop-color="#ffb3b3"/><stop offset=".45" stop-color="#ef254c"/><stop offset="1" stop-color="#650017"/></radialGradient>
+                    <radialGradient id="amethyst"><stop offset="0" stop-color="#f2c4ff"/><stop offset=".45" stop-color="#b054ff"/><stop offset="1" stop-color="#3c0a68"/></radialGradient>
+                    <filter id="chestShadow" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#000" flood-opacity=".65"/></filter>
+                    <filter id="gemGlow" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                  </defs>
+                  <ellipse cx="132" cy="216" rx="98" ry="12" fill="#05020c" opacity=".75"/>
+                  <g filter="url(#chestShadow)">
+                    <path d="M27 132C10 117 3 134 10 151c7 17 19 21 31 12" fill="none" stroke="#c89125" stroke-width="6" stroke-linecap="round" stroke-dasharray="9 5"/>
+                    <path d="M232 137c17-13 25 4 18 20-6 14-17 18-28 10" fill="none" stroke="#c89125" stroke-width="6" stroke-linecap="round" stroke-dasharray="9 5"/>
+                    <path d="M53 103c0-20 12-34 31-39h98c19 5 31 19 31 39v98c0 13-7 20-20 20H73c-13 0-20-7-20-20z" fill="url(#wood)" stroke="#3a1205" stroke-width="5"/>
+                    <path d="M43 95c0-38 23-61 62-67h56c39 6 62 29 62 67z" fill="url(#gold2)" stroke="#4a2103" stroke-width="6"/>
+                    <path d="M53 103h160v98c0 13-7 20-20 20H73c-13 0-20-7-20-20z" fill="url(#gold)" stroke="#4a2103" stroke-width="6"/>
+                    <path d="M47 99h172" stroke="#ffe08a" stroke-width="5" opacity=".8"/>
+                    <path d="M75 31v187M191 31v187" stroke="#7b3d04" stroke-width="14" opacity=".78"/>
+                    <path d="M75 31v187M191 31v187" stroke="#ffd76a" stroke-width="4" opacity=".8"/>
+                    <path d="M58 118h150M58 188h150" stroke="#5b2a03" stroke-width="4" opacity=".55"/>
+                    <path d="M44 88c18-22 42-33 74-33s58 11 75 33" fill="none" stroke="#fff1ad" stroke-width="4" opacity=".45"/>
+                    <g transform="translate(130 151)" filter="url(#gemGlow)">
+                      <path d="M-38 -27c0-34 76-34 76 0 0 17-11 29-17 36v11c0 9-42 9-42 0v-11c-6-7-17-19-17-36z" fill="#f3e2b9" stroke="#5b2b0a" stroke-width="4"/>
+                      <ellipse cx="-16" cy="-17" rx="10" ry="12" fill="#1d0805"/>
+                      <ellipse cx="16" cy="-17" rx="10" ry="12" fill="#1d0805"/>
+                      <ellipse cx="-16" cy="-18" rx="4" ry="5" fill="#ff334f" opacity=".8"/>
+                      <ellipse cx="16" cy="-18" rx="4" ry="5" fill="#ff334f" opacity=".8"/>
+                      <path d="M0 -2 L-8 13 H8 Z" fill="#3b1608"/>
+                      <path d="M-21 25c8 5 34 5 42 0" fill="none" stroke="#5b2b0a" stroke-width="3"/>
+                      <path d="M-13 26v10M-4 27v11M5 27v11M14 26v10" stroke="#5b2b0a" stroke-width="2" opacity=".8"/>
+                    </g>
+                    <g filter="url(#gemGlow)">
+                      <circle cx="77" cy="82" r="12" fill="url(#ruby)" stroke="#ffb7c4" stroke-width="2"/>
+                      <circle cx="183" cy="82" r="12" fill="url(#ruby)" stroke="#ffb7c4" stroke-width="2"/>
+                      <circle cx="53" cy="145" r="9" fill="url(#amethyst)" stroke="#d9a6ff" stroke-width="2"/>
+                      <circle cx="207" cy="145" r="9" fill="url(#amethyst)" stroke="#d9a6ff" stroke-width="2"/>
+                    </g>
+                    <rect x="105" y="102" width="50" height="31" rx="5" fill="#2a0a06" stroke="#ffd76a" stroke-width="4"/>
+                    <circle cx="130" cy="115" r="6" fill="#ffcf57"/><path d="M130 120v8" stroke="#ffcf57" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M20 185c22 12 40-5 60 4 18 8 33 12 50 12s34-5 52-13c20-9 39 8 58-3" fill="none" stroke="#d39a29" stroke-width="7" stroke-linecap="round" stroke-dasharray="12 6" opacity=".9"/>
+                    <path d="M61 60c15-9 30-13 48-13" fill="none" stroke="#fffbd2" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+                  </g>
+                </svg>
+                <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+                  <symbol id="coin" viewBox="0 0 24 24">
+                    <ellipse cx="12" cy="18" rx="8.6" ry="3" fill="currentColor" opacity=".55"/>
+                    <path d="M3.4 13.2c0-2.2 3.8-4 8.6-4s8.6 1.8 8.6 4v3.1c0 2.2-3.8 4-8.6 4s-8.6-1.8-8.6-4z" fill="currentColor"/>
+                    <path d="M3.4 9.1c0-2.2 3.8-4 8.6-4s8.6 1.8 8.6 4-3.8 4-8.6 4-8.6-1.8-8.6-4z" fill="currentColor" opacity=".85"/>
+                    <path d="M3.4 5.2c0-2.2 3.8-4 8.6-4s8.6 1.8 8.6 4-3.8 4-8.6 4-8.6-1.8-8.6-4z" fill="currentColor" opacity=".7"/>
+                    <path d="M6 10.2c1.8 1.4 9.9 1.4 12 0" fill="none" stroke="#7b4200" stroke-width="1.2" opacity=".5"/>
+                  </symbol>
+                </svg>
+                <div class="figures">
+                  <div class="stat"><span class="label">{{totalLabel}}</span><b class="value">{{H(v.Total)}}</b></div>
+                  <div class="sep" aria-hidden="true"></div>
+                  <div class="stat"><span class="label">{{currentLabel}}</span><b class="value">{{H(v.Current ?? "—")}}</b></div>
+                </div>
               </div>
-              {{(rowsHtml.Length > 0 ? rowsHtml.ToString() : "")}}
-            </div></div>
-            </div></body></html>
+            </section></body></html>
             """;
     }
 

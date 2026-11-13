@@ -20,8 +20,8 @@ Un overlay discret, un rapport clair et toutes tes données sur ton PC.
 
 - Compte les coffres à partir des **rediffusions Fortnite**, quelques secondes après chaque partie.
 - Ne prend en compte que les parties **à partir du 1er novembre 2026**.
-- Affiche un **HUD sur une ligne** ou la **carte violette**, avec le total, la dernière partie et les coffres cassés.
-- Fournit un **lien de source navigateur** pour afficher le compteur dans OBS ou TikTok Live Studio.
+- Affiche un **HUD sur une ligne** ou la **carte violette**, avec le total et la dernière partie.
+- Fournit un **lien de source navigateur** pour afficher dans OBS ou TikTok Live Studio la grande carte pirate, avec le total, la partie en cours et les récompenses déjà trouvées.
 - **Activité Discord** : si Discord desktop est ouvert, ton profil affiche le compteur avec un minuteur de session et deux boutons (GitHub / téléchargement), même quand Fortnite est lancé. La première ligne (« Joue à … ») reprend le nom de l'application Discord ; les deux lignes suivantes et les boutons sont ceux du compteur.
 - Garde l’historique, les sessions et les trésors dans un **rapport web** local.
 - Français, anglais et espagnol.
@@ -46,7 +46,7 @@ Seules les parties **commencées le 1er novembre 2026 ou après** sont comptées
 
 ## Calcul des coffres
 
-Le total additionne **tous les coffres trouvés dans les replays** : coffres classiques, rares, enterrés, coffres d’esprit, coffres des affiches et autres coffres. Les coffres **cassés au lieu d’être ouverts** sont inclus, et la ligne **« dont cassés »** indique leur part dans le total. Les caisses de munitions, caisses de nourriture et autres conteneurs restent suivis séparément dans le rapport.
+Le total additionne **tous les coffres trouvés dans les replays** : coffres classiques, rares, enterrés, coffres d’esprit, coffres des affiches et autres coffres. Les coffres **cassés au lieu d’être ouverts** sont directement inclus dans ce total, sans ligne séparée ; la dernière partie suit le même calcul. Les caisses de munitions, caisses de nourriture et autres conteneurs restent suivis séparément dans le rapport.
 
 ## Interface
 
@@ -65,20 +65,21 @@ Le rapport s’ouvre dans le navigateur et se met à jour automatiquement pendan
 
 ## Overlay
 
-<img src="docs/overlay-fr.png" alt="Carte violette et HUD sur une ligne" width="360">
+<img src="docs/overlay-fr.png" alt="Grande carte pirate pour OBS et TikTok Live Studio" width="800">
 
 - **HUD** : une seule ligne, dans l’esprit du HUD Fortnite. Idéal sous la minimap.
-- **Carte violette** : la carte compacte d'origine, avec le petit coffre dans l'en-tête, le total en or, la dernière partie et la ligne « dont cassés ». Une animation discrète fait respirer la bordure et le coffre, et le total monte quand un nouveau coffre est ajouté. Le même esprit visuel est utilisé pour la source navigateur OBS/TikTok.
+- **Carte violette en jeu** : la carte compacte, avec le petit coffre dans l'en-tête, le total en or et la dernière partie. Une animation brève fait monter le total quand un nouveau coffre est ajouté, puis la carte reste immobile.
+- **Carte OBS / TikTok Live Studio** : la grande carte pirate avec le coffre à crâne, les deux compteurs en or et la grille des **10 récompenses Treasure Hunt**. Une récompense déjà trouvée dans tes replays est automatiquement barrée d'une croix rouge ; les autres restent en or. La grille se remplit à partir du `PrizeId` du coffre doré, sans clic manuel.
 
 La taille se règle de **50 à 175 %** et l’opacité de **30 à 100 %** dans **Réglages → Overlay en jeu**. Pour l’afficher au-dessus du jeu, utilise le mode **Plein écran fenêtré** de Fortnite.
 
 ## OBS / TikTok Live Studio
 
-Pour afficher le compteur dans un live :
+Pour afficher la grande carte dans un live :
 
 1. Ouvre **Réglages → OBS / TikTok Live Studio** et clique sur **Copier le lien**.
 2. Dans OBS, ajoute une source **Navigateur** et colle le lien. Dans TikTok Live Studio, utilise sa source navigateur si ta version en propose une.
-3. Règle la taille de la source sur **1920 × 1080** (ou la taille de ton canvas) : le fond de la page est transparent.
+3. Règle la taille de la source sur **1920 × 1080** (ou la taille de ton canvas) : la carte s'adapte à la source et le fond de la page est transparent.
 
 Le lien est servi uniquement sur ce PC, à l’adresse `127.0.0.1` affichée dans les réglages. Le compteur doit rester ouvert pendant le live ; aucun réglage réseau, compte ou hébergement externe n’est nécessaire. Le port peut changer si le port préféré est déjà occupé : utilise toujours le lien affiché dans l’application.
 

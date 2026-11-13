@@ -15,7 +15,10 @@ public sealed record OverlayRow(string Label, string Value, bool Treasure = fals
 /// <param name="Current">Right counter (match in progress, or last match); null = "—".</param>
 /// <param name="CurrentLive">Right counter is the match in progress (green).</param>
 /// <param name="Badge">Header badge ("● EN DIRECT" / "● LIVE", "● PARTIE EN COURS" / "● MATCH IN PROGRESS") or null.</param>
-public sealed record OverlayView(string Total, string? Current, string CurrentCaption, bool CurrentLive, string? Badge, IReadOnlyList<OverlayRow> Rows, string Treasures = "0", string Session = "0", string? Last = null);
+public sealed record OverlayView(string Total, string? Current, string CurrentCaption, bool CurrentLive, string? Badge, IReadOnlyList<OverlayRow> Rows, string Treasures = "0", string Session = "0", string? Last = null, IReadOnlyList<OverlayObject>? Objects = null);
+
+/// <summary>One collectible shown in the OBS/TikTok card. Found comes from the replays, never from a manual click.</summary>
+public sealed record OverlayObject(string Label, bool Found);
 
 [SupportedOSPlatform("windows")]
 public static class NativeOverlay
@@ -55,10 +58,9 @@ public static class NativeOverlay
     private static long _plusStartedMs;
     private static bool _animationTimerRunning;
     private const int AnimationTimerId = 1;
-    private const int AnimationTimerMs = 50;
+    private const int AnimationTimerMs = 33;
     private const double TotalAnimationMs = 480;
     private const double PlusAnimationMs = 900;
-    private const double CardBreathMs = 4200;
 
     /// <summary>"hud" (figures only, under the minimap, like the game's HUD) or "classic" (dark card).</summary>
     private static volatile string _style = "classic";
@@ -653,13 +655,10 @@ public static class NativeOverlay
     private static void PaintCardBackground(IntPtr hdc, RECT rc)
     {
         var height = Math.Max(1, rc.Bottom - rc.Top);
-        var pulse = CardPulse();
-        var top = Blend(Rgb(30, 18, 53), Rgb(38, 23, 66), 0.08 + 0.35 * pulse);
-        var bottom = Blend(Rgb(13, 7, 30), Rgb(17, 9, 37), 0.08 + 0.35 * pulse);
         for (var i = 0; i < height; i++)
         {
             var t = height <= 1 ? 0d : i / (double)(height - 1);
-            var brush = CreateSolidBrush(Blend(top, bottom, t));
+            var brush = CreateSolidBrush(Blend(Rgb(30, 18, 53), Rgb(13, 7, 30), t));
             var line = new RECT { Left = rc.Left, Top = rc.Top + i, Right = rc.Right, Bottom = rc.Top + i + 1 };
             FillRect(hdc, ref line, brush);
             DeleteObject(brush);
@@ -679,7 +678,7 @@ public static class NativeOverlay
 
     // ---- "hud" style: figures only, outlined like the game's own HUD, right-aligned under the minimap -------------
     //
-    //   [chest] 3 934   Dernière • 14   dont cassés • 17
+    //   [chest] 3 934   Dernière • 14
     // One horizontal row, like the game's own HUD. The last part becomes "● En partie" or "● En direct • 12".
 
     private sealed record HudRow(string Label, string Value, bool Dot);
@@ -717,7 +716,7 @@ public static class NativeOverlay
             var stateW = stateTextW + (state.Dot ? Sc(18) : 0);
             var rowsW = v.Rows.Sum(r => Sc(18) + TextWidth(hdc, _fontHudSmall, r.Label + Sep + r.Value, out _));
             var lineH = Math.Max(_hudBigH, _hudSmallH);
-            // One row: chest + total, then the last/live counter and the destroyed chests.
+            // One row: chest + total, then the last/live counter. Extra rows are kept empty.
             w = lockW + pad + Sc(26) + Sc(8) + bigW + Sc(18) + stateW + rowsW + pad + Sc(14);
             h = pad + lineH + pad;
             w = Math.Max(_stableW, w);
@@ -1047,11 +1046,16 @@ public static class NativeOverlay
         }
     }
 
-    /// <summary>Slow breath for the classic card. 0 = dim, 1 = bright.</summary>
+    /// <summary>Short highlight while the total counts up; exactly zero when the card is at rest.</summary>
     private static double CardPulse()
     {
-        var phase = Environment.TickCount64 / CardBreathMs * Math.PI * 2;
-        return 0.5 + 0.5 * Math.Sin(phase);
+        lock (_animationLock)
+        {
+            if (!_totalAnimating) return 0;
+            var elapsed = Environment.TickCount64 - _totalStartedMs;
+            if (elapsed >= TotalAnimationMs) return 0;
+            return 1 - Math.Clamp(elapsed / TotalAnimationMs, 0, 1);
+        }
     }
 
     /// <summary>Total while it counts up; the latest value until the first animation starts.</summary>
@@ -1072,8 +1076,8 @@ public static class NativeOverlay
             StopAnimationTimer(hwnd);
             return;
         }
-        // The classic card always breathes; the HUD only animates while live or after a gain.
-        var needed = !Keyed || _view.CurrentLive || _view.Badge != null || AnyMotion();
+        // The card only animates during a gain; the HUD also animates while live.
+        var needed = AnyMotion() || (Keyed && (_view.CurrentLive || _view.Badge != null));
         if (!needed)
         {
             StopAnimationTimer(hwnd);

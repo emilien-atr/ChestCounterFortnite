@@ -894,6 +894,12 @@ public static class TreasureNames
         "delilahprize:dpid_item2" => L.T("Plunder in Paradise (écran de chargement)", "Plunder in Paradise (loading screen)", "Plunder in Paradise (pantalla de carga)"),
         "delilahprize:dpid_item3" => L.T("Mercedes-AMG G 63 (véhicule) ?", "Mercedes-AMG G 63 (vehicle) ?", "Mercedes-AMG G 63 (vehículo) ?"),
         "delilahprize:dpid_item4" => L.T("No Trespassing (piste musicale)", "No Trespassing (music track)", "No Trespassing (pista musical)"),
+        "delilahprize:dpid_item5" => L.T("Tenue A$AP Rocky en or massif ?", "A$AP Rocky solid gold outfit ?", "Atuendo dorado de A$AP Rocky ?"),
+        "delilahprize:dpid_item6" => L.T("Tenue Lil Uzi Vert en or massif ?", "Lil Uzi Vert solid gold outfit ?", "Atuendo dorado de Lil Uzi Vert ?"),
+        "delilahprize:dpid_item7" => L.T("Sac à dos Lil' Uzi Crew ?", "Lil' Uzi Crew back bling ?", "Mochila Lil' Uzi Crew ?"),
+        "delilahprize:dpid_item8" => L.T("London (piste musicale) ?", "London (music track) ?", "London (pista musical) ?"),
+        "delilahprize:dpid_item9" => L.T("So Kawaii (écran de chargement) ?", "So Kawaii (loading screen) ?", "So Kawaii (pantalla de carga) ?"),
+        "delilahprize:dpid_item10" => L.T("Cadillac CT5-V Blackwing (véhicule) ?", "Cadillac CT5-V Blackwing (vehicle) ?", "Cadillac CT5-V Blackwing (vehículo) ?"),
         _ => null,
     };
 
