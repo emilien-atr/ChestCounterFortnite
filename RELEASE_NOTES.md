@@ -1,28 +1,26 @@
-**Français**
-- **Nouvelle carte OBS / TikTok Live Studio** : grande carte pirate sombre avec coffre à crâne, bordure violette/rose, total en or, partie en cours et badge LIVE. Le titre et les textes du bas ont été retirés.
-- **Grille des récompenses** : les 10 récompenses Treasure Hunt sont affichées en haut à droite. Une récompense trouvée dans un replay est automatiquement barrée d'une croix rouge, sans clic manuel.
-- **Coffres cassés intégrés au total** : la ligne « dont cassés » disparaît de la carte, du HUD et du rapport. Les coffres cassés comptent directement dans le total et dans la dernière partie.
-- **Animation corrigée** : plus de pulsation permanente qui pouvait scintiller ou saccader. Seul le total s'anime brièvement quand un nouveau coffre est ajouté, puis la carte reste immobile.
-- **Fonctions conservées** : HUD en jeu, statut Discord avec minuteur et deux boutons, lien OBS/TikTok, archives ZIP des replays et réglages existants.
+**1.4.0 — Le compteur sort aussi en stream**
 
----
+**Français**
+- **Nouvel overlay de jeu pour le stream** : en plus de la grande carte, Chest Counter sert maintenant une carte compacte sur `/overlay/game`. Elle reprend le style de l'overlay en jeu (carte sombre, total en or, partie en cours ou dernière partie et badge LIVE) et se met à jour automatiquement.
+- **Deux liens dans les réglages** : la section **OBS / TikTok Live Studio** propose désormais **Carte complète** et **Overlay de jeu (stream)**, avec un bouton pour copier et un bouton pour ouvrir chaque aperçu.
+- **Site entièrement refondu** : cinq pages séparées (accueil, fonctionnalités, installation, overlays, FAQ), des captures réelles de l'interface, un calculateur de coffres manqués et un ton éditorial beaucoup plus lisible. Le bouton de téléchargement pointe toujours vers la dernière version.
+- **Coffres manqués expliqués** : le site rappelle que les replays ne sont pas rétroactifs et propose une estimation basée sur une moyenne de 30 coffres par partie. Aucun coffre d'une partie non enregistrée ne peut être récupéré.
+- **Fonctions conservées** : HUD en jeu, overlay natif, grande carte OBS/TikTok, rapports, historique, activité Discord, archives ZIP et mises à jour automatiques.
 
 **English**
-- **New OBS / TikTok Live Studio card**: a large dark pirate card with a skull chest, purple/pink border, gold total, current match and LIVE badge. The title and bottom texts are gone.
-- **Reward grid**: the 10 Treasure Hunt rewards sit in the top-right corner. A reward found in a replay is automatically crossed out in red, with no manual click.
-- **Broken chests counted in the total**: the “incl. destroyed” line is gone from the card, HUD and report. Broken chests count directly in the total and in the last match.
-- **Animation fixed**: no more permanent pulse that could shimmer or stutter. Only the total animates briefly when a new chest is added, then the card stays still.
-- **Kept features**: in-game HUD, Discord activity with timer and two buttons, OBS/TikTok link, replay ZIP archives and existing settings.
-
----
+- **New game overlay for streams**: alongside the large card, Chest Counter now serves a compact `/overlay/game` card. It matches the in-game overlay (dark card, gold total, current or last match, LIVE badge) and refreshes automatically.
+- **Two settings links**: **OBS / TikTok Live Studio** now offers **Full card** and **Game overlay (stream)**, each with copy and preview buttons.
+- **Site rebuilt**: five separate pages, real interface screenshots, a missed-chest estimator and a clearer editorial look. Download buttons always point to the latest release.
+- **Missed chests explained**: replays are not retroactive. The site offers an estimate based on roughly 30 chests per match; chests from matches that were never recorded cannot be recovered.
+- **Kept features**: in-game HUD, native overlay, large OBS/TikTok card, reports, history, Discord activity, replay ZIP archives and automatic updates.
 
 **Español**
-- **Nueva tarjeta para OBS / TikTok Live Studio**: gran tarjeta pirata oscura con cofre de calavera, borde violeta/rosa, total dorado, partida actual e indicador LIVE. Se han eliminado el título y los textos inferiores.
-- **Cuadrícula de recompensas**: las 10 recompensas de Treasure Hunt aparecen arriba a la derecha. Una recompensa encontrada en una repetición se tacha automáticamente con una cruz roja, sin clic manual.
-- **Cofres rotos incluidos en el total**: desaparece la línea «incl. destruidos» de la tarjeta, el HUD y el informe. Los cofres rotos cuentan directamente en el total y en la última partida.
-- **Animación corregida**: se acabó la pulsación permanente que podía parpadear o entrecortarse. Solo el total se anima brevemente al añadir un cofre, y luego la tarjeta queda inmóvil.
-- **Funciones conservadas**: HUD en el juego, actividad de Discord con temporizador y dos botones, enlace OBS/TikTok, archivos ZIP de repeticiones y ajustes existentes.
+- **Nuevo overlay de juego para streams**: además de la tarjeta grande, Chest Counter sirve una tarjeta compacta en `/overlay/game`, con el estilo del overlay del juego, total dorado, partida actual o última y indicador LIVE.
+- **Dos enlaces en los ajustes**: **OBS / TikTok Live Studio** ofrece **Tarjeta completa** y **Overlay de juego (stream)**, con botones para copiar y abrir cada vista.
+- **Sitio renovado**: cinco páginas separadas, capturas reales, calculadora de cofres no contados y un estilo editorial más claro.
+- **Cofres perdidos**: las repeticiones no son retroactivas. La web recuerda que las partidas sin replay no se pueden recuperar y ofrece una estimación de 30 cofres por partida.
+- **Funciones conservadas**: HUD, overlay nativo, tarjeta grande para OBS/TikTok, informes, historial, actividad de Discord, archivos ZIP y actualizaciones automáticas.
 
 ---
 
-Windows peut afficher « Windows a protégé votre ordinateur » (exe non signé) : **Informations complémentaires → Exécuter quand même**.
+Windows peut afficher « Windows a protégé votre ordinateur » (exe non signé) : **Informations complémentaires → Exécuter quand même**. Téléchargement : https://github.com/emilien-atr/ChestCounterFortnite/releases/latest

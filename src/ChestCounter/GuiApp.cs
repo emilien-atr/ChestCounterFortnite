@@ -337,6 +337,12 @@ internal sealed class AppWindow : Form
                 case "openBroadcast":
                     OpenBroadcastLink();
                     break;
+                case "copyBroadcastGame":
+                    CopyBroadcastGameLink();
+                    break;
+                case "openBroadcastGame":
+                    OpenBroadcastGameLink();
+                    break;
                 case "lock":
                     if (OperatingSystem.IsWindows() && NativeOverlay.IsRunning)
                     {
@@ -495,6 +501,7 @@ internal sealed class AppWindow : Form
             broadcast = new
             {
                 url = _broadcastUrl ?? "",
+                gameUrl = OverlayServer.GameUrl ?? "",
                 running = !string.IsNullOrEmpty(_broadcastUrl),
             },
             replay = new
@@ -1266,14 +1273,50 @@ internal sealed class AppWindow : Form
 
     private void OpenBroadcastLink()
     {
-        if (string.IsNullOrWhiteSpace(_broadcastUrl))
+        OpenBroadcastLink(_broadcastUrl);
+    }
+
+    private void CopyBroadcastGameLink()
+    {
+        CopyBroadcastLink(OverlayServer.GameUrl, L.T("Lien de l'overlay de jeu copié : colle-le dans une source navigateur OBS ou TikTok Live Studio.",
+            "Game overlay link copied: paste it into an OBS or TikTok Live Studio browser source.",
+            "Enlace del overlay de juego copiado: pégalo en una fuente de navegador de OBS o TikTok Live Studio."));
+    }
+
+    private void OpenBroadcastGameLink()
+    {
+        OpenBroadcastLink(OverlayServer.GameUrl);
+    }
+
+    private void CopyBroadcastLink(string? url, string message)
+    {
+        if (string.IsNullOrWhiteSpace(url))
         {
             Toast(L.T("Lien de diffusion indisponible : redémarre ChestCounterFortnite.", "Broadcast link unavailable: restart ChestCounterFortnite.", "Enlace de emisión no disponible: reinicia ChestCounterFortnite."), "error");
             return;
         }
         try
         {
-            Process.Start(new ProcessStartInfo(_broadcastUrl) { UseShellExecute = true })?.Dispose();
+            Clipboard.SetText(url);
+            Toast(message, "ok");
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Broadcast game link copy", ex);
+            Toast(L.T("Impossible de copier le lien.", "Could not copy the link.", "No se pudo copiar el enlace."), "error");
+        }
+    }
+
+    private void OpenBroadcastLink(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            Toast(L.T("Lien de diffusion indisponible : redémarre ChestCounterFortnite.", "Broadcast link unavailable: restart ChestCounterFortnite.", "Enlace de emisión no disponible: reinicia ChestCounterFortnite."), "error");
+            return;
+        }
+        try
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true })?.Dispose();
         }
         catch (Exception ex)
         {
@@ -1496,6 +1539,16 @@ internal static class OverlayServer
         }
     }
 
+    /// <summary>The compact in-game look, served for stream browser sources.</summary>
+    public static string? GameUrl
+    {
+        get
+        {
+            var url = Url;
+            return url == null ? null : url + "/game";
+        }
+    }
+
     /// <summary>Starts the loopback server and returns the URL to paste into a browser source.</summary>
     public static string? Start(Store store)
     {
@@ -1519,7 +1572,7 @@ internal static class OverlayServer
                 _listener = listener;
                 _stopper = stopper;
                 _url = $"http://127.0.0.1:{actualPort}/overlay";
-                _ = Task.Run(() => AcceptLoopAsync(listener, store.OverlayPath, stopper.Token));
+                _ = Task.Run(() => AcceptLoopAsync(listener, store.OverlayPath, store.GameOverlayPath, stopper.Token));
                 return _url;
             }
 
@@ -1564,7 +1617,7 @@ internal static class OverlayServer
         }
     }
 
-    private static async Task AcceptLoopAsync(TcpListener listener, string overlayPath, CancellationToken token)
+    private static async Task AcceptLoopAsync(TcpListener listener, string overlayPath, string gameOverlayPath, CancellationToken token)
     {
         while (!token.IsCancellationRequested)
         {
@@ -1585,11 +1638,11 @@ internal static class OverlayServer
             {
                 break;
             }
-            _ = HandleAsync(client, overlayPath, token);
+            _ = HandleAsync(client, overlayPath, gameOverlayPath, token);
         }
     }
 
-    private static async Task HandleAsync(TcpClient client, string overlayPath, CancellationToken token)
+    private static async Task HandleAsync(TcpClient client, string overlayPath, string gameOverlayPath, CancellationToken token)
     {
         using (client)
         {
@@ -1619,7 +1672,8 @@ internal static class OverlayServer
                     await WriteResponseAsync(stream, 204, "No Content", "text/plain", Array.Empty<byte>(), token);
                     return;
                 }
-                if (path is not ("/" or "/overlay" or "/overlay.html"))
+                var isGame = path is "/overlay/game" or "/overlay/game.html" or "/game" or "/overlay-game";
+                if (!isGame && path is not ("/" or "/overlay" or "/overlay.html"))
                 {
                     await WriteResponseAsync(stream, 404, "Not Found", "text/plain; charset=utf-8",
                         Encoding.UTF8.GetBytes("Not found"), token);
@@ -1629,7 +1683,7 @@ internal static class OverlayServer
                 byte[] body;
                 try
                 {
-                    body = await File.ReadAllBytesAsync(overlayPath, token);
+                    body = await File.ReadAllBytesAsync(isGame ? gameOverlayPath : overlayPath, token);
                 }
                 catch
                 {
