@@ -1,7 +1,8 @@
-**1.5.0 — Ton carnet de coffres suit sur tous tes PC**
+**1.5.1 — L'overlay s'adapte à ton stream**
 
 **Français**
 **Nouveautés**
+- **Overlay auto-adaptatif** : la carte de stream et l'overlay de jeu s'adaptent maintenant à la taille de la source, sans redimensionnement manuel. La carte compacte monte jusqu'à 960 px de large (92 % de la source) et la grande carte garde une marge automatique.
 - **Connexion au démarrage** : une page dédiée permet de se connecter avec une adresse e-mail et un mot de passe, ou avec Google. Le bouton « Plus tard, rester en local » permet de continuer sans compte.
 - **Synchronisation multi-appareils** : l'historique et les statistiques sont associés au compte Supabase et récupérés sur les autres PC. Les parties sont fusionnées par replay : une partie analysée sur deux machines n'apparaît qu'une fois.
 - **Totaux manuels synchronisés** : les coffres classiques, rares et d'esprit saisis dans « Totaux de saison » suivent le compte et sont restaurés sur les autres PC.
@@ -13,6 +14,7 @@
 
 **English**
 **What's new**
+- **Self-sizing overlay**: the stream card and game overlay now fit the source size, with no manual resizing. The compact card grows up to 960 px wide (92% of the source) and the full card keeps automatic margins.
 - **Sign-in at launch**: a dedicated page lets you use an email address and password, or Google. "Not now, stay local" keeps the app usable without an account.
 - **Multi-device sync**: history and statistics are linked to the Supabase account and fetched on your other PCs. Matches are merged by replay, so one analyzed on two machines appears only once.
 - **Manual totals sync**: classic, rare and sprite chests entered in "Season totals" follow the account and are restored on your other PCs.
@@ -24,6 +26,7 @@
 
 **Español**
 **Novedades**
+- **Overlay autoajustable**: la tarjeta del stream y el overlay de juego se adaptan ahora al tamaño de la fuente, sin redimensionarlos a mano. La tarjeta compacta llega hasta 960 px de ancho (92 % de la fuente) y la tarjeta grande conserva márgenes automáticos.
 - **Conexión al iniciar**: una página dedicada permite entrar con correo y contraseña, o con Google. «Más tarde, seguir en local» mantiene la app usable sin cuenta.
 - **Sincronización entre dispositivos**: el historial y las estadísticas se asocian a la cuenta de Supabase y se recuperan en los otros PC. Las partidas se fusionan por repetición: una analizada en dos máquinas aparece una sola vez.
 - **Totales manuales sincronizados**: los cofres clásicos, raros y de espíritu introducidos en «Totales de temporada» siguen la cuenta y se restauran en los otros PC.

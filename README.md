@@ -88,7 +88,7 @@ Pour afficher un overlay dans un live :
 
 1. Ouvre **Réglages → OBS / TikTok Live Studio** et choisis **Carte complète** ou **Overlay de jeu (stream)**, puis clique sur **Copier** (ou **Copier le lien**).
 2. Dans OBS, ajoute une source **Navigateur** et colle le lien. Dans TikTok Live Studio, choisis une source **Lien** et colle le **lien HTTPS** affiché : TikTok refuse les URL locales en `http://`.
-3. Règle la taille de la source sur **1920 × 1080** (ou la taille de ton canvas) : la carte s'adapte à la source et le fond de la page est transparent. Pour l'overlay de jeu, une source plus compacte (par exemple **700 × 200**) suffit.
+3. Laisse la source à la taille de ton canvas : la carte et l'overlay de jeu s'adaptent automatiquement à la source, sans redimensionnement manuel. Le fond de la page est transparent ; pour l'overlay de jeu, une source plus compacte suffit.
 
 Les liens restent servis sur ce PC. Le lien TikTok utilise `https://127-0-0-1.anyip.dev:<port>/overlay`, un domaine public qui pointe vers `127.0.0.1` : le trafic ne sort pas de la machine et aucun certificat n’est à installer. Une connexion Internet est nécessaire pour résoudre ce domaine. L’ancien lien HTTP reste disponible pour les sources OBS déjà configurées. Le compteur doit rester ouvert pendant le live ; le port peut changer si le port préféré est déjà occupé : utilise toujours le lien affiché dans l’application.
 

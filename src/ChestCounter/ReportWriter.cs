@@ -589,8 +589,8 @@ public static class ReportWriter
             {{FontFace}}
             *{box-sizing:border-box}
             html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden}
-            body{display:grid;place-items:center;padding:2vh 2vw;color:#f8e7b0;font-family:"Segoe UI",system-ui,sans-serif}
-            .card{position:relative;width:min(96vw,calc(96vh * 1.957));aspect-ratio:920/470;border-radius:30px;padding:3px;
+            body{--pad:clamp(10px,2.2vmin,26px);display:grid;place-items:center;padding:var(--pad);color:#f8e7b0;font-family:"Segoe UI",system-ui,sans-serif}
+            .card{position:relative;width:min(calc(100vw - var(--pad) - var(--pad)),calc((100vh - var(--pad) - var(--pad)) * 1.957));aspect-ratio:920/470;border-radius:30px;padding:3px;
               background:linear-gradient(135deg,#ff8df4 0%,#b15cff 25%,#5b21b6 63%,#38bdf8 100%);
               box-shadow:0 0 0 2px rgba(255,120,245,.24),0 0 46px rgba(139,92,246,.55),0 20px 55px rgba(0,0,0,.72)}
             .inner{position:relative;width:100%;height:100%;overflow:hidden;border-radius:27px;container-type:inline-size;
@@ -727,24 +727,24 @@ public static class ReportWriter
             {{FontFace}}
             *{box-sizing:border-box}
             html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden}
-            body{display:flex;align-items:flex-start;justify-content:flex-start;padding:2.2vh 2vw;color:#f7e9b6;font-family:"Segoe UI",system-ui,sans-serif}
-            .card{position:relative;container-type:inline-size;width:min(92vw,640px);min-width:360px;padding:16px 23px 18px;overflow:hidden;border:1px solid rgba(243,189,82,.78);border-radius:18px;
+            body{display:flex;align-items:flex-start;justify-content:flex-start;padding:clamp(10px,2.2vh,26px) clamp(12px,2vw,32px);color:#f7e9b6;font-family:"Segoe UI",system-ui,sans-serif}
+            .card{position:relative;container-type:inline-size;width:min(92vw,960px);min-width:0;padding:clamp(12px,2.4vw,24px) clamp(16px,3.4vw,34px) clamp(14px,2.8vw,26px);overflow:hidden;border:1px solid rgba(243,189,82,.78);border-radius:clamp(14px,1.8vw,22px);
               background:linear-gradient(145deg,#211532 0%,#100d1d 58%,#090b14 100%);
               box-shadow:0 0 0 2px rgba(243,189,82,.14),0 0 28px rgba(139,92,246,.28),0 16px 35px rgba(0,0,0,.55)}
             .card:before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(45% 90% at 4% 0%,rgba(243,189,82,.12),transparent 70%),radial-gradient(35% 80% at 100% 0%,rgba(138,92,255,.2),transparent 70%)}
-            .top{position:relative;display:flex;align-items:center;gap:9px;min-height:20px}
-            .brand{display:inline-flex;align-items:center;gap:7px;color:#f3bd52;font-size:11px;font-weight:800;letter-spacing:.16em}
-            .brand svg{width:20px;height:20px;filter:drop-shadow(0 0 6px rgba(243,189,82,.4))}
-            .brand small{color:#9d95af;font-size:8px;font-weight:600;letter-spacing:.12em}
-            .live{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border:1px solid rgba(255,95,167,.55);border-radius:999px;background:rgba(255,79,163,.13);color:#ff9ac5;font-size:9px;font-weight:800;letter-spacing:.14em}
-            .live i{width:5px;height:5px;border-radius:50%;background:#ff5fa7;box-shadow:0 0 0 3px rgba(255,95,167,.12)}
-            .numbers{position:relative;display:grid;grid-template-columns:1.22fr 1px 1fr;gap:22px;align-items:end;margin-top:11px}
+            .top{position:relative;display:flex;align-items:center;gap:clamp(7px,1.2vw,12px);min-height:clamp(18px,2.4vw,28px)}
+            .brand{display:inline-flex;align-items:center;gap:clamp(5px,1vw,10px);color:#f3bd52;font-size:clamp(9px,1.55cqw,16px);font-weight:800;letter-spacing:.16em}
+            .brand svg{width:clamp(18px,3.1cqw,30px);height:clamp(18px,3.1cqw,30px);filter:drop-shadow(0 0 6px rgba(243,189,82,.4))}
+            .brand small{color:#9d95af;font-size:clamp(7px,1.05cqw,11px);font-weight:600;letter-spacing:.12em}
+            .live{margin-left:auto;display:inline-flex;align-items:center;gap:clamp(4px,.8cqw,8px);padding:clamp(3px,.65cqw,6px) clamp(6px,1.35cqw,12px);border:1px solid rgba(255,95,167,.55);border-radius:999px;background:rgba(255,79,163,.13);color:#ff9ac5;font-size:clamp(7px,1.4cqw,14px);font-weight:800;letter-spacing:.14em}
+            .live i{width:clamp(4px,.85cqw,8px);height:clamp(4px,.85cqw,8px);border-radius:50%;background:#ff5fa7;box-shadow:0 0 0 3px rgba(255,95,167,.12)}
+            .numbers{position:relative;display:grid;grid-template-columns:1.22fr 1px 1fr;gap:clamp(12px,3.4cqw,34px);align-items:end;margin-top:clamp(8px,1.7cqw,16px)}
             .stat{min-width:0;display:flex;flex-direction:column;gap:3px}
-            .label{color:#d6b86f;font-size:9px;font-weight:750;letter-spacing:.15em;white-space:nowrap}
-            .value{font-family:"Bahnschrift","Arial Black",sans-serif;font-size:clamp(34px,9.2cqw,60px);font-weight:800;font-variant-numeric:tabular-nums;line-height:.92;letter-spacing:-.01em;color:#ffd45e;text-shadow:0 2px 0 #5b2a00,0 0 18px rgba(255,177,36,.3);white-space:nowrap}
-            .stat:last-child .value{font-size:clamp(26px,7cqw,45px)}
-            .sep{width:1px;height:58px;align-self:center;background:linear-gradient(180deg,transparent,rgba(243,189,82,.65) 18%,rgba(243,189,82,.65) 82%,transparent)}
-            @media (max-width:520px){body{padding:12px}.card{min-width:0;width:100%;padding:14px 18px 16px}.numbers{gap:14px}.value{font-size:36px}.stat:last-child .value{font-size:28px} }
+            .label{color:#d6b86f;font-size:clamp(8px,1.45cqw,15px);font-weight:750;letter-spacing:.15em;white-space:nowrap}
+            .value{font-family:"Bahnschrift","Arial Black",sans-serif;font-size:clamp(34px,9.2cqw,92px);font-weight:800;font-variant-numeric:tabular-nums;line-height:.92;letter-spacing:-.01em;color:#ffd45e;text-shadow:0 2px 0 #5b2a00,0 0 18px rgba(255,177,36,.3);white-space:nowrap}
+            .stat:last-child .value{font-size:clamp(26px,7cqw,70px)}
+            .sep{width:1px;height:clamp(46px,9cqw,86px);align-self:center;background:linear-gradient(180deg,transparent,rgba(243,189,82,.65) 18%,rgba(243,189,82,.65) 82%,transparent)}
+            @media (max-width:520px){body{padding:12px}.card{width:100%;padding:12px 16px 14px}.numbers{gap:14px}.value{font-size:36px}.stat:last-child .value{font-size:28px} }
             </style></head><body>
             <section class="card">
               <div class="top">
