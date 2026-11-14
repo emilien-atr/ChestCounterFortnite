@@ -8,9 +8,6 @@ on:
 permissions:
   contents: write
 
-env:
-  APP_VERSION: 1.2.${{ github.run_number }}
-
 jobs:
   build:
     runs-on: windows-latest
@@ -19,8 +16,16 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Read app version
+        id: app_version
+        shell: pwsh
+        run: |
+          [xml]$project = Get-Content -Raw src/ChestCounter/ChestCounter.csproj
+          $version = $project.Project.PropertyGroup.Version
+          if ([string]::IsNullOrWhiteSpace($version)) { throw 'Version missing from ChestCounter.csproj' }
+          "version=$version" >> $env:GITHUB_OUTPUT
       - name: Publish
-        run: dotnet publish src/ChestCounter/ChestCounter.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -p:Version=${{ env.APP_VERSION }} -o dist
+        run: dotnet publish src/ChestCounter/ChestCounter.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -p:Version=${{ steps.app_version.outputs.version }} -o dist
       - name: Checksum
         shell: pwsh
         run: |
@@ -35,8 +40,8 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ env.APP_VERSION }}
-          name: ChestCounterFortnite ${{ env.APP_VERSION }}
+          tag_name: v${{ steps.app_version.outputs.version }}
+          name: ChestCounterFortnite ${{ steps.app_version.outputs.version }}
           body_path: RELEASE_NOTES.md
           files: |
             dist/ChestCounterFortnite.exe

@@ -163,7 +163,7 @@ public static class ReportSite
         SetRow(L.T("Dernier replay", "Last replay", "Última repetición"), H(health.LastReplayLabel));
         SetRow(L.T("Enregistrement Fortnite", "Fortnite recording", "Grabación de Fortnite"), H(health.Status));
         SetRow(L.T("Overlay", "Overlay", "Overlay"),
-            $"{L.T("Activé", "On", "Activado")} · {(config.OverlayStyle == "classic" ? L.T("Carte violette", "Purple card", "Tarjeta violeta") : "HUD")} · {config.OverlaySize} % · {config.OverlayOpacity} %");
+            $"{L.T("Activé", "On", "Activado")} · {L.T("Carte violette", "Purple card", "Tarjeta violeta")} · {config.OverlaySize} % · {config.OverlayOpacity} %");
 
         var generatedDisplay = now.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture);
         var generatedLabel = L.T("Rapport généré le", "Report generated on", "Informe generado el") + " " + generatedDisplay;

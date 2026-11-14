@@ -108,8 +108,8 @@ public sealed class Config
     /// <summary>Version whose "what's new" card the player dismissed with "OK, masquer les nouveautés".</summary>
     public string? NewsDismissed { get; set; }
 
-    /// <summary>Look of the overlay: "hud" (figures only, like the game's HUD) or "classic" (purple card).</summary>
-    public string OverlayStyle { get; set; } = "hud";
+    /// <summary>Look of the overlay. The purple card is the only supported style.</summary>
+    public string OverlayStyle { get; set; } = "classic";
     public int? OverlayX { get; set; }
     public int? OverlayY { get; set; }
     /// <summary>Locked overlay = click-through, cannot be moved (Ctrl+Shift+L to toggle).</summary>
@@ -161,6 +161,15 @@ public static class HeadStart
     };
 }
 
+/// <summary>Manual season totals stored with the account so another PC recovers them.</summary>
+public sealed class ManualChestTotals
+{
+    /// <summary>Head-start offsets, not the absolute totals shown in the settings.</summary>
+    public int Classic { get; set; }
+    public int Rare { get; set; }
+    public int Sprite { get; set; }
+}
+
 public sealed class TrackerData
 {
     public int Version { get; set; } = 1;
@@ -170,6 +179,9 @@ public sealed class TrackerData
 
     /// <summary>Key = file name|size|last write ticks. Value = session id, "skipped" or "error: ...".</summary>
     public Dictionary<string, string> ProcessedFiles { get; set; } = new();
+
+    /// <summary>Manual "before tracking" chest totals, synchronized with the account. Null for old histories.</summary>
+    public ManualChestTotals? ManualChests { get; set; }
 }
 
 /// <summary>Reads/writes JSON files atomically in the data folder.</summary>

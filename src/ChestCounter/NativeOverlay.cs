@@ -62,7 +62,7 @@ public static class NativeOverlay
     private const double TotalAnimationMs = 480;
     private const double PlusAnimationMs = 900;
 
-    /// <summary>"hud" (figures only, under the minimap, like the game's HUD) or "classic" (dark card).</summary>
+    /// <summary>The purple card is the only supported look; the old HUD style is kept out of the app.</summary>
     private static volatile string _style = "classic";
     private static IntPtr _fontHudBig, _fontHudSmall;
     private static int _hudBigH, _hudSmallH;
@@ -71,12 +71,12 @@ public static class NativeOverlay
     /// anti-aliased edge of the black outline around the text blends into it without any colored fringe.</summary>
     private static readonly uint KeyColor = 0x00010001;
 
-    public static string[] Styles => new[] { "hud", "classic" };
+    public static string[] Styles => new[] { "classic" };
 
-    /// <summary>Changes the look of the overlay at once.</summary>
+    /// <summary>Keeps the purple card as the only overlay style.</summary>
     public static void SetStyle(string style)
     {
-        _style = Array.IndexOf(Styles, style) >= 0 ? style : "hud";
+        _style = "classic";
         if (_hwnd != IntPtr.Zero)
         {
             PostMessageW(_hwnd, WM_APP_APPEARANCE, IntPtr.Zero, IntPtr.Zero);

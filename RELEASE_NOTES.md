@@ -1,25 +1,37 @@
-**1.4.0 — Le compteur sort aussi en stream**
+**1.5.0 — Ton carnet de coffres suit sur tous tes PC**
 
 **Français**
-- **Nouvel overlay de jeu pour le stream** : en plus de la grande carte, Chest Counter sert maintenant une carte compacte sur `/overlay/game`. Elle reprend le style de l'overlay en jeu (carte sombre, total en or, partie en cours ou dernière partie et badge LIVE) et se met à jour automatiquement.
-- **Deux liens dans les réglages** : la section **OBS / TikTok Live Studio** propose désormais **Carte complète** et **Overlay de jeu (stream)**, avec un bouton pour copier et un bouton pour ouvrir chaque aperçu.
-- **Site entièrement refondu** : cinq pages séparées (accueil, fonctionnalités, installation, overlays, FAQ), des captures réelles de l'interface, un calculateur de coffres manqués et un ton éditorial beaucoup plus lisible. Le bouton de téléchargement pointe toujours vers la dernière version.
-- **Coffres manqués expliqués** : le site rappelle que les replays ne sont pas rétroactifs et propose une estimation basée sur une moyenne de 30 coffres par partie. Aucun coffre d'une partie non enregistrée ne peut être récupéré.
-- **Fonctions conservées** : HUD en jeu, overlay natif, grande carte OBS/TikTok, rapports, historique, activité Discord, archives ZIP et mises à jour automatiques.
+**Nouveautés**
+- **Connexion au démarrage** : une page dédiée permet de se connecter avec une adresse e-mail et un mot de passe, ou avec Google. Le bouton « Plus tard, rester en local » permet de continuer sans compte.
+- **Synchronisation multi-appareils** : l'historique et les statistiques sont associés au compte Supabase et récupérés sur les autres PC. Les parties sont fusionnées par replay : une partie analysée sur deux machines n'apparaît qu'une fois.
+- **Totaux manuels synchronisés** : les coffres classiques, rares et d'esprit saisis dans « Totaux de saison » suivent le compte et sont restaurés sur les autres PC.
+- **Réglages conservés** : l'overlay, la langue et le dossier des replays restent propres à chaque PC. Les fichiers `.replay` ne sont jamais envoyés.
+- **Configuration intégrée** : la page de connexion permet de saisir l'URL du projet Supabase et sa clé publique. Le schéma SQL et le guide Google sont fournis dans `docs/SUPABASE.md`.
+- **Overlay TikTok Studio corrigé** : le compteur fournit maintenant un lien HTTPS local, accepté par TikTok Studio (qui refuse les liens HTTP), sans tunnel ni certificat à installer.
+- **Fonctions conservées** : carte violette en jeu, overlay de stream `/overlay/game`, grande carte OBS/TikTok, rapports, historique, archives ZIP, Discord et mises à jour automatiques.
+- **Fermeture discrète** : la croix range le compteur dans la zone de notification et le laisse tourner en arrière-plan ; l'overlay reste la carte violette.
 
 **English**
-- **New game overlay for streams**: alongside the large card, Chest Counter now serves a compact `/overlay/game` card. It matches the in-game overlay (dark card, gold total, current or last match, LIVE badge) and refreshes automatically.
-- **Two settings links**: **OBS / TikTok Live Studio** now offers **Full card** and **Game overlay (stream)**, each with copy and preview buttons.
-- **Site rebuilt**: five separate pages, real interface screenshots, a missed-chest estimator and a clearer editorial look. Download buttons always point to the latest release.
-- **Missed chests explained**: replays are not retroactive. The site offers an estimate based on roughly 30 chests per match; chests from matches that were never recorded cannot be recovered.
-- **Kept features**: in-game HUD, native overlay, large OBS/TikTok card, reports, history, Discord activity, replay ZIP archives and automatic updates.
+**What's new**
+- **Sign-in at launch**: a dedicated page lets you use an email address and password, or Google. "Not now, stay local" keeps the app usable without an account.
+- **Multi-device sync**: history and statistics are linked to the Supabase account and fetched on your other PCs. Matches are merged by replay, so one analyzed on two machines appears only once.
+- **Manual totals sync**: classic, rare and sprite chests entered in "Season totals" follow the account and are restored on your other PCs.
+- **Local settings stay local**: overlay, language and replay folder remain specific to each PC. `.replay` files are never uploaded.
+- **Built-in setup**: the sign-in page accepts the Supabase project URL and public key. The SQL schema and Google guide are in `docs/SUPABASE.md`.
+- **TikTok Studio overlay fixed**: the counter now serves a local HTTPS link accepted by TikTok Studio (which rejects HTTP links), with no tunnel or certificate to install.
+- **Kept features**: purple in-game card, `/overlay/game` stream overlay, large OBS/TikTok card, reports, history, ZIP archives, Discord and automatic updates.
+- **Quiet close**: the X button puts the counter in the notification area and keeps it running in the background; the overlay stays the purple card.
 
 **Español**
-- **Nuevo overlay de juego para streams**: además de la tarjeta grande, Chest Counter sirve una tarjeta compacta en `/overlay/game`, con el estilo del overlay del juego, total dorado, partida actual o última y indicador LIVE.
-- **Dos enlaces en los ajustes**: **OBS / TikTok Live Studio** ofrece **Tarjeta completa** y **Overlay de juego (stream)**, con botones para copiar y abrir cada vista.
-- **Sitio renovado**: cinco páginas separadas, capturas reales, calculadora de cofres no contados y un estilo editorial más claro.
-- **Cofres perdidos**: las repeticiones no son retroactivas. La web recuerda que las partidas sin replay no se pueden recuperar y ofrece una estimación de 30 cofres por partida.
-- **Funciones conservadas**: HUD, overlay nativo, tarjeta grande para OBS/TikTok, informes, historial, actividad de Discord, archivos ZIP y actualizaciones automáticas.
+**Novedades**
+- **Conexión al iniciar**: una página dedicada permite entrar con correo y contraseña, o con Google. «Más tarde, seguir en local» mantiene la app usable sin cuenta.
+- **Sincronización entre dispositivos**: el historial y las estadísticas se asocian a la cuenta de Supabase y se recuperan en los otros PC. Las partidas se fusionan por repetición: una analizada en dos máquinas aparece una sola vez.
+- **Totales manuales sincronizados**: los cofres clásicos, raros y de espíritu introducidos en «Totales de temporada» siguen la cuenta y se restauran en los otros PC.
+- **Ajustes locales**: el overlay, el idioma y la carpeta de repeticiones siguen siendo propios de cada PC. Los archivos `.replay` nunca se envían.
+- **Configuración integrada**: la página de conexión acepta la URL del proyecto Supabase y su clave pública. El esquema SQL y la guía de Google están en `docs/SUPABASE.md`.
+- **Overlay de TikTok Studio corregido**: el contador ofrece ahora un enlace HTTPS local que TikTok Studio acepta (rechaza los enlaces HTTP), sin túnel ni certificado que instalar.
+- **Funciones conservadas**: tarjeta violeta en el juego, overlay de stream `/overlay/game`, tarjeta grande para OBS/TikTok, informes, historial, archivos ZIP, Discord y actualizaciones automáticas.
+- **Cierre discreto**: la X pone el contador en el área de notificación y lo deja funcionando en segundo plano; el overlay sigue siendo la tarjeta violeta.
 
 ---
 

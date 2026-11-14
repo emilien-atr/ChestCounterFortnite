@@ -1,9 +1,12 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Security.Authentication;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using System.Windows.Forms;
@@ -66,6 +69,7 @@ internal sealed class AppWindow : Form
     private readonly bool _auto;
     private readonly string _dataDir;
     private readonly bool _reanalyzing;
+    private readonly CloudService _cloud;
     private readonly TextWriter _originalOut;
     private readonly System.Windows.Forms.Timer _timer = new() { Interval = 1000 };
     private readonly NotifyIcon _tray = new();
@@ -92,10 +96,13 @@ internal sealed class AppWindow : Form
     private string _overlaySignature = "";
     private string? _broadcastUrl;
     private bool _closing;
+    private bool _allowClose;
     private bool _sawFortnite;
     private DateTime? _fortniteClosedAt;
     private bool _webReady;
     private bool _webInitialized;
+    private bool _authSkipped;
+    private DateTime _nextCloudSync = DateTime.UtcNow.AddSeconds(6);
     private string? _lastState;
 
     public AppWindow(Store store, Config config, TrackerData data, Tracker tracker, bool auto, string dataDir, bool reanalyzing)
@@ -107,6 +114,9 @@ internal sealed class AppWindow : Form
         _auto = auto;
         _dataDir = dataDir;
         _reanalyzing = reanalyzing;
+        _cloud = new CloudService(store, data, config);
+        _cloud.Changed += OnCloudChanged;
+        _cloud.DataMerged += OnCloudDataMerged;
 
         AutoScaleMode = AutoScaleMode.Dpi;
         FormBorderStyle = FormBorderStyle.None;
@@ -150,7 +160,7 @@ internal sealed class AppWindow : Form
         _trayQuit = new ToolStripMenuItem();
         _trayOpen.Click += (_, _) => RestoreWindow();
         _trayReport.Click += (_, _) => OpenReport();
-        _trayQuit.Click += (_, _) => Close();
+        _trayQuit.Click += (_, _) => { _allowClose = true; Close(); };
         menu.Items.Add(_trayOpen);
         menu.Items.Add(_trayReport);
         menu.Items.Add(new ToolStripSeparator());
@@ -211,6 +221,7 @@ internal sealed class AppWindow : Form
             "Ready: chests are counted a few seconds after each match.",
             "Listo: los cofres se cuentan unos segundos después de cada partida."));
         RefreshHealth(force: true);
+        _ = InitializeCloudAsync();
         if (_reanalyzing)
         {
             AppendActivity(L.T("Nouvelle version de l'analyse : les replays encore présents vont être réanalysés (sans doublon).",
@@ -282,6 +293,7 @@ internal sealed class AppWindow : Form
                 "The interface could not start: the \"Microsoft Edge WebView2 Runtime\" is missing on this PC.\n\nInstall it from the Microsoft Edge website, then start ChestCounterFortnite again.",
                 "La interfaz no pudo iniciarse: falta el componente «Microsoft Edge WebView2 Runtime» en este PC.\n\nInstálalo desde la web de Microsoft Edge y vuelve a abrir ChestCounterFortnite.");
             MessageBox.Show(this, message, AppInfo.Name, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            _allowClose = true;
             Close();
         }
     }
@@ -322,7 +334,10 @@ internal sealed class AppWindow : Form
                     MinimizeRequested();
                     break;
                 case "close":
+                    HideToBackground();
+                    break;
                 case "quit":
+                    _allowClose = true;
                     Close();
                     break;
                 case "report":
@@ -376,6 +391,55 @@ internal sealed class AppWindow : Form
                     {
                         SaveSettings(settings);
                     }
+                    break;
+                case "authSignIn":
+                case "authSignUp":
+                    if (root.TryGetProperty("email", out var emailElement) && root.TryGetProperty("password", out var passwordElement))
+                    {
+                        _ = AuthEmailAsync(emailElement.GetString() ?? "", passwordElement.GetString() ?? "", type == "authSignUp");
+                    }
+                    break;
+                case "authGoogle":
+                    _ = AuthGoogleAsync();
+                    break;
+                case "authSkip":
+                    _authSkipped = true;
+                    _cloud.CancelGoogle();
+                    PushState(force: true);
+                    break;
+                case "authLogin":
+                    _authSkipped = false;
+                    PushState(force: true);
+                    break;
+                case "authLogout":
+                    _ = AuthLogoutAsync();
+                    break;
+                case "authSync":
+                    if (_cloud.SignedIn)
+                    {
+                        TriggerCloudSync();
+                    }
+                    else
+                    {
+                        _authSkipped = false;
+                        PushState(force: true);
+                    }
+                    break;
+                case "authConfig":
+                    if (root.TryGetProperty("url", out var urlElement) && root.TryGetProperty("key", out var keyElement))
+                    {
+                        var configured = _cloud.Configure(urlElement.GetString() ?? "", keyElement.GetString() ?? "");
+                        PostAuthResult(configured.Succeeded, configured.Message);
+                        _authSkipped = false;
+                        if (_cloud.SignedIn)
+                        {
+                            TriggerCloudSync();
+                        }
+                        PushState(force: true);
+                    }
+                    break;
+                case "openSupabase":
+                    OpenSupabaseDashboard();
                     break;
                 case "error":
                     ErrorLog.Write("Interface", new Exception(root.TryGetProperty("message", out var msg) ? msg.GetString() : "unknown script error"));
@@ -514,6 +578,7 @@ internal sealed class AppWindow : Form
             },
             news = _config.NewsDismissed != AppInfo.VersionText && newsBullets.Count > 0,
             newsBullets,
+            auth = BuildAuthState(),
             replayStorage = new
             {
                 folderCount = L.N(_replayStorage.FolderCount),
@@ -530,7 +595,6 @@ internal sealed class AppWindow : Form
             {
                 lang = L.Code,
                 showOverlay = _config.ShowOverlay,
-                style = _config.OverlayStyle,
                 size = _config.OverlaySize,
                 opacity = _config.OverlayOpacity,
                 tray = _config.MinimizeToTray,
@@ -597,11 +661,8 @@ internal sealed class AppWindow : Form
         }
 
         _config.ShowOverlay = GetBool(settings, "showOverlay", _config.ShowOverlay);
-        var style = GetString(settings, "style");
-        if (style is "hud" or "classic")
-        {
-            _config.OverlayStyle = style;
-        }
+        // The in-game overlay is now always the purple card; old "hud" configs are migrated on load.
+        _config.OverlayStyle = "classic";
         if (GetInt(settings, "size", out var size))
         {
             _config.OverlaySize = Nearest(OverlayAppearance.Sizes, size);
@@ -692,6 +753,11 @@ internal sealed class AppWindow : Form
         _nextReplayMaintenance = DateTime.UtcNow.AddSeconds(2);
         _nextReplayStorage = DateTime.MinValue;
         PushState(force: true);
+        if (_cloud.SignedIn)
+        {
+            // Manual season totals changed: publish them without waiting for the periodic sync.
+            TriggerCloudSync();
+        }
         Post(new { type = "saved" });
         Toast(L.T("Réglages enregistrés.", "Settings saved.", "Ajustes guardados."), "ok");
         if (warning.Length > 0)
@@ -718,8 +784,9 @@ internal sealed class AppWindow : Form
             }
             else
             {
+                _config.OverlayStyle = "classic";
                 NativeOverlay.SetAppearance(_config.OverlaySize, _config.OverlayOpacity);
-                NativeOverlay.SetStyle(_config.OverlayStyle);
+                NativeOverlay.SetStyle("classic");
                 UpdateOverlay(force: true);
             }
         }
@@ -792,6 +859,7 @@ internal sealed class AppWindow : Form
                 if (added > 0)
                 {
                     ReportWriter.WriteAll(_store, _config, _data);
+                    _nextCloudSync = DateTime.UtcNow.AddSeconds(2);
                     if (_config.ReplayArchiveEnabled)
                     {
                         _nextReplayMaintenance = DateTime.UtcNow.AddSeconds(2);
@@ -820,6 +888,7 @@ internal sealed class AppWindow : Form
             UpdateOverlay(force: false);
             UpdateDiscordPresence();
             AutoCloseCheck();
+            MaintainCloudSync();
             _ = CheckForUpdateAsync();
         }
         catch (Exception ex)
@@ -874,6 +943,7 @@ internal sealed class AppWindow : Form
                 UseShellExecute = true,
                 WorkingDirectory = Path.GetDirectoryName(exe) ?? Environment.CurrentDirectory,
             })?.Dispose();
+            _allowClose = true;
             _closing = true;
             Close();
         }
@@ -976,12 +1046,13 @@ internal sealed class AppWindow : Form
         {
             return;
         }
-        NativeOverlay.SetAppearance(_config.OverlaySize, _config.OverlayOpacity);
-        if (Array.IndexOf(NativeOverlay.Styles, _config.OverlayStyle) < 0)
+        if (_config.OverlayStyle != "classic")
         {
-            _config.OverlayStyle = "hud";
+            _config.OverlayStyle = "classic";
+            try { _store.SaveConfig(_config); } catch { /* ignore */ }
         }
-        NativeOverlay.SetStyle(_config.OverlayStyle);
+        NativeOverlay.SetAppearance(_config.OverlaySize, _config.OverlayOpacity);
+        NativeOverlay.SetStyle("classic");
         NativeOverlay.Start(_config.OverlayX, _config.OverlayY, _config.OverlayLocked,
             (x, y) =>
             {
@@ -1055,6 +1126,7 @@ internal sealed class AppWindow : Form
         }
         if (_fortniteClosedAt is { } closed && DateTime.UtcNow - closed > TimeSpan.FromSeconds(60))
         {
+            _allowClose = true;
             Close();
         }
     }
@@ -1374,6 +1446,18 @@ internal sealed class AppWindow : Form
         }
     }
 
+    private void HideToBackground()
+    {
+        // The close button must never leave the old HUD on screen: keep only the purple card.
+        _config.OverlayStyle = "classic";
+        try { _store.SaveConfig(_config); } catch { /* ignore */ }
+        if (OperatingSystem.IsWindows() && NativeOverlay.IsRunning)
+        {
+            NativeOverlay.SetStyle("classic");
+        }
+        HideToTray(notify: false);
+    }
+
     private void HideToTray(bool notify)
     {
         Hide();
@@ -1414,9 +1498,233 @@ internal sealed class AppWindow : Form
         }
     }
 
+    private object BuildAuthState()
+    {
+        var cloud = _cloud.Snapshot();
+        return new
+        {
+            configured = cloud.Configured,
+            signedIn = cloud.SignedIn,
+            required = !_auto && !_authSkipped && !cloud.SignedIn,
+            email = cloud.Email,
+            name = cloud.Name,
+            provider = cloud.Provider,
+            sync = cloud.Sync,
+            lastSync = cloud.LastSyncUtc is { } last ? L.DateTimeShort(last.ToLocalTime()) : "",
+            error = cloud.Error,
+            busy = cloud.Busy,
+            callback = cloud.CallbackUrl,
+            userId = _cloud.UserId ?? "",
+        };
+    }
+
+    private async Task InitializeCloudAsync()
+    {
+        try
+        {
+            await _cloud.InitializeAsync();
+            if (_cloud.SignedIn)
+            {
+                // Existing users must get their local history into the cloud as soon as the app opens.
+                TriggerCloudSync();
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Initialisation Supabase", ex);
+        }
+        finally
+        {
+            RunOnUi(() => PushState(force: true));
+        }
+    }
+
+    private void TriggerCloudSync()
+    {
+        if (!_cloud.SignedIn)
+        {
+            return;
+        }
+        _nextCloudSync = DateTime.UtcNow;
+        _ = SyncCloudAsync();
+    }
+
+    private void MaintainCloudSync()
+    {
+        if (!_cloud.SignedIn || _cloud.Busy || DateTime.UtcNow < _nextCloudSync)
+        {
+            return;
+        }
+        _nextCloudSync = DateTime.UtcNow.AddSeconds(45);
+        _ = SyncCloudAsync();
+    }
+
+    private async Task SyncCloudAsync()
+    {
+        try
+        {
+            await _cloud.SyncAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Synchronisation Supabase", ex);
+            Toast(L.T("Synchronisation impossible pour le moment.",
+                "Could not sync right now.",
+                "No se puede sincronizar ahora mismo."), "error");
+        }
+        finally
+        {
+            _nextCloudSync = DateTime.UtcNow.AddSeconds(45);
+        }
+    }
+
+    private async Task AuthEmailAsync(string email, string password, bool signUp)
+    {
+        try
+        {
+            var result = signUp
+                ? await _cloud.SignUpAsync(email, password)
+                : await _cloud.SignInAsync(email, password);
+            RunOnUi(() =>
+            {
+                PostAuthResult(result.Succeeded, result.Message);
+                if (result.Succeeded && _cloud.SignedIn)
+                {
+                    _authSkipped = false;
+                    TriggerCloudSync();
+                }
+                PushState(force: true);
+            });
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Connexion Supabase", ex);
+            PostAuthResult(false, L.T("Connexion impossible pour le moment.",
+                "Could not sign in right now.",
+                "No se puede iniciar sesión ahora mismo."));
+        }
+    }
+
+    private async Task AuthGoogleAsync()
+    {
+        try
+        {
+            var result = await _cloud.SignInWithGoogleAsync();
+            RunOnUi(() =>
+            {
+                PostAuthResult(result.Succeeded, result.Message);
+                if (result.Succeeded && _cloud.SignedIn)
+                {
+                    _authSkipped = false;
+                    TriggerCloudSync();
+                }
+                PushState(force: true);
+            });
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Connexion Google", ex);
+            PostAuthResult(false, L.T("Connexion Google impossible pour le moment.",
+                "Could not sign in with Google right now.",
+                "No se puede iniciar sesión con Google ahora mismo."));
+        }
+    }
+
+    private async Task AuthLogoutAsync()
+    {
+        try
+        {
+            await _cloud.SignOutAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Déconnexion Supabase", ex);
+        }
+        RunOnUi(() =>
+        {
+            _authSkipped = false;
+            _nextCloudSync = DateTime.UtcNow.AddSeconds(10);
+            PushState(force: true);
+            Toast(L.T("Tu es déconnecté. Tes données restent sur ce PC.",
+                "You are signed out. Your data stays on this PC.",
+                "Has cerrado sesión. Tus datos siguen en este PC."), "ok");
+        });
+    }
+
+    private void PostAuthResult(bool success, string message) =>
+        RunOnUi(() => Post(new { type = "authResult", ok = success, message }));
+
+    private void OnCloudChanged()
+    {
+        RunOnUi(() =>
+        {
+            _nextDiscordUpdate = DateTime.MinValue;
+            PushState(force: true);
+        });
+    }
+
+    private void OnCloudDataMerged()
+    {
+        RunOnUi(() =>
+        {
+            try
+            {
+                _store.SaveData(_data);
+                ReportWriter.WriteAll(_store, _config, _data);
+            }
+            catch (Exception ex)
+            {
+                ErrorLog.Write("Données synchronisées", ex);
+            }
+            _nextScan = DateTime.UtcNow.AddSeconds(2);
+            _nextDiscordUpdate = DateTime.MinValue;
+            _overlaySignature = "";
+            UpdateOverlay(force: true);
+            PushState(force: true);
+        });
+    }
+
+    private void RunOnUi(Action action)
+    {
+        if (_closing || IsDisposed)
+        {
+            return;
+        }
+        if (InvokeRequired)
+        {
+            try { BeginInvoke(action); } catch { /* the window is closing */ }
+            return;
+        }
+        action();
+    }
+
+    private void OpenSupabaseDashboard()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("https://supabase.com/dashboard") { UseShellExecute = true })?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Ouverture Supabase", ex);
+            Toast(L.T("Impossible d'ouvrir Supabase.", "Could not open Supabase.", "No se puede abrir Supabase."), "error");
+        }
+    }
+
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
+        if (!_allowClose && !_closing
+            && e.CloseReason is not (CloseReason.WindowsShutDown or CloseReason.TaskManagerClosing))
+        {
+            // The title-bar X backgrounds the app; the tray "Quit" action still exits for real.
+            // Windows shutdown and Task Manager keep their normal close behavior.
+            e.Cancel = true;
+            HideToBackground();
+            return;
+        }
+        _allowClose = true;
         _closing = true;
+        _cloud.CancelGoogle();
         _timer.Stop();
         DiscordPresence.Stop();
         _watcher?.Dispose();
@@ -1516,15 +1824,17 @@ internal sealed class AppWindow : Form
 }
 
 /// <summary>
-/// Minimal HTTP server for browser sources such as OBS and TikTok Live Studio. It listens only on the loopback
-/// interface and serves the overlay.html page that the counter already writes, so no URL ACL, admin rights or
-/// external hosting are needed. Kept beside the window code to avoid another source file.
+/// Minimal HTTP + HTTPS server for browser sources such as OBS and TikTok Live Studio. Both listeners are
+/// loopback-only and serve the overlay.html page that the counter already writes. The HTTPS URL is required by
+/// TikTok Studio; it uses a public hostname that resolves to 127.0.0.1, so nothing leaves the PC.
 /// </summary>
 internal static class OverlayServer
 {
     private static readonly object Gate = new();
     private static readonly int[] CandidatePorts = { 8765, 8766, 8767, 8768, 8769, 8770, 8771, 8772, 8773, 8774, 8775 };
     private static TcpListener? _listener;
+    private static TcpListener? _tlsListener;
+    private static OverlayCertificate? _certificate;
     private static CancellationTokenSource? _stopper;
     private static string? _url;
 
@@ -1549,7 +1859,10 @@ internal static class OverlayServer
         }
     }
 
-    /// <summary>Starts the loopback server and returns the URL to paste into a browser source.</summary>
+    /// <summary>
+    /// Starts the loopback HTTP and HTTPS servers. The HTTPS link is preferred because TikTok LIVE Studio
+    /// rejects http:// URLs; the HTTP listener stays available for OBS sources that already use the old link.
+    /// </summary>
     public static string? Start(Store store)
     {
         lock (Gate)
@@ -1559,25 +1872,50 @@ internal static class OverlayServer
                 return _url;
             }
 
-            foreach (var port in CandidatePorts.Concat(new[] { 0 }))
+            var httpListener = TryListenAny(CandidatePorts);
+            OverlayCertificate? certificate = null;
+            try
             {
-                var listener = TryListen(port);
-                if (listener == null)
-                {
-                    continue;
-                }
-
-                var actualPort = ((IPEndPoint)listener.LocalEndpoint).Port;
-                var stopper = new CancellationTokenSource();
-                _listener = listener;
-                _stopper = stopper;
-                _url = $"http://127.0.0.1:{actualPort}/overlay";
-                _ = Task.Run(() => AcceptLoopAsync(listener, store.OverlayPath, store.GameOverlayPath, stopper.Token));
-                return _url;
+                certificate = OverlayCertificate.Load(store.Folder);
+            }
+            catch (Exception ex)
+            {
+                ErrorLog.Write("Overlay HTTPS", ex);
+            }
+            var tlsListener = certificate == null ? null : TryListenAny(CandidatePorts);
+            if (tlsListener == null && certificate != null)
+            {
+                certificate.Dispose();
+                certificate = null;
             }
 
-            ErrorLog.Write("Overlay server", new Exception("No loopback port could be opened for the browser source."));
-            return null;
+            if (httpListener == null && tlsListener == null)
+            {
+                ErrorLog.Write("Overlay server", new Exception("No loopback port could be opened for the browser source."));
+                return null;
+            }
+
+            var stopper = new CancellationTokenSource();
+            _listener = httpListener;
+            _tlsListener = tlsListener;
+            _certificate = certificate;
+            _stopper = stopper;
+
+            var httpPort = httpListener == null ? 0 : ((IPEndPoint)httpListener.LocalEndpoint).Port;
+            var tlsPort = tlsListener == null ? 0 : ((IPEndPoint)tlsListener.LocalEndpoint).Port;
+            var httpUrl = httpPort == 0 ? null : $"http://127.0.0.1:{httpPort}/overlay";
+            var httpsUrl = tlsPort == 0 ? null : $"https://127-0-0-1.anyip.dev:{tlsPort}/overlay";
+            _url = httpsUrl ?? httpUrl;
+
+            if (httpListener != null)
+            {
+                _ = Task.Run(() => AcceptLoopAsync(httpListener, store.OverlayPath, store.GameOverlayPath, null, stopper.Token));
+            }
+            if (tlsListener != null)
+            {
+                _ = Task.Run(() => AcceptLoopAsync(tlsListener, store.OverlayPath, store.GameOverlayPath, certificate, stopper.Token));
+            }
+            return _url;
         }
     }
 
@@ -1587,13 +1925,32 @@ internal static class OverlayServer
         {
             var stopper = _stopper;
             var listener = _listener;
+            var tlsListener = _tlsListener;
+            var certificate = _certificate;
             _stopper = null;
             _listener = null;
+            _tlsListener = null;
+            _certificate = null;
             _url = null;
 
             try { stopper?.Cancel(); } catch { /* best effort */ }
             try { listener?.Stop(); } catch { /* best effort */ }
+            try { tlsListener?.Stop(); } catch { /* best effort */ }
+            try { certificate?.Dispose(); } catch { /* best effort */ }
         }
+    }
+
+    private static TcpListener? TryListenAny(int[] ports)
+    {
+        foreach (var port in ports.Concat(new[] { 0 }))
+        {
+            var listener = TryListen(port);
+            if (listener != null)
+            {
+                return listener;
+            }
+        }
+        return null;
     }
 
     private static TcpListener? TryListen(int port)
@@ -1617,7 +1974,7 @@ internal static class OverlayServer
         }
     }
 
-    private static async Task AcceptLoopAsync(TcpListener listener, string overlayPath, string gameOverlayPath, CancellationToken token)
+    private static async Task AcceptLoopAsync(TcpListener listener, string overlayPath, string gameOverlayPath, OverlayCertificate? certificate, CancellationToken token)
     {
         while (!token.IsCancellationRequested)
         {
@@ -1638,17 +1995,41 @@ internal static class OverlayServer
             {
                 break;
             }
-            _ = HandleAsync(client, overlayPath, gameOverlayPath, token);
+            _ = HandleAsync(client, overlayPath, gameOverlayPath, certificate, token);
         }
     }
 
-    private static async Task HandleAsync(TcpClient client, string overlayPath, string gameOverlayPath, CancellationToken token)
+    private static async Task HandleAsync(TcpClient client, string overlayPath, string gameOverlayPath, OverlayCertificate? certificate, CancellationToken token)
     {
         using (client)
         {
             try
             {
-                using var stream = client.GetStream();
+                using var network = client.GetStream();
+                Stream stream = network;
+                if (certificate != null)
+                {
+                    var tls = new SslStream(network, leaveInnerStreamOpen: false);
+                    try
+                    {
+                        var options = new SslServerAuthenticationOptions
+                        {
+                            ServerCertificateContext = certificate.Context,
+                            EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
+                            ClientCertificateRequired = false,
+                            CertificateRevocationCheckMode = X509RevocationMode.NoCheck,
+                        };
+                        await tls.AuthenticateAsServerAsync(options, token);
+                        stream = tls;
+                    }
+                    catch (Exception ex)
+                    {
+                        ErrorLog.Write("Overlay HTTPS handshake", ex);
+                        tls.Dispose();
+                        return;
+                    }
+                }
+
                 var buffer = new byte[8192];
                 var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), token);
                 if (read == 0)
@@ -1703,7 +2084,7 @@ internal static class OverlayServer
     }
 
     private static async Task WriteResponseAsync(
-        NetworkStream stream, int status, string reason, string contentType, byte[] body, CancellationToken token)
+        Stream stream, int status, string reason, string contentType, byte[] body, CancellationToken token)
     {
         var head = $"HTTP/1.1 {status} {reason}\r\n"
             + $"Content-Type: {contentType}\r\n"

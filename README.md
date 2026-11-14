@@ -6,7 +6,7 @@
 
 **Tes coffres Fortnite, comptés automatiquement.**
 
-Un overlay discret, un rapport clair et toutes tes données sur ton PC.
+Un overlay discret, un rapport clair, et ton historique synchronisé entre tes PC si tu le souhaites.
 
 [![Télécharger](https://img.shields.io/badge/T%C3%A9l%C3%A9charger-la%20derni%C3%A8re%20version-E8B04B?style=for-the-badge)](https://github.com/emilien-atr/ChestCounterFortnite/releases/latest)
 [![Windows 10 / 11](https://img.shields.io/badge/Windows-10%20%7C%2011-3A7BD5?style=flat-square)](#)
@@ -20,13 +20,14 @@ Un overlay discret, un rapport clair et toutes tes données sur ton PC.
 
 - Compte les coffres à partir des **rediffusions Fortnite**, quelques secondes après chaque partie.
 - Ne prend en compte que les parties **à partir du 1er novembre 2026**.
-- Affiche un **HUD sur une ligne** ou la **carte violette**, avec le total et la dernière partie.
+- Affiche la **carte violette** en jeu, avec le total et la dernière partie.
 - Fournit **deux liens de source navigateur** pour OBS ou TikTok Live Studio : la grande carte pirate (total, partie en cours, récompenses) et l'**overlay de jeu compact** `/overlay/game`, dans le style de l'overlay natif.
 - **Activité Discord** : si Discord desktop est ouvert, ton profil affiche le compteur avec un minuteur de session et deux boutons (GitHub / téléchargement), même quand Fortnite est lancé. La première ligne (« Joue à … ») reprend le nom de l'application Discord ; les deux lignes suivantes et les boutons sont ceux du compteur.
 - Garde l’historique, les sessions et les trésors dans un **rapport web** local.
+- **Compte optionnel** : connecte-toi par e-mail ou avec Google pour retrouver le même historique sur plusieurs PC via Supabase.
 - Français, anglais et espagnol.
 - **Mises à jour automatiques** depuis GitHub.
-- Aucun compte, aucune publicité, aucune donnée de jeu envoyée ; l'activité Discord est optionnelle et n'envoie que le total de coffres à Discord.
+- Aucun compte obligatoire, aucune publicité, aucune donnée de jeu envoyée. L'activité Discord et la synchronisation cloud sont optionnelles ; les fichiers de replay restent sur ton disque.
 
 ## Installation
 
@@ -50,11 +51,19 @@ Le total additionne **tous les coffres trouvés dans les replays** : coffres cla
 
 ## Interface
 
-- **Accueil** : total, session, dernière partie, profil et actions rapides (rapport, overlay, verrouillage).
+- **Accueil** : total, session, dernière partie, profil et actions rapides (rapport, overlay, verrouillage). La croix de la fenêtre range le compteur dans la zone de notification ; il continue de tourner en arrière-plan.
 - **Réglages** : langue, overlay, lien OBS/TikTok Live Studio, dossier des replays, totaux de saison et comportement.
 - **Aide** : rappels, raccourcis et dossier de données.
 
 Le rapport s’ouvre dans le navigateur et se met à jour automatiquement pendant l’analyse.
+
+## Compte et synchronisation
+
+Au lancement, une page de connexion propose un compte par **adresse e-mail** ou avec **Google**. Elle peut être passée avec **Plus tard, rester en local** et rouverte depuis **Réglages → Synchronisation**.
+
+Une fois connecté, l'historique et les statistiques sont synchronisés dans une table Supabase protégée par RLS. Les parties sont fusionnées par identifiant de replay : une partie analysée sur deux PC n'apparaît qu'une fois. Les réglages d'overlay et de dossier restent propres à chaque PC ; les fichiers `.replay` ne sont jamais envoyés. Les totaux manuels de saison (coffres classiques, rares et d'esprit) suivent le compte et sont restaurés sur les autres PC.
+
+La configuration du projet Supabase, de Google et de l'URL de retour est détaillée dans [`docs/SUPABASE.md`](docs/SUPABASE.md).
 
 ## Raccourcis
 
@@ -67,7 +76,6 @@ Le rapport s’ouvre dans le navigateur et se met à jour automatiquement pendan
 
 <img src="docs/overlay-fr.png" alt="Grande carte pirate pour OBS et TikTok Live Studio" width="800">
 
-- **HUD** : une seule ligne, dans l’esprit du HUD Fortnite. Idéal sous la minimap.
 - **Carte violette en jeu** : la carte compacte, avec le petit coffre dans l'en-tête, le total en or et la dernière partie. Une animation brève fait monter le total quand un nouveau coffre est ajouté, puis la carte reste immobile.
 - **Carte OBS / TikTok Live Studio** : la grande carte pirate avec le coffre à crâne, les deux compteurs en or et la grille des **10 récompenses Treasure Hunt**. Une récompense déjà trouvée dans tes replays est automatiquement barrée d'une croix rouge ; les autres restent en or. La grille se remplit à partir du `PrizeId` du coffre doré, sans clic manuel.
 - **Overlay de jeu pour le stream** : la carte compacte de l'overlay natif, servie sur `/overlay/game`. Idéale pour un rappel discret dans OBS ou TikTok Live Studio, avec le total, la partie en cours ou la dernière partie et le badge LIVE.
@@ -79,22 +87,23 @@ La taille se règle de **50 à 175 %** et l’opacité de **30 à 100 %** dans *
 Pour afficher un overlay dans un live :
 
 1. Ouvre **Réglages → OBS / TikTok Live Studio** et choisis **Carte complète** ou **Overlay de jeu (stream)**, puis clique sur **Copier** (ou **Copier le lien**).
-2. Dans OBS, ajoute une source **Navigateur** et colle le lien. Dans TikTok Live Studio, utilise sa source navigateur si ta version en propose une.
+2. Dans OBS, ajoute une source **Navigateur** et colle le lien. Dans TikTok Live Studio, choisis une source **Lien** et colle le **lien HTTPS** affiché : TikTok refuse les URL locales en `http://`.
 3. Règle la taille de la source sur **1920 × 1080** (ou la taille de ton canvas) : la carte s'adapte à la source et le fond de la page est transparent. Pour l'overlay de jeu, une source plus compacte (par exemple **700 × 200**) suffit.
 
-Les deux liens sont servis uniquement sur ce PC, à l’adresse `127.0.0.1` affichée dans les réglages. Le compteur doit rester ouvert pendant le live ; aucun réglage réseau, compte ou hébergement externe n’est nécessaire. Le port peut changer si le port préféré est déjà occupé : utilise toujours le lien affiché dans l’application.
+Les liens restent servis sur ce PC. Le lien TikTok utilise `https://127-0-0-1.anyip.dev:<port>/overlay`, un domaine public qui pointe vers `127.0.0.1` : le trafic ne sort pas de la machine et aucun certificat n’est à installer. Une connexion Internet est nécessaire pour résoudre ce domaine. L’ancien lien HTTP reste disponible pour les sources OBS déjà configurées. Le compteur doit rester ouvert pendant le live ; le port peut changer si le port préféré est déjà occupé : utilise toujours le lien affiché dans l’application.
 
 ## Données
 
-Tout reste sur le PC, dans `%APPDATA%\ChestCounterFortnite` :
+Par défaut, tout reste sur le PC, dans `%APPDATA%\ChestCounterFortnite` :
 
 - `data.json` : historique ;
 - `config.json` : réglages et position de l’overlay ;
 - `report.html` : rapport web ;
 - `matches.csv` : parties exportables ;
-- `replay-archive/` : `replays.zip`, une archive ZIP unique contenant les replays déjà analysés déplacés depuis le dossier Fortnite (optionnel).
+- `replay-archive/` : `replays.zip`, une archive ZIP unique contenant les replays déjà analysés déplacés depuis le dossier Fortnite (optionnel) ;
+- `supabase.json` / `supabase-session.json` : configuration et session cloud, uniquement si tu actives la synchronisation.
 
-Le compteur ne modifie jamais Fortnite et ne lit pas sa mémoire. Aucune donnée n’est envoyée sur Internet, hors vérification des mises à jour GitHub et activité Discord optionnelle. Le lien de diffusion est servi uniquement en local sur `127.0.0.1`.
+Le compteur ne modifie jamais Fortnite et ne lit pas sa mémoire. Sans connexion, aucune donnée n’est envoyée sur Internet, hors vérification des mises à jour GitHub et activité Discord optionnelle. Avec un compte, le contenu de `data.json` est copié dans ton projet Supabase et associé à ton utilisateur ; les replays et les réglages locaux ne sont pas envoyés. Le lien de diffusion est servi uniquement en local : le domaine HTTPS public pointe vers `127.0.0.1`.
 
 ## Compiler
 
