@@ -9,14 +9,19 @@ using System.Text.Json;
 namespace ChestCounter;
 
 /// <summary>
-/// Optional Supabase account: email/password sign-in, Google OAuth with a loopback callback, and a
-/// per-user copy of the history. The local application keeps working when Supabase is not configured.
+/// Supabase account: email/password sign-in, Google OAuth with a loopback callback, and a per-user copy
+/// of the history. The project URL and the publishable key are supplied by the application itself.
 /// </summary>
 internal sealed class CloudService
 {
     public const string CallbackUrl = "http://127.0.0.1:53682/auth/callback";
     private const int CallbackPort = 53682;
     private const string Table = "chest_counter_state";
+
+    // Public configuration of the ChestCounterFortnite project. The key is a Supabase publishable key,
+    // protected by RLS: it is not a service_role secret.
+    private const string SupabaseUrl = "https://mzhnmfrypwomerhgvyss.supabase.co";
+    private const string SupabasePublishableKey = "sb_publishable_gzwnmUCnlZTH7hfR_8wUwg_FfqK87vH";
 
     private static readonly JsonSerializerOptions FileJson = new()
     {
@@ -60,15 +65,17 @@ internal sealed class CloudService
         _settings = settings;
         _config = LoadConfig();
         _session = LoadSession();
-        _sync = _config.IsConfigured ? (_session != null ? "idle" : "off") : "off";
+        _sync = _session != null ? "idle" : "off";
         if (_session != null)
         {
             _sync = "idle";
         }
         EnsureDeviceId();
+        // Rewrite the old local file without its URL/key: configuration now lives in the application.
+        SaveConfig();
     }
 
-    public bool Configured => _config.IsConfigured;
+    public bool Configured => true;
     public bool SignedIn => _session != null;
     public bool Busy => _busy;
     public string? Email => _session?.Email;
@@ -85,7 +92,6 @@ internal sealed class CloudService
     public bool RecoveryActive => _recoveryStage is "sent" or "ready";
 
     public CloudSnapshot Snapshot() => new(
-        Configured,
         SignedIn,
         Email ?? "",
         Name ?? "",
@@ -529,41 +535,11 @@ internal sealed class CloudService
     {
         _session = null;
         _error = "";
-        _sync = Configured ? "off" : "off";
+        _sync = "off";
         _lastSyncUtc = null;
         TryDelete(SessionPath);
         Changed?.Invoke();
         return Task.CompletedTask;
-    }
-
-    public CloudResult Configure(string url, string anonKey)
-    {
-        var normalized = NormalizeUrl(url);
-        if (normalized.Length == 0)
-        {
-            return CloudResult.Fail("L'URL Supabase est invalide.");
-        }
-        var key = (anonKey ?? "").Trim();
-        if (key.Length < 20)
-        {
-            return CloudResult.Fail("La clé publique (anon ou publishable) est invalide.");
-        }
-
-        var previousUrl = _config.Url;
-        _config.Url = normalized;
-        _config.AnonKey = key;
-        _config.IsConfigured = true;
-        _error = "";
-        _sync = _session != null && string.Equals(previousUrl, normalized, StringComparison.OrdinalIgnoreCase) ? "idle" : "off";
-        if (!string.Equals(previousUrl, normalized, StringComparison.OrdinalIgnoreCase))
-        {
-            // A different project cannot reuse the previous project's session.
-            _session = null;
-            TryDelete(SessionPath);
-        }
-        SaveConfig();
-        Changed?.Invoke();
-        return CloudResult.Ok("Configuration Supabase enregistrée. Tu peux te connecter.");
     }
 
     /// <summary>Pulls the account's history, merges it with the local one, then uploads the union.</summary>
@@ -1037,7 +1013,7 @@ internal sealed class CloudService
 
     private HttpRequestMessage AddApiHeaders(HttpRequestMessage request, string? accessToken = null)
     {
-        request.Headers.TryAddWithoutValidation("apikey", _config.AnonKey);
+        request.Headers.TryAddWithoutValidation("apikey", SupabasePublishableKey);
         if (!string.IsNullOrEmpty(accessToken))
         {
             request.Headers.TryAddWithoutValidation("Authorization", "Bearer " + accessToken);
@@ -1048,7 +1024,7 @@ internal sealed class CloudService
     private static StringContent JsonBody(object value) =>
         new(JsonSerializer.Serialize(value), Encoding.UTF8, "application/json");
 
-    private string ApiUrl(string path) => _config.Url.TrimEnd('/') + path;
+    private static string ApiUrl(string path) => SupabaseUrl + path;
 
     private static string Base64Url(byte[] bytes) =>
         Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
@@ -1118,18 +1094,9 @@ internal sealed class CloudService
 
     private CloudConfig LoadConfig()
     {
+        // Old versions stored the URL and key here. They are ignored; only the device id is kept.
         var config = ReadJson<CloudConfig>(ConfigPath) ?? new CloudConfig();
-        if (string.IsNullOrWhiteSpace(config.Url))
-        {
-            config.Url = Environment.GetEnvironmentVariable("CHESTCOUNTER_SUPABASE_URL") ?? "";
-        }
-        if (string.IsNullOrWhiteSpace(config.AnonKey))
-        {
-            config.AnonKey = Environment.GetEnvironmentVariable("CHESTCOUNTER_SUPABASE_ANON_KEY") ?? "";
-        }
-        config.Url = NormalizeUrl(config.Url);
-        config.AnonKey = config.AnonKey.Trim();
-        config.IsConfigured = config.Url.Length > 0 && config.AnonKey.Length >= 20;
+        config.DeviceId = (config.DeviceId ?? "").Trim();
         return config;
     }
 
@@ -1224,10 +1191,7 @@ internal sealed class CloudService
 
     private sealed class CloudConfig
     {
-        public string Url { get; set; } = "";
-        public string AnonKey { get; set; } = "";
         public string DeviceId { get; set; } = "";
-        public bool IsConfigured { get; set; }
     }
 
     private sealed class CloudSession
@@ -1254,7 +1218,6 @@ internal sealed record CloudResult(bool Succeeded, string Message)
 }
 
 internal sealed record CloudSnapshot(
-    bool Configured,
     bool SignedIn,
     string Email,
     string Name,

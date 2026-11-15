@@ -68,17 +68,6 @@ button{background:none;border:0;cursor:pointer}
 @keyframes authPulse{70%{box-shadow:0 0 0 9px rgba(246,183,60,0)}100%{box-shadow:0 0 0 0 rgba(246,183,60,0)}}
 .auth-back{align-self:flex-start;margin-top:2px;font-size:11.5px;color:#a99fbd;text-decoration:underline;text-underline-offset:3px}
 .auth-back:hover{color:#f0b94f}
-.auth-config{margin-top:15px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07)}
-.auth-config-toggle{font-size:11.5px;color:#a99fbd;text-decoration:underline;text-underline-offset:3px}
-.auth-config-toggle:hover{color:#f0b94f}
-.auth-config-fields{margin-top:10px;padding:12px;border-radius:9px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
-.auth-config-fields p{margin:0 0 9px;font-size:11px;line-height:1.45;color:#91869f}
-.auth-config-fields .auth-field{margin-top:8px}
-.login-panel .auth-config-fields .auth-field input{height:32px;font-size:12px}
-.auth-config-actions{display:flex;gap:7px;margin-top:10px}
-.auth-config-actions .btn{height:32px;padding:0 10px;font-size:11.5px}
-.auth-hint{margin-top:9px!important;font-size:10.5px!important;color:#756a84!important;overflow-wrap:anywhere}
-.auth-hint code{color:#c9b7f4;font-family:Consolas,monospace;font-size:10px}
 .cloud-avatar{background:linear-gradient(160deg,#0f3b36,#10222b);border-color:rgba(74,222,128,.28);color:#6ee7b7}
 .cloud-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
 .cloud-actions .btn{height:32px;padding:0 10px;font-size:11.5px}
@@ -392,19 +381,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
             <span data-i18n="auth.google">Continuer avec Google</span>
           </button>
           <p class="auth-message" id="auth-message" role="alert" aria-live="polite"></p>
-          <div class="auth-config" id="auth-config">
-            <button class="auth-config-toggle" id="auth-config-toggle" type="button" data-auth-action="configToggle" data-i18n="auth.config">Configurer Supabase</button>
-            <div class="auth-config-fields" id="auth-config-fields" hidden>
-              <p data-i18n="auth.configHelp">Crée un projet sur supabase.com, puis colle ici l'URL du projet et sa clé publique (anon ou publishable). Ces valeurs restent sur ce PC.</p>
-              <label class="auth-field"><span data-i18n="auth.url">URL du projet Supabase</span><input id="auth-url" type="text" autocomplete="off" spellcheck="false" placeholder="https://xxxxx.supabase.co"></label>
-              <label class="auth-field"><span data-i18n="auth.key">Clé publique (anon / publishable)</span><input id="auth-key" type="text" autocomplete="off" spellcheck="false" placeholder="eyJhbGciOi…"></label>
-              <div class="auth-config-actions">
-                <button class="btn gold" id="auth-config-save" type="button" data-auth-action="configSave" data-i18n="auth.saveConfig">Enregistrer</button>
-                <button class="btn ghost" type="button" data-auth-action="openSupabase" data-i18n="auth.openSupabase">Ouvrir Supabase</button>
-              </div>
-              <p class="auth-hint"><span data-i18n="auth.callback">URL de redirection à autoriser dans Supabase :</span><br><code id="auth-callback">http://127.0.0.1:53682/auth/callback</code></p>
-            </div>
-          </div>
         </div>
       </div>
     </section>
@@ -689,9 +665,9 @@ const I18N = {
     "settings.kicker":"Personnalise ton compteur","settings.title":"Réglages","settings.language":"Langue","settings.languageDesc":"La langue de la fenêtre, du rapport et de l'overlay.","settings.overlay":"Overlay en jeu","settings.showOverlay":"Afficher l'overlay en jeu","settings.showOverlayDesc":"La carte violette, avec le total et la dernière partie.","settings.size":"Taille","settings.opacity":"Opacité","settings.overlayHint":"En jeu : Ctrl+Maj+O pour l'afficher ou le masquer, Ctrl+Maj+L pour le verrouiller.","settings.broadcast":"OBS / TikTok Live Studio","settings.broadcastDesc":"L'overlay compact du jeu, pour OBS et TikTok Live Studio. Le lien HTTPS fonctionne dans les deux ; TikTok refuse les anciens liens HTTP.","settings.broadcastLink":"Lien de la source navigateur","settings.broadcastHint":"Le domaine HTTPS pointe vers 127.0.0.1 : le trafic reste sur ce PC. Garde ChestCounterFortnite ouvert et laisse Internet résoudre le domaine. L'overlay s'adapte automatiquement à la source : aucun redimensionnement à faire. OBS peut aussi utiliser l'ancien lien HTTP déjà configuré.","settings.broadcastGame":"Overlay de jeu (stream)","settings.broadcastCopy":"Copier le lien","settings.broadcastOpen":"Ouvrir","settings.broadcastUnavailable":"Lien indisponible","settings.behavior":"Comportement","settings.tray":"Réduire dans la zone de notification","settings.trayDesc":"Le compteur continue de tourner, loin de la barre des tâches. La croix de la fenêtre le range aussi ici.","settings.withFortnite":"Ouvrir avec Fortnite","settings.withFortniteDesc":"Une veille discrète démarre le compteur avec le jeu.","settings.discordPresence":"Afficher mon activité dans Discord","settings.discordDesc":"Affiche ton total de coffres avec un minuteur et deux boutons (GitHub / téléchargement), même quand Fortnite est lancé. Nécessite Discord desktop.","settings.totals":"Totaux de saison","settings.totalsDesc":"Les coffres ouverts avant le début du suivi. Ces totaux suivent ton compte.","settings.classic":"Coffres classiques","settings.rare":"Coffres rares","settings.sprite":"Coffres d'esprit","settings.totalsHint":"Total de la saison, parties déjà comptées comprises : les prochaines s'ajoutent par-dessus.","settings.replays":"Dossier des replays","settings.replaysDesc":"Là où Fortnite enregistre ses rediffusions.","settings.browse":"Parcourir…","settings.account":"Compte","settings.replayFolder":"Dossier Fortnite","settings.replayArchiveFolder":"Archive ZIP unique","settings.replayAutoArchive":"Archiver automatiquement les replays analysés","settings.replayAutoArchiveDesc":"Ils quittent le dossier Fortnite et sont regroupés dans une archive ZIP unique.","settings.replayRetention":"Supprimer les replays archivés après","settings.replayWarning":"Désactivé par défaut. L'archive ZIP unique utilise encore de l'espace ; la suppression est définitive et ne concerne que l'archive.","settings.replayArchiveNow":"Archiver maintenant","settings.replayCleanupNow":"Supprimer les anciens","settings.replayOpenArchive":"Ouvrir l'archive","replay.never":"Ne jamais supprimer","replay.after7":"Après 7 jours","replay.after30":"Après 30 jours","replay.after90":"Après 90 jours","replay.unit":"replays","settings.localHint":"Historique local, synchronisé si tu te connectes.","settings.cancel":"Annuler","settings.save":"Enregistrer","settings.saved":"Réglages enregistrés.","settings.saveError":"Impossible d'enregistrer les réglages.","settings.withFortniteError":"Ouvrir avec Fortnite : impossible ici, lance le compteur depuis ChestCounterFortnite.exe.",
     "help.kicker":"Tout savoir en deux minutes","help.title":"Aide","help.howTitle":"Comment ça marche","help.howText":"Le compteur lit les replays que Fortnite enregistre et compte tes coffres quelques secondes après la fin de chaque partie. Garde la fenêtre ouverte pendant que tu joues : elle peut rester dans la zone de notification.","help.replayTitle":"Rien n'est compté ?","help.replayText":"Dans Fortnite, active Paramètres → Jeu → Rediffusions → Enregistrer les rediffusions. Les coffres apparaissent ensuite tout seuls.","help.overlayTitle":"L'overlay","help.overlayText":"Affiche ou masque-le avec","help.overlayText2":"et verrouille-le avec","help.overlayText3":"Déverrouillé, maintiens le clic gauche pour le déplacer. En jeu, choisis « Plein écran fenêtré ».","help.dataTitle":"Tes données","help.dataText":"Tout est enregistré sur ce PC, dans %APPDATA%\\ChestCounterFortnite : historique, réglages et rapport. Une fois connecté, ton historique est aussi copié dans ton compte Supabase ; les replays restent locaux. Les mises à jour se téléchargent automatiquement depuis GitHub.",
     "matchesShort":"parties","chestsShort":"coffres",
-    "auth.kicker":"Connexion au cloud","auth.title":"Retrouve tes coffres.","auth.subtitle":"Connecte-toi pour synchroniser ton historique entre tes appareils.","auth.signin":"Se connecter","auth.signup":"Créer un compte","auth.email":"Adresse e-mail","auth.password":"Mot de passe","auth.or":"ou","auth.google":"Continuer avec Google","auth.config":"Configurer Supabase","auth.configHelp":"Crée un projet sur supabase.com, puis colle ici l'URL du projet et sa clé publique (anon ou publishable). Ces valeurs restent sur ce PC.","auth.url":"URL du projet Supabase","auth.key":"Clé publique (anon / publishable)","auth.saveConfig":"Enregistrer","auth.openSupabase":"Ouvrir Supabase","auth.callback":"URL de redirection à autoriser dans Supabase :","auth.connecting":"Connexion…","auth.creating":"Création…","auth.googleOpening":"Ouverture de Google…","auth.configRequired":"Configure d'abord ton projet Supabase ci-dessous.","auth.fillFields":"Indique ton adresse e-mail et ton mot de passe.","auth.passwordShort":"Le mot de passe doit contenir au moins 6 caractères.","auth.welcome":"Connecté. Ton historique est en cours de synchronisation.","auth.googleHint":"Une fenêtre Google va s'ouvrir dans ton navigateur.","auth.configSaved":"Configuration enregistrée. Tu peux te connecter.","auth.forgot":"Mot de passe oublié ?","auth.forgotTitle":"Mot de passe oublié","auth.forgotSubtitle":"Entre l'adresse de ton compte. Si elle existe, Supabase t'enverra un lien de réinitialisation.","auth.sendReset":"Envoyer le lien","auth.sendingReset":"Envoi…","auth.resetSentTitle":"Vérifie tes e-mails","auth.resetSentSubtitle":"Le lien de réinitialisation est en attente.","auth.resetSent":"Si un compte existe avec cette adresse, un lien vient d'être envoyé. Garde ChestCounter ouvert, puis ouvre le lien sur ce PC.","auth.resetSamePc":"Le lien revient vers cette application sur ce PC. Ne ferme pas ChestCounter pendant l'opération.","auth.resetReadyTitle":"Nouveau mot de passe","auth.resetReadySubtitle":"Le lien est vérifié. Choisis un nouveau mot de passe pour ton compte.","auth.newPassword":"Nouveau mot de passe","auth.confirmPassword":"Confirme le mot de passe","auth.updatePassword":"Mettre à jour le mot de passe","auth.updatingPassword":"Mise à jour…","auth.resetMismatch":"Les deux mots de passe ne correspondent pas.","auth.fillResetEmail":"Indique l'adresse e-mail de ton compte.","auth.cancelReset":"Annuler la réinitialisation","auth.backSignin":"Retour à la connexion",
+    "auth.kicker":"Connexion au cloud","auth.title":"Retrouve tes coffres.","auth.subtitle":"Connecte-toi pour synchroniser ton historique entre tes appareils.","auth.signin":"Se connecter","auth.signup":"Créer un compte","auth.email":"Adresse e-mail","auth.password":"Mot de passe","auth.or":"ou","auth.google":"Continuer avec Google","auth.connecting":"Connexion…","auth.creating":"Création…","auth.googleOpening":"Ouverture de Google…","auth.fillFields":"Indique ton adresse e-mail et ton mot de passe.","auth.passwordShort":"Le mot de passe doit contenir au moins 6 caractères.","auth.welcome":"Connecté. Ton historique est en cours de synchronisation.","auth.googleHint":"Une fenêtre Google va s'ouvrir dans ton navigateur.","auth.forgot":"Mot de passe oublié ?","auth.forgotTitle":"Mot de passe oublié","auth.forgotSubtitle":"Entre l'adresse de ton compte. Si elle existe, Supabase t'enverra un lien de réinitialisation.","auth.sendReset":"Envoyer le lien","auth.sendingReset":"Envoi…","auth.resetSentTitle":"Vérifie tes e-mails","auth.resetSentSubtitle":"Le lien de réinitialisation est en attente.","auth.resetSent":"Si un compte existe avec cette adresse, un lien vient d'être envoyé. Garde ChestCounter ouvert, puis ouvre le lien sur ce PC.","auth.resetSamePc":"Le lien revient vers cette application sur ce PC. Ne ferme pas ChestCounter pendant l'opération.","auth.resetReadyTitle":"Nouveau mot de passe","auth.resetReadySubtitle":"Le lien est vérifié. Choisis un nouveau mot de passe pour ton compte.","auth.newPassword":"Nouveau mot de passe","auth.confirmPassword":"Confirme le mot de passe","auth.updatePassword":"Mettre à jour le mot de passe","auth.updatingPassword":"Mise à jour…","auth.resetMismatch":"Les deux mots de passe ne correspondent pas.","auth.fillResetEmail":"Indique l'adresse e-mail de ton compte.","auth.cancelReset":"Annuler la réinitialisation","auth.backSignin":"Retour à la connexion",
     "settings.cloud":"Synchronisation","settings.cloudOff":"Cloud non connecté","settings.cloudOffDesc":"Ton historique reste sur ce PC.","settings.cloudLogin":"Se connecter","settings.cloudSync":"Synchroniser","settings.cloudLogout":"Déconnexion","settings.cloudHint":"Connecte-toi pour retrouver ton historique sur un autre PC. Les réglages d'affichage restent propres à chaque PC.",
-    "cloud.idle":"Connecté","cloud.syncing":"Synchronisation…","cloud.synced":"À jour","cloud.offline":"Hors ligne","cloud.error":"Erreur de synchronisation","cloud.pending":"En attente de synchronisation","cloud.last":"Dernière sync : {v}","cloud.never":"Pas encore synchronisé","cloud.notConfigured":"Supabase n'est pas configuré.","cloud.emailFallback":"Compte connecté","cloud.configHint":"Configure Supabase dans la fenêtre de connexion."
+    "cloud.idle":"Connecté","cloud.syncing":"Synchronisation…","cloud.synced":"À jour","cloud.offline":"Hors ligne","cloud.error":"Erreur de synchronisation","cloud.pending":"En attente de synchronisation","cloud.last":"Dernière sync : {v}","cloud.never":"Pas encore synchronisé","cloud.emailFallback":"Compte connecté"
   },
   en: {
     "nav.home":"Home","nav.settings":"Settings","nav.help":"Help",
@@ -706,9 +682,9 @@ const I18N = {
     "settings.kicker":"Make it yours","settings.title":"Settings","settings.language":"Language","settings.languageDesc":"The language of the window, the report and the overlay.","settings.overlay":"In-game overlay","settings.showOverlay":"Show the in-game overlay","settings.showOverlayDesc":"The purple card, with the total and the last match.","settings.size":"Size","settings.opacity":"Opacity","settings.overlayHint":"In game: Ctrl+Shift+O to show or hide it, Ctrl+Shift+L to lock it.","settings.broadcast":"OBS / TikTok Live Studio","settings.broadcastDesc":"The compact game overlay for OBS and TikTok Live Studio. The HTTPS link works in both; TikTok rejects the old HTTP links.","settings.broadcastLink":"Browser source link","settings.broadcastHint":"The HTTPS domain points to 127.0.0.1, so traffic stays on this PC. Keep ChestCounterFortnite open and let Internet resolve the domain. The overlay fits the source automatically: no resizing needed. OBS can keep its existing HTTP link.","settings.broadcastGame":"Game overlay (stream)","settings.broadcastCopy":"Copy link","settings.broadcastOpen":"Open","settings.broadcastUnavailable":"Link unavailable","settings.behavior":"Behaviour","settings.tray":"Minimize to the notification area","settings.trayDesc":"The counter keeps running, out of the taskbar. The window's X also moves it here.","settings.withFortnite":"Open with Fortnite","settings.withFortniteDesc":"A quiet watcher starts the counter with the game.","settings.discordPresence":"Show my activity in Discord","settings.discordDesc":"Shows your chest total with a session timer and two buttons (GitHub / download), even while Fortnite is running. Requires Discord desktop.","settings.totals":"Season totals","settings.totalsDesc":"Chests opened before tracking began. These totals follow your account.","settings.classic":"Classic chests","settings.rare":"Rare chests","settings.sprite":"Sprite chests","settings.totalsHint":"Season total, including matches already counted: new ones add on top.","settings.replays":"Replays folder","settings.replaysDesc":"Where Fortnite saves its replays.","settings.browse":"Browse…","settings.account":"Account","settings.replayFolder":"Fortnite folder","settings.replayArchiveFolder":"Single ZIP archive","settings.replayAutoArchive":"Automatically archive analyzed replays","settings.replayAutoArchiveDesc":"They leave the Fortnite folder and are grouped into one ZIP archive.","settings.replayRetention":"Delete archived replays after","settings.replayWarning":"Off by default. The single ZIP archive still uses disk space; deletion is permanent and only affects the archive.","settings.replayArchiveNow":"Archive now","settings.replayCleanupNow":"Delete old ones","settings.replayOpenArchive":"Open archive","replay.never":"Never delete","replay.after7":"After 7 days","replay.after30":"After 30 days","replay.after90":"After 90 days","replay.unit":"replays","settings.localHint":"Local history, synced when you sign in.","settings.cancel":"Cancel","settings.save":"Save","settings.saved":"Settings saved.","settings.saveError":"Could not save the settings.","settings.withFortniteError":"Open with Fortnite: not possible here, run the counter from ChestCounterFortnite.exe.",
     "help.kicker":"Everything in two minutes","help.title":"Help","help.howTitle":"How it works","help.howText":"The counter reads the replays Fortnite saves and counts your chests a few seconds after each match ends. Keep the window open while you play: it can stay in the notification area.","help.replayTitle":"Nothing counted?","help.replayText":"In Fortnite, turn on Settings → Game → Replays → Record Replays. Chests then appear on their own.","help.overlayTitle":"The overlay","help.overlayText":"Show or hide it with","help.overlayText2":"and lock it with","help.overlayText3":"Unlocked, hold the left button to move it. In game, choose Windowed Fullscreen.","help.dataTitle":"Your data","help.dataText":"Everything is saved on this PC, in %APPDATA%\\ChestCounterFortnite: history, settings and report. Once signed in, your history is also copied to your Supabase account; replays stay local. Updates download automatically from GitHub.",
     "matchesShort":"matches","chestsShort":"chests",
-    "auth.kicker":"Cloud sign-in","auth.title":"Find your chests again.","auth.subtitle":"Sign in to sync your history between your devices.","auth.signin":"Sign in","auth.signup":"Create an account","auth.email":"Email address","auth.password":"Password","auth.or":"or","auth.google":"Continue with Google","auth.config":"Configure Supabase","auth.configHelp":"Create a project on supabase.com, then paste its project URL and public key (anon or publishable) here. These values stay on this PC.","auth.url":"Supabase project URL","auth.key":"Public key (anon / publishable)","auth.saveConfig":"Save","auth.openSupabase":"Open Supabase","auth.callback":"Redirect URL to allow in Supabase:","auth.connecting":"Signing in…","auth.creating":"Creating…","auth.googleOpening":"Opening Google…","auth.configRequired":"Configure your Supabase project below first.","auth.fillFields":"Enter your email address and password.","auth.passwordShort":"The password must contain at least 6 characters.","auth.welcome":"Signed in. Your history is syncing.","auth.googleHint":"A Google window will open in your browser.","auth.configSaved":"Configuration saved. You can sign in.","auth.forgot":"Forgot password?","auth.forgotTitle":"Forgot password","auth.forgotSubtitle":"Enter your account email. If it exists, Supabase will send a reset link.","auth.sendReset":"Send the link","auth.sendingReset":"Sending…","auth.resetSentTitle":"Check your email","auth.resetSentSubtitle":"The reset link is waiting.","auth.resetSent":"If an account exists for this address, a link has just been sent. Keep ChestCounter open, then open the link on this PC.","auth.resetSamePc":"The link returns to this application on this PC. Do not close ChestCounter during the process.","auth.resetReadyTitle":"New password","auth.resetReadySubtitle":"The link is verified. Choose a new password for your account.","auth.newPassword":"New password","auth.confirmPassword":"Confirm password","auth.updatePassword":"Update password","auth.updatingPassword":"Updating…","auth.resetMismatch":"The two passwords do not match.","auth.fillResetEmail":"Enter your account email address.","auth.cancelReset":"Cancel reset","auth.backSignin":"Back to sign in",
+    "auth.kicker":"Cloud sign-in","auth.title":"Find your chests again.","auth.subtitle":"Sign in to sync your history between your devices.","auth.signin":"Sign in","auth.signup":"Create an account","auth.email":"Email address","auth.password":"Password","auth.or":"or","auth.google":"Continue with Google","auth.connecting":"Signing in…","auth.creating":"Creating…","auth.googleOpening":"Opening Google…","auth.fillFields":"Enter your email address and password.","auth.passwordShort":"The password must contain at least 6 characters.","auth.welcome":"Signed in. Your history is syncing.","auth.googleHint":"A Google window will open in your browser.","auth.forgot":"Forgot password?","auth.forgotTitle":"Forgot password","auth.forgotSubtitle":"Enter your account email. If it exists, Supabase will send a reset link.","auth.sendReset":"Send the link","auth.sendingReset":"Sending…","auth.resetSentTitle":"Check your email","auth.resetSentSubtitle":"The reset link is waiting.","auth.resetSent":"If an account exists for this address, a link has just been sent. Keep ChestCounter open, then open the link on this PC.","auth.resetSamePc":"The link returns to this application on this PC. Do not close ChestCounter during the process.","auth.resetReadyTitle":"New password","auth.resetReadySubtitle":"The link is verified. Choose a new password for your account.","auth.newPassword":"New password","auth.confirmPassword":"Confirm password","auth.updatePassword":"Update password","auth.updatingPassword":"Updating…","auth.resetMismatch":"The two passwords do not match.","auth.fillResetEmail":"Enter your account email address.","auth.cancelReset":"Cancel reset","auth.backSignin":"Back to sign in",
     "settings.cloud":"Sync","settings.cloudOff":"Cloud not connected","settings.cloudOffDesc":"Your history stays on this PC.","settings.cloudLogin":"Sign in","settings.cloudSync":"Sync now","settings.cloudLogout":"Sign out","settings.cloudHint":"Sign in to find your history on another PC. Display settings stay specific to each PC.",
-    "cloud.idle":"Connected","cloud.syncing":"Syncing…","cloud.synced":"Up to date","cloud.offline":"Offline","cloud.error":"Sync error","cloud.pending":"Waiting to sync","cloud.last":"Last sync: {v}","cloud.never":"Not synced yet","cloud.notConfigured":"Supabase is not configured.","cloud.emailFallback":"Connected account","cloud.configHint":"Configure Supabase in the sign-in window."
+    "cloud.idle":"Connected","cloud.syncing":"Syncing…","cloud.synced":"Up to date","cloud.offline":"Offline","cloud.error":"Sync error","cloud.pending":"Waiting to sync","cloud.last":"Last sync: {v}","cloud.never":"Not synced yet","cloud.emailFallback":"Connected account"
   },
   es: {
     "nav.home":"Inicio","nav.settings":"Ajustes","nav.help":"Ayuda",
@@ -723,13 +699,13 @@ const I18N = {
     "settings.kicker":"Personaliza tu contador","settings.title":"Ajustes","settings.language":"Idioma","settings.languageDesc":"El idioma de la ventana, el informe y el overlay.","settings.overlay":"Overlay en el juego","settings.showOverlay":"Mostrar el overlay en el juego","settings.showOverlayDesc":"La tarjeta violeta, con el total y la última partida.","settings.size":"Tamaño","settings.opacity":"Opacidad","settings.overlayHint":"En el juego: Ctrl+Mayús+O para mostrarlo u ocultarlo, Ctrl+Mayús+L para bloquearlo.","settings.broadcast":"OBS / TikTok Live Studio","settings.broadcastDesc":"El overlay compacto del juego para OBS y TikTok Live Studio. El enlace HTTPS funciona en ambos; TikTok rechaza los antiguos enlaces HTTP.","settings.broadcastLink":"Enlace de la fuente de navegador","settings.broadcastHint":"El dominio HTTPS apunta a 127.0.0.1: el tráfico sigue en este PC. Mantén ChestCounterFortnite abierto y deja que Internet resuelva el dominio. El overlay se adapta automáticamente a la fuente: no hay que redimensionarla. OBS puede conservar su enlace HTTP.","settings.broadcastGame":"Overlay de juego (stream)","settings.broadcastCopy":"Copiar enlace","settings.broadcastOpen":"Abrir","settings.broadcastUnavailable":"Enlace no disponible","settings.behavior":"Comportamiento","settings.tray":"Minimizar al área de notificación","settings.trayDesc":"El contador sigue funcionando, fuera de la barra de tareas. La X de la ventana también lo guarda aquí.","settings.withFortnite":"Abrir con Fortnite","settings.withFortniteDesc":"Una vigilia discreta inicia el contador con el juego.","settings.discordPresence":"Mostrar mi actividad en Discord","settings.discordDesc":"Muestra tu total de cofres con un temporizador y dos botones (GitHub / descarga), incluso con Fortnite abierto. Requiere Discord para escritorio.","settings.totals":"Totales de temporada","settings.totalsDesc":"Cofres abiertos antes de empezar el seguimiento. Estos totales siguen tu cuenta.","settings.classic":"Cofres clásicos","settings.rare":"Cofres raros","settings.sprite":"Cofres de espíritu","settings.totalsHint":"Total de la temporada, partidas ya contadas incluidas: las nuevas se suman encima.","settings.replays":"Carpeta de repeticiones","settings.replaysDesc":"Donde Fortnite guarda sus repeticiones.","settings.browse":"Examinar…","settings.account":"Cuenta","settings.replayFolder":"Carpeta de Fortnite","settings.replayArchiveFolder":"Archivo ZIP único","settings.replayAutoArchive":"Archivar automáticamente las repeticiones analizadas","settings.replayAutoArchiveDesc":"Salen de la carpeta de Fortnite y se agrupan en un único archivo ZIP.","settings.replayRetention":"Eliminar las repeticiones archivadas después de","settings.replayWarning":"Desactivado por defecto. El único archivo ZIP sigue ocupando espacio; la eliminación es definitiva y solo afecta al archivo.","settings.replayArchiveNow":"Archivar ahora","settings.replayCleanupNow":"Eliminar las antiguas","settings.replayOpenArchive":"Abrir el archivo","replay.never":"No eliminar nunca","replay.after7":"Después de 7 días","replay.after30":"Después de 30 días","replay.after90":"Después de 90 días","replay.unit":"repeticiones","settings.localHint":"Historial local, sincronizado al iniciar sesión.","settings.cancel":"Cancelar","settings.save":"Guardar","settings.saved":"Ajustes guardados.","settings.saveError":"No se pudieron guardar los ajustes.","settings.withFortniteError":"Abrir con Fortnite: no es posible aquí, abre el contador desde ChestCounterFortnite.exe.",
     "help.kicker":"Todo en dos minutos","help.title":"Ayuda","help.howTitle":"Cómo funciona","help.howText":"El contador lee las repeticiones que guarda Fortnite y cuenta tus cofres unos segundos después de cada partida. Deja la ventana abierta mientras juegas: puede quedarse en el área de notificación.","help.replayTitle":"¿No se cuenta nada?","help.replayText":"En Fortnite, activa Ajustes → Juego → Repeticiones → Grabar repeticiones. Los cofres aparecen solos.","help.overlayTitle":"El overlay","help.overlayText":"Muéstralo u ocúltalo con","help.overlayText2":"y bloquéalo con","help.overlayText3":"Desbloqueado, mantén el clic izquierdo para moverlo. En el juego, elige «Pantalla completa en ventana».","help.dataTitle":"Tus datos","help.dataText":"Todo se guarda en este PC, en %APPDATA%\\ChestCounterFortnite: historial, ajustes e informe. Una vez conectado, tu historial también se copia en tu cuenta de Supabase; las repeticiones siguen en local. Las actualizaciones se descargan automáticamente desde GitHub.",
     "matchesShort":"partidas","chestsShort":"cofres",
-    "auth.kicker":"Conexión a la nube","auth.title":"Encuentra tus cofres.","auth.subtitle":"Inicia sesión para sincronizar tu historial entre tus dispositivos.","auth.signin":"Iniciar sesión","auth.signup":"Crear una cuenta","auth.email":"Correo electrónico","auth.password":"Contraseña","auth.or":"o","auth.google":"Continuar con Google","auth.config":"Configurar Supabase","auth.configHelp":"Crea un proyecto en supabase.com y pega aquí la URL del proyecto y su clave pública (anon o publishable). Estos valores se quedan en este PC.","auth.url":"URL del proyecto Supabase","auth.key":"Clave pública (anon / publishable)","auth.saveConfig":"Guardar","auth.openSupabase":"Abrir Supabase","auth.callback":"URL de redirección que autorizar en Supabase:","auth.connecting":"Conectando…","auth.creating":"Creando…","auth.googleOpening":"Abriendo Google…","auth.configRequired":"Configura primero tu proyecto Supabase abajo.","auth.fillFields":"Indica tu correo y tu contraseña.","auth.passwordShort":"La contraseña debe tener al menos 6 caracteres.","auth.welcome":"Conectado. Tu historial se está sincronizando.","auth.googleHint":"Se abrirá una ventana de Google en tu navegador.","auth.configSaved":"Configuración guardada. Puedes iniciar sesión.","auth.forgot":"¿Has olvidado la contraseña?","auth.forgotTitle":"Contraseña olvidada","auth.forgotSubtitle":"Introduce el correo de tu cuenta. Si existe, Supabase te enviará un enlace de restablecimiento.","auth.sendReset":"Enviar el enlace","auth.sendingReset":"Enviando…","auth.resetSentTitle":"Revisa tu correo","auth.resetSentSubtitle":"El enlace de restablecimiento está esperando.","auth.resetSent":"Si existe una cuenta con esta dirección, acaba de enviarse un enlace. Mantén ChestCounter abierto y abre el enlace en este PC.","auth.resetSamePc":"El enlace vuelve a esta aplicación en este PC. No cierres ChestCounter durante la operación.","auth.resetReadyTitle":"Nueva contraseña","auth.resetReadySubtitle":"El enlace está verificado. Elige una nueva contraseña para tu cuenta.","auth.newPassword":"Nueva contraseña","auth.confirmPassword":"Confirma la contraseña","auth.updatePassword":"Actualizar la contraseña","auth.updatingPassword":"Actualizando…","auth.resetMismatch":"Las dos contraseñas no coinciden.","auth.fillResetEmail":"Indica el correo de tu cuenta.","auth.cancelReset":"Cancelar el restablecimiento","auth.backSignin":"Volver a iniciar sesión",
+    "auth.kicker":"Conexión a la nube","auth.title":"Encuentra tus cofres.","auth.subtitle":"Inicia sesión para sincronizar tu historial entre tus dispositivos.","auth.signin":"Iniciar sesión","auth.signup":"Crear una cuenta","auth.email":"Correo electrónico","auth.password":"Contraseña","auth.or":"o","auth.google":"Continuar con Google","auth.connecting":"Conectando…","auth.creating":"Creando…","auth.googleOpening":"Abriendo Google…","auth.fillFields":"Indica tu correo y tu contraseña.","auth.passwordShort":"La contraseña debe tener al menos 6 caracteres.","auth.welcome":"Conectado. Tu historial se está sincronizando.","auth.googleHint":"Se abrirá una ventana de Google en tu navegador.","auth.forgot":"¿Has olvidado la contraseña?","auth.forgotTitle":"Contraseña olvidada","auth.forgotSubtitle":"Introduce el correo de tu cuenta. Si existe, Supabase te enviará un enlace de restablecimiento.","auth.sendReset":"Enviar el enlace","auth.sendingReset":"Enviando…","auth.resetSentTitle":"Revisa tu correo","auth.resetSentSubtitle":"El enlace de restablecimiento está esperando.","auth.resetSent":"Si existe una cuenta con esta dirección, acaba de enviarse un enlace. Mantén ChestCounter abierto y abre el enlace en este PC.","auth.resetSamePc":"El enlace vuelve a esta aplicación en este PC. No cierres ChestCounter durante la operación.","auth.resetReadyTitle":"Nueva contraseña","auth.resetReadySubtitle":"El enlace está verificado. Elige una nueva contraseña para tu cuenta.","auth.newPassword":"Nueva contraseña","auth.confirmPassword":"Confirma la contraseña","auth.updatePassword":"Actualizar la contraseña","auth.updatingPassword":"Actualizando…","auth.resetMismatch":"Las dos contraseñas no coinciden.","auth.fillResetEmail":"Indica el correo de tu cuenta.","auth.cancelReset":"Cancelar el restablecimiento","auth.backSignin":"Volver a iniciar sesión",
     "settings.cloud":"Sincronización","settings.cloudOff":"Nube no conectada","settings.cloudOffDesc":"Tu historial se queda en este PC.","settings.cloudLogin":"Conectarse","settings.cloudSync":"Sincronizar","settings.cloudLogout":"Cerrar sesión","settings.cloudHint":"Inicia sesión para encontrar tu historial en otro PC. Los ajustes de pantalla siguen siendo propios de cada PC.",
-    "cloud.idle":"Conectado","cloud.syncing":"Sincronizando…","cloud.synced":"Al día","cloud.offline":"Sin conexión","cloud.error":"Error de sincronización","cloud.pending":"Esperando sincronización","cloud.last":"Última sincronización: {v}","cloud.never":"Aún no sincronizado","cloud.notConfigured":"Supabase no está configurado.","cloud.emailFallback":"Cuenta conectada","cloud.configHint":"Configura Supabase en la ventana de conexión."
+    "cloud.idle":"Conectado","cloud.syncing":"Sincronizando…","cloud.synced":"Al día","cloud.offline":"Sin conexión","cloud.error":"Error de sincronización","cloud.pending":"Esperando sincronización","cloud.last":"Última sincronización: {v}","cloud.never":"Aún no sincronizado","cloud.emailFallback":"Cuenta conectada"
   }
 };
 
-const S = { state:null, lang:"fr", tab:"home", dirty:false, authMode:"signin", authView:"login", authMessage:"", authMessageKind:"", authBusy:false, authConfigOpen:false };
+const S = { state:null, lang:"fr", tab:"home", dirty:false, authMode:"signin", authView:"login", authMessage:"", authMessageKind:"", authBusy:false };
 const byId = id => document.getElementById(id);
 
 function post(message) {
@@ -904,14 +880,12 @@ function renderAuth() {
   const recovery = a.recovery || {};
   const stage = recovery.stage || "idle";
   const resetView = S.authView === "forgot" || stage !== "idle";
-  const configured = !!a.configured;
   const busy = !!S.authBusy || !!a.busy;
 
   byId("auth-tabs").hidden = resetView;
   byId("auth-form").hidden = resetView;
   byId("auth-divider").hidden = resetView;
   byId("auth-google").hidden = resetView;
-  byId("auth-config").hidden = resetView;
   byId("auth-reset").hidden = !resetView;
 
   const titleKey = stage === "ready" ? "auth.resetReadyTitle"
@@ -934,17 +908,15 @@ function renderAuth() {
   const google = byId("auth-google");
   const email = byId("auth-email");
   const password = byId("auth-password");
-  const configSave = byId("auth-config-save");
   if (submit) {
-    submit.disabled = !configured || busy;
+    submit.disabled = busy;
     submit.textContent = busy
       ? t(S.authMode === "signup" ? "auth.creating" : "auth.connecting")
       : t(S.authMode === "signup" ? "auth.signup" : "auth.signin");
   }
-  if (google) google.disabled = !configured || busy;
-  if (email) email.disabled = !configured || busy;
-  if (password) password.disabled = !configured || busy;
-  if (configSave) configSave.disabled = busy;
+  if (google) google.disabled = busy;
+  if (email) email.disabled = busy;
+  if (password) password.disabled = busy;
 
   byId("auth-reset-request").hidden = stage === "sent" || stage === "ready";
   byId("auth-reset-wait").hidden = stage !== "sent";
@@ -954,9 +926,9 @@ function renderAuth() {
   const newPassword = byId("auth-new-password");
   const confirmPassword = byId("auth-confirm-password");
   const resetComplete = byId("auth-reset-complete");
-  if (resetEmail) resetEmail.disabled = !configured || busy;
+  if (resetEmail) resetEmail.disabled = busy;
   if (resetSend) {
-    resetSend.disabled = !configured || busy;
+    resetSend.disabled = busy;
     resetSend.textContent = busy ? t("auth.sendingReset") : t("auth.sendReset");
   }
   if (newPassword) newPassword.disabled = busy;
@@ -966,21 +938,15 @@ function renderAuth() {
     resetComplete.textContent = busy ? t("auth.updatingPassword") : t("auth.updatePassword");
   }
 
-  const openConfig = !!S.authConfigOpen || !configured;
-  const fields = byId("auth-config-fields");
-  if (fields) fields.hidden = !openConfig;
-  setText("auth-config-toggle", t("auth.config"));
-  setText("auth-callback", a.callback || "http://127.0.0.1:53682/auth/callback");
-
   let message = S.authMessage || "";
-  if (!message && stage === "idle") message = !configured ? t("auth.configRequired") : (recovery.error || a.error || "");
+  if (!message && stage === "idle") message = recovery.error || a.error || "";
   if (!message && stage === "sent") message = recovery.error || "";
   const box = byId("auth-message");
   if (box) {
     box.textContent = message;
     box.classList.toggle("error", !!message && S.authMessageKind !== "ok" && S.authMessageKind !== "info");
     box.classList.toggle("ok", S.authMessageKind === "ok");
-    box.classList.toggle("info", S.authMessageKind === "info" || (!S.authMessage && !configured));
+    box.classList.toggle("info", S.authMessageKind === "info");
   }
 }
 function cloudStatusText(a) {
@@ -997,7 +963,7 @@ function renderCloud() {
   setText("cloud-name", signed ? identity : t("settings.cloudOff"));
   const meta = signed
     ? (a.email && a.email !== identity ? a.email + " · " : "") + cloudStatusText(a)
-    : (a.configured ? t("settings.cloudOffDesc") : t("cloud.notConfigured"));
+    : t("settings.cloudOffDesc");
   setText("cloud-meta", meta);
   const login = byId("cloud-login");
   if (login) login.hidden = signed;
@@ -1011,7 +977,7 @@ function renderCloud() {
   }
   const hint = byId("cloud-hint");
   if (hint) {
-    const text = signed ? (a.error || t("settings.cloudHint")) : (a.configured ? t("settings.cloudHint") : t("cloud.configHint"));
+    const text = signed ? (a.error || t("settings.cloudHint")) : t("settings.cloudHint");
     hint.textContent = text;
     hint.classList.toggle("cloud-error", !!a.error && signed);
   }
@@ -1024,16 +990,8 @@ function setAuthMode(mode) {
   renderAuth();
 }
 function submitAuth() {
-  const a = (S.state && S.state.auth) || {};
   const email = (byId("auth-email").value || "").trim();
   const password = byId("auth-password").value || "";
-  if (!a.configured) {
-    S.authConfigOpen = true;
-    S.authMessage = t("auth.configRequired");
-    S.authMessageKind = "info";
-    renderAuth();
-    return;
-  }
   if (!email || !password) {
     S.authMessage = t("auth.fillFields");
     S.authMessageKind = "error";
@@ -1053,15 +1011,7 @@ function submitAuth() {
   post({ type: S.authMode === "signup" ? "authSignUp" : "authSignIn", email, password });
 }
 function authAction(action) {
-  const a = (S.state && S.state.auth) || {};
   if (action === "google") {
-    if (!a.configured) {
-      S.authConfigOpen = true;
-      S.authMessage = t("auth.configRequired");
-      S.authMessageKind = "info";
-      renderAuth();
-      return;
-    }
     if (S.authBusy) return;
     S.authBusy = true;
     S.authMessage = t("auth.googleHint");
@@ -1069,13 +1019,6 @@ function authAction(action) {
     renderAuth();
     post({ type: "authGoogle" });
   } else if (action === "forgot") {
-    if (!a.configured) {
-      S.authConfigOpen = true;
-      S.authMessage = t("auth.configRequired");
-      S.authMessageKind = "info";
-      renderAuth();
-      return;
-    }
     S.authView = "forgot";
     S.authMessage = "";
     S.authMessageKind = "";
@@ -1085,12 +1028,6 @@ function authAction(action) {
     renderAuth();
   } else if (action === "requestReset") {
     const email = (byId("auth-reset-email").value || "").trim();
-    if (!a.configured) {
-      S.authMessage = t("auth.configRequired");
-      S.authMessageKind = "error";
-      renderAuth();
-      return;
-    }
     if (!email) {
       S.authMessage = t("auth.fillResetEmail");
       S.authMessageKind = "error";
@@ -1132,24 +1069,6 @@ function authAction(action) {
     byId("auth-new-password").value = "";
     byId("auth-confirm-password").value = "";
     renderAuth();
-  } else if (action === "configToggle") {
-    S.authConfigOpen = !S.authConfigOpen;
-    renderAuth();
-  } else if (action === "configSave") {
-    const url = (byId("auth-url").value || "").trim();
-    const key = (byId("auth-key").value || "").trim();
-    if (!url || !key) {
-      S.authMessage = t("auth.configHelp");
-      S.authMessageKind = "error";
-      renderAuth();
-      return;
-    }
-    S.authMessage = "";
-    S.authMessageKind = "info";
-    renderAuth();
-    post({ type: "authConfig", url, key });
-  } else if (action === "openSupabase") {
-    post({ type: "openSupabase" });
   }
 }
 function render() {
@@ -1340,7 +1259,6 @@ function bind() {
       case "authLogin":
         S.authMessage = "";
         S.authMessageKind = "";
-        S.authConfigOpen = false;
         renderAuth();
         post({ type: "authLogin" });
         break;

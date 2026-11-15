@@ -56,15 +56,11 @@ Dans **Authentication → URL Configuration** :
 
 C'est l'adresse du petit serveur local qui reçoit le retour de Google et le lien de réinitialisation du mot de passe. Le port est fixe ; s'il est déjà occupé, ferme l'autre tentative et réessaie.
 
-## 6. Configurer l'application
+## 6. Configuration de l'application
 
-Au premier lancement, la page de connexion s'ouvre. Clique sur **Configurer Supabase**, colle l'URL du projet et la clé publique, puis **Enregistrer**. Les valeurs sont conservées dans :
+L'URL du projet et la clé publique sont intégrées à l'application : les utilisateurs n'ont aucune configuration Supabase à saisir, et l'interface ne les affiche nulle part. Le fichier local `supabase.json` ne contient que l'identifiant de l'appareil ; la session est enregistrée dans `supabase-session.json`. Utilise **Déconnexion** dans **Réglages → Synchronisation** pour effacer la session.
 
-```
-%APPDATA%\ChestCounterFortnite\supabase.json
-```
-
-La clé publique peut être utilisée dans une application de bureau ; les droits réels sont contrôlés par les règles RLS. La session est enregistrée dans `supabase-session.json` dans le même dossier. Utilise **Déconnexion** dans **Réglages → Synchronisation** pour l'effacer.
+Une clé Supabase **publishable** est destinée à être embarquée dans un client : elle n'accorde aucun droit à elle seule, les règles RLS limitent chaque compte à ses propres données. La clé **service_role** ne doit jamais être mise dans l'application.
 
 ## Fonctionnement de la synchronisation
 
@@ -79,7 +75,7 @@ La clé publique peut être utilisée dans une application de bureau ; les droit
 
 | Message | À vérifier |
 |---|---|
-| `Supabase n'est pas configuré` | URL et clé publique dans la page de connexion. |
+| `Connexion impossible` | Vérifie la connexion Internet et le projet Supabase. |
 | `E-mail ou mot de passe incorrect` | Mot de passe, ou confirmation de l'adresse e-mail. |
 | `Invalid login credentials` côté Supabase | Provider Email activé et compte confirmé. |
 | La fenêtre Google reste ouverte | L'URL de redirection autorisée doit être exactement `http://127.0.0.1:53682/auth/callback`. |

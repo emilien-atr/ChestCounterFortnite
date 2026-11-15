@@ -35,7 +35,7 @@ Au premier lancement, l’application crée automatiquement un raccourci **Chest
 
 ## Compte et synchronisation
 
-La connexion est **nécessaire** pour utiliser le compteur, y compris quand ChestCounterFortnite est lancé automatiquement avec Fortnite. Une fois connecté, l’historique et les totaux manuels suivent le compte sur tous tes PC ; les réglages et les fichiers `.replay` restent locaux. La configuration Supabase est décrite dans [`docs/SUPABASE.md`](docs/SUPABASE.md).
+La connexion est **nécessaire** pour utiliser le compteur, y compris quand ChestCounterFortnite est lancé automatiquement avec Fortnite. Une fois connecté, l’historique et les totaux manuels suivent le compte sur tous tes PC ; les réglages et les fichiers `.replay` restent locaux. L’application est déjà reliée au projet Supabase : aucune URL ni clé n’est demandée aux utilisateurs. La configuration technique du projet est décrite dans [`docs/SUPABASE.md`](docs/SUPABASE.md).
 
 La connexion Google est prise en charge par l’application, mais elle doit être activée dans le projet Supabase (**Authentication → Providers → Google**). Tant que le provider n’est pas activé, utilise l’adresse e-mail et le mot de passe.
 
@@ -56,8 +56,10 @@ Dans OBS, ajoute une source **Navigateur**. Dans TikTok Live Studio, utilise une
 
 Tout est enregistré dans `%APPDATA%\ChestCounterFortnite`. Les replays restent sur ton disque ; avec un compte, seul l’historique est synchronisé. Aucune donnée de jeu n’est envoyée sans connexion.
 
-## Nouveautés 1.5.3
+## Nouveautés 1.5.4
 
+- **Configuration invisible** : l’URL et la clé publique du projet sont intégrées à l’application ; les utilisateurs ne peuvent plus les voir ni les modifier.
+- **Fichier local nettoyé** : `supabase.json` ne contient plus l’URL ni la clé ; seul l’identifiant de l’appareil reste. La session reste dans `supabase-session.json`.
 - **Connexion obligatoire** : l’option « rester en local » a été retirée.
 - **Mot de passe oublié** : envoi d’un lien Supabase et retour direct dans l’application.
 - **Overlay de stream compact** : un seul overlay de jeu, auto-adapté à la source OBS/TikTok.

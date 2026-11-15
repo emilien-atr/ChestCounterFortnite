@@ -1,3 +1,25 @@
+**1.5.4 — Configuration Supabase intégrée**
+
+**Français**
+**Nouveautés**
+- **Configuration invisible** : l’URL et la clé publique du projet sont intégrées à l’application ; les utilisateurs ne peuvent plus les voir ni les modifier.
+- **Fichier local nettoyé** : `supabase.json` ne contient plus l’URL ni la clé ; seul l’identifiant de l’appareil reste. La session reste dans `supabase-session.json`.
+- **Sécurité** : la clé publishable ne donne aucun droit à elle seule ; les règles RLS protègent chaque compte. Ne jamais utiliser de clé `service_role` dans l’application.
+
+**English**
+**What's new**
+- **Invisible configuration**: the project URL and publishable key are built into the app; users can no longer see or change them.
+- **Clean local file**: `supabase.json` no longer contains the URL or key; only the device id remains. The session stays in `supabase-session.json`.
+- **Security**: the publishable key grants no access by itself; RLS rules protect each account. Never use a `service_role` key in the app.
+
+**Español**
+**Novedades**
+- **Configuración invisible**: la URL y la clave publishable del proyecto están integradas en la aplicación; los usuarios ya no pueden verlas ni cambiarlas.
+- **Archivo local limpio**: `supabase.json` ya no contiene la URL ni la clave; solo queda el identificador del dispositivo. La sesión permanece en `supabase-session.json`.
+- **Seguridad**: la clave publishable no da acceso por sí sola; las reglas RLS protegen cada cuenta. No uses nunca una clave `service_role` en la aplicación.
+
+---
+
 **1.5.3 — Connexion au compte obligatoire**
 
 **Français**

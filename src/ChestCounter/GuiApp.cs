@@ -434,21 +434,6 @@ internal sealed class AppWindow : Form
                         PushState(force: true);
                     }
                     break;
-                case "authConfig":
-                    if (root.TryGetProperty("url", out var urlElement) && root.TryGetProperty("key", out var keyElement))
-                    {
-                        var configured = _cloud.Configure(urlElement.GetString() ?? "", keyElement.GetString() ?? "");
-                        PostAuthResult(configured.Succeeded, configured.Message);
-                        if (_cloud.SignedIn)
-                        {
-                            TriggerCloudSync();
-                        }
-                        PushState(force: true);
-                    }
-                    break;
-                case "openSupabase":
-                    OpenSupabaseDashboard();
-                    break;
                 case "error":
                     ErrorLog.Write("Interface", new Exception(root.TryGetProperty("message", out var msg) ? msg.GetString() : "unknown script error"));
                     break;
@@ -1502,7 +1487,6 @@ internal sealed class AppWindow : Form
         var cloud = _cloud.Snapshot();
         return new
         {
-            configured = cloud.Configured,
             signedIn = cloud.SignedIn,
             required = !cloud.SignedIn || cloud.RecoveryStage is "sent" or "ready",
             email = cloud.Email,
@@ -1771,19 +1755,6 @@ internal sealed class AppWindow : Form
             return;
         }
         action();
-    }
-
-    private void OpenSupabaseDashboard()
-    {
-        try
-        {
-            Process.Start(new ProcessStartInfo("https://supabase.com/dashboard") { UseShellExecute = true })?.Dispose();
-        }
-        catch (Exception ex)
-        {
-            ErrorLog.Write("Ouverture Supabase", ex);
-            Toast(L.T("Impossible d'ouvrir Supabase.", "Could not open Supabase.", "No se puede abrir Supabase."), "error");
-        }
     }
 
     protected override void OnFormClosing(FormClosingEventArgs e)
