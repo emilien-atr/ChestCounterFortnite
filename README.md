@@ -41,7 +41,7 @@ La connexion est **optionnelle** : « Plus tard, rester en local » permet d’u
 
 | Carte complète | Overlay de jeu |
 |:---:|:---:|
-| <img src="docs/overlay-fr.png" alt="Carte complète pour OBS et TikTok" width="520"> | <img src="docs/overlay-game-fr.png" alt="Overlay de jeu compact" width="420"> |
+| <img src="docs/overlay-fr.png" alt="Carte complète pour OBS et TikTok" width="460"> | <img src="docs/overlay-game-fr.png" alt="Overlay de jeu compact" width="360"> |
 
 - **Carte complète** : total, partie en cours ou dernière partie et les 10 récompenses Treasure Hunt.
 - **Overlay de jeu** : version compacte pour le stream, avec le total et le badge LIVE.
