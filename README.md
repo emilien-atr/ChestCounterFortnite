@@ -22,12 +22,22 @@ Un overlay discret, un rapport clair, et ton historique synchronisé entre tes P
 - Ne prend en compte que les parties **à partir du 1er novembre 2026**.
 - Affiche la **carte violette** en jeu, avec le total et la dernière partie.
 - Fournit **deux liens de source navigateur** pour OBS ou TikTok Live Studio : la grande carte pirate (total, partie en cours, récompenses) et l'**overlay de jeu compact** `/overlay/game`, dans le style de l'overlay natif.
+- **Overlay auto-adaptatif** : les deux cartes se dimensionnent selon la source OBS/TikTok, sans taille fixe à régler.
 - **Activité Discord** : si Discord desktop est ouvert, ton profil affiche le compteur avec un minuteur de session et deux boutons (GitHub / téléchargement), même quand Fortnite est lancé. La première ligne (« Joue à … ») reprend le nom de l'application Discord ; les deux lignes suivantes et les boutons sont ceux du compteur.
 - Garde l’historique, les sessions et les trésors dans un **rapport web** local.
 - **Compte optionnel** : connecte-toi par e-mail ou avec Google pour retrouver le même historique sur plusieurs PC via Supabase.
 - Français, anglais et espagnol.
 - **Mises à jour automatiques** depuis GitHub.
 - Aucun compte obligatoire, aucune publicité, aucune donnée de jeu envoyée. L'activité Discord et la synchronisation cloud sont optionnelles ; les fichiers de replay restent sur ton disque.
+
+## Nouveautés de la 1.5
+
+<img src="docs/connexion-fr.png" alt="Connexion au compte ChestCounterFortnite" width="900">
+
+- **Connexion au démarrage** : un compte par e-mail ou avec Google, ou « Plus tard, rester en local ».
+- **Synchronisation multi-PC** : historique et totaux manuels suivent le compte ; les fichiers de replay restent sur chaque PC.
+- **Overlay auto-adaptatif** : la carte pirate et `/overlay/game` se dimensionnent selon la source OBS/TikTok ; plus de taille 1920 × 1080 à régler.
+- **TikTok Studio** : liens HTTPS locaux acceptés, sans tunnel ni certificat à installer.
 
 ## Installation
 
@@ -52,8 +62,10 @@ Le total additionne **tous les coffres trouvés dans les replays** : coffres cla
 ## Interface
 
 - **Accueil** : total, session, dernière partie, profil et actions rapides (rapport, overlay, verrouillage). La croix de la fenêtre range le compteur dans la zone de notification ; il continue de tourner en arrière-plan.
-- **Réglages** : langue, overlay, lien OBS/TikTok Live Studio, dossier des replays, totaux de saison et comportement.
+- **Réglages** : langue, overlay, compte et synchronisation, lien OBS/TikTok Live Studio, dossier des replays, totaux de saison et comportement.
 - **Aide** : rappels, raccourcis et dossier de données.
+
+<img src="docs/reglages-fr.png" alt="Réglages de ChestCounterFortnite 1.5" width="900">
 
 Le rapport s’ouvre dans le navigateur et se met à jour automatiquement pendant l’analyse.
 
@@ -80,7 +92,9 @@ La configuration du projet Supabase, de Google et de l'URL de retour est détail
 - **Carte OBS / TikTok Live Studio** : la grande carte pirate avec le coffre à crâne, les deux compteurs en or et la grille des **10 récompenses Treasure Hunt**. Une récompense déjà trouvée dans tes replays est automatiquement barrée d'une croix rouge ; les autres restent en or. La grille se remplit à partir du `PrizeId` du coffre doré, sans clic manuel.
 - **Overlay de jeu pour le stream** : la carte compacte de l'overlay natif, servie sur `/overlay/game`. Idéale pour un rappel discret dans OBS ou TikTok Live Studio, avec le total, la partie en cours ou la dernière partie et le badge LIVE.
 
-La taille se règle de **50 à 175 %** et l’opacité de **30 à 100 %** dans **Réglages → Overlay en jeu**. Pour l’afficher au-dessus du jeu, utilise le mode **Plein écran fenêtré** de Fortnite.
+Les deux pages de stream se dimensionnent automatiquement à la source : la carte compacte utilise jusqu’à **92 % de la largeur** (maximum 960 px), et la grande carte conserve une marge automatique. Aucune taille fixe n’est à régler.
+
+La taille de la **carte violette en jeu** se règle de **50 à 175 %** et son opacité de **30 à 100 %** dans **Réglages → Overlay en jeu**. Pour l’afficher au-dessus du jeu, utilise le mode **Plein écran fenêtré** de Fortnite.
 
 ## OBS / TikTok Live Studio
 
