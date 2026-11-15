@@ -3,18 +3,21 @@
 **Français**
 **Nouveautés**
 - **Option locale retirée** : le bouton « Plus tard, rester en local » a été supprimé. La connexion au compte est désormais nécessaire pour utiliser le compteur.
+- **Lancement avec Fortnite** : l’écran de connexion apparaît aussi quand le compteur est démarré automatiquement avec le jeu ; l’application retourne dans la zone de notification après la connexion.
 - **Mot de passe oublié** : un lien sur l'écran de connexion envoie un e-mail Supabase ; le retour dans l'application permet de choisir un nouveau mot de passe sans quitter ChestCounter.
 - **Reste inchangé** : overlay, rapports, historique local et synchronisation du compte.
 
 **English**
 **What's new**
 - **Local option removed**: the “Not now, stay local” button is gone. Signing in is now required to use the counter.
+- **Started with Fortnite**: the sign-in screen also appears when the counter starts automatically with the game; the app returns to the notification area after signing in.
 - **Forgot password**: a link on the sign-in screen sends a Supabase email; the return to the app lets you choose a new password without leaving ChestCounter.
 - **Unchanged**: overlay, reports, local history and account sync.
 
 **Español**
 **Novedades**
 - **Opción local eliminada**: se ha quitado el botón «Más tarde, seguir en local». Ahora es necesario iniciar sesión para usar el contador.
+- **Inicio con Fortnite**: la pantalla de inicio de sesión también aparece cuando el contador se inicia automáticamente con el juego; la aplicación vuelve al área de notificación después de iniciar sesión.
 - **Contraseña olvidada**: un enlace en la pantalla de inicio de sesión envía un correo de Supabase; al volver a la aplicación puedes elegir una nueva contraseña sin salir de ChestCounter.
 - **Sin cambios**: overlay, informes, historial local y sincronización de la cuenta.
 

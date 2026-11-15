@@ -33,7 +33,7 @@ Historique, statistiques et overlays OBS/TikTok, avec synchronisation entre tes 
 
 ## Compte et synchronisation
 
-La connexion est **nécessaire** pour utiliser le compteur. Une fois connecté, l’historique et les totaux manuels suivent le compte sur tous tes PC ; les réglages et les fichiers `.replay` restent locaux. La configuration Supabase est décrite dans [`docs/SUPABASE.md`](docs/SUPABASE.md).
+La connexion est **nécessaire** pour utiliser le compteur, y compris quand ChestCounterFortnite est lancé automatiquement avec Fortnite. Une fois connecté, l’historique et les totaux manuels suivent le compte sur tous tes PC ; les réglages et les fichiers `.replay` restent locaux. La configuration Supabase est décrite dans [`docs/SUPABASE.md`](docs/SUPABASE.md).
 
 La connexion Google est prise en charge par l’application, mais elle doit être activée dans le projet Supabase (**Authentication → Providers → Google**). Tant que le provider n’est pas activé, utilise l’adresse e-mail et le mot de passe.
 

@@ -101,6 +101,7 @@ internal sealed class AppWindow : Form
     private DateTime? _fortniteClosedAt;
     private bool _webReady;
     private bool _webInitialized;
+    private bool _autoLoginShown;
     private DateTime _nextCloudSync = DateTime.UtcNow.AddSeconds(6);
     private string? _lastState;
 
@@ -116,6 +117,7 @@ internal sealed class AppWindow : Form
         _cloud = new CloudService(store, data, config);
         _cloud.Changed += OnCloudChanged;
         _cloud.DataMerged += OnCloudDataMerged;
+        _autoLoginShown = _auto && !_cloud.SignedIn;
 
         AutoScaleMode = AutoScaleMode.Dpi;
         FormBorderStyle = FormBorderStyle.None;
@@ -129,8 +131,8 @@ internal sealed class AppWindow : Form
         MinimumSize = new Size(760, 512);
         StartPosition = FormStartPosition.CenterScreen;
         DoubleBuffered = true;
-        ShowInTaskbar = !_auto;
-        Opacity = _auto ? 0 : 1;
+        ShowInTaskbar = !_auto || _autoLoginShown;
+        Opacity = _auto && !_autoLoginShown ? 0 : 1;
         KeyPreview = true;
 
         _web.Dock = DockStyle.Fill;
@@ -198,13 +200,14 @@ internal sealed class AppWindow : Form
     protected override async void OnShown(EventArgs e)
     {
         base.OnShown(e);
-        if (_auto)
+        if (_auto && !_autoLoginShown)
         {
             HideToTray(notify: false);
         }
         else
         {
             Opacity = 1;
+            ShowInTaskbar = true;
             Activate();
         }
         LocalizeTray();
@@ -412,6 +415,10 @@ internal sealed class AppWindow : Form
                     PushState(force: true);
                     break;
                 case "authLogin":
+                    if (!Visible)
+                    {
+                        RestoreWindow();
+                    }
                     PushState(force: true);
                     break;
                 case "authLogout":
@@ -1467,6 +1474,10 @@ internal sealed class AppWindow : Form
         WindowState = FormWindowState.Normal;
         ShowInTaskbar = true;
         Opacity = 1;
+        if (_auto && !_cloud.SignedIn)
+        {
+            _autoLoginShown = true;
+        }
         Activate();
         _web.Focus();
     }
@@ -1493,7 +1504,7 @@ internal sealed class AppWindow : Form
         {
             configured = cloud.Configured,
             signedIn = cloud.SignedIn,
-            required = !_auto && (!cloud.SignedIn || cloud.RecoveryStage is "sent" or "ready"),
+            required = !cloud.SignedIn || cloud.RecoveryStage is "sent" or "ready",
             email = cloud.Email,
             name = cloud.Name,
             provider = cloud.Provider,
@@ -1704,6 +1715,24 @@ internal sealed class AppWindow : Form
     {
         RunOnUi(() =>
         {
+            if (_auto && !_cloud.SignedIn)
+            {
+                if (!Visible && !_autoLoginShown)
+                {
+                    _autoLoginShown = true;
+                    RestoreWindow();
+                }
+                else if (Visible)
+                {
+                    _autoLoginShown = true;
+                }
+            }
+            else if (_auto && _autoLoginShown)
+            {
+                // An auto-started instance returns to the tray once the account is connected.
+                _autoLoginShown = false;
+                HideToTray(notify: false);
+            }
             _nextDiscordUpdate = DateTime.MinValue;
             PushState(force: true);
         });
