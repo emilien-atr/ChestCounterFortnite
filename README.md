@@ -31,6 +31,8 @@ Historique, statistiques et overlays OBS/TikTok, avec synchronisation entre tes 
 2. Active les rediffusions dans **Fortnite → Paramètres → Jeu → Rediffusions**, puis clique sur **Appliquer**.
 3. Lance `ChestCounterFortnite.exe`. Windows peut afficher un avertissement car l’exécutable n’est pas signé : **Informations complémentaires → Exécuter quand même**.
 
+Au premier lancement, l’application crée automatiquement un raccourci **ChestCounterFortnite** sur le Bureau.
+
 ## Compte et synchronisation
 
 La connexion est **nécessaire** pour utiliser le compteur, y compris quand ChestCounterFortnite est lancé automatiquement avec Fortnite. Une fois connecté, l’historique et les totaux manuels suivent le compte sur tous tes PC ; les réglages et les fichiers `.replay` restent locaux. La configuration Supabase est décrite dans [`docs/SUPABASE.md`](docs/SUPABASE.md).
@@ -59,6 +61,7 @@ Tout est enregistré dans `%APPDATA%\ChestCounterFortnite`. Les replays restent 
 - **Connexion obligatoire** : l’option « rester en local » a été retirée.
 - **Mot de passe oublié** : envoi d’un lien Supabase et retour direct dans l’application.
 - **Overlay de stream compact** : un seul overlay de jeu, auto-adapté à la source OBS/TikTok.
+- **Raccourci Bureau** : créé automatiquement au premier lancement, sans manipulation.
 
 <details>
 <summary><b>Compiler depuis les sources</b></summary>

@@ -158,6 +158,13 @@ config ??= new Config();
 // Installed builds follow the GitHub releases automatically, including configs saved by older versions.
 config.UpdateMode = "auto";
 
+// First launch after a new install or an update: create the desktop shortcut once.
+if (OperatingSystem.IsWindows() && guiMode && AppInfo.ExePath is { } shortcutExe
+    && (firstRun || config.LastVersion != AppInfo.VersionText))
+{
+    DesktopShortcut.TryCreate(shortcutExe);
+}
+
 // Language: --lang, else the saved choice, else asked once (Windows language when nobody can answer).
 if (langArg != null)
 {
