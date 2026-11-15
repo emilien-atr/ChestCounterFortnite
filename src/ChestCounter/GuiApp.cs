@@ -352,12 +352,6 @@ internal sealed class AppWindow : Form
                 case "openBroadcast":
                     OpenBroadcastLink();
                     break;
-                case "copyBroadcastGame":
-                    CopyBroadcastGameLink();
-                    break;
-                case "openBroadcastGame":
-                    OpenBroadcastGameLink();
-                    break;
                 case "lock":
                     if (OperatingSystem.IsWindows() && NativeOverlay.IsRunning)
                     {
@@ -565,7 +559,6 @@ internal sealed class AppWindow : Form
             broadcast = new
             {
                 url = _broadcastUrl ?? "",
-                gameUrl = OverlayServer.GameUrl ?? "",
                 running = !string.IsNullOrEmpty(_broadcastUrl),
             },
             replay = new
@@ -1348,18 +1341,6 @@ internal sealed class AppWindow : Form
         OpenBroadcastLink(_broadcastUrl);
     }
 
-    private void CopyBroadcastGameLink()
-    {
-        CopyBroadcastLink(OverlayServer.GameUrl, L.T("Lien de l'overlay de jeu copié : colle-le dans une source navigateur OBS ou TikTok Live Studio.",
-            "Game overlay link copied: paste it into an OBS or TikTok Live Studio browser source.",
-            "Enlace del overlay de juego copiado: pégalo en una fuente de navegador de OBS o TikTok Live Studio."));
-    }
-
-    private void OpenBroadcastGameLink()
-    {
-        OpenBroadcastLink(OverlayServer.GameUrl);
-    }
-
     private void CopyBroadcastLink(string? url, string message)
     {
         if (string.IsNullOrWhiteSpace(url))
@@ -1825,7 +1806,7 @@ internal sealed class AppWindow : Form
 
 /// <summary>
 /// Minimal HTTP + HTTPS server for browser sources such as OBS and TikTok Live Studio. Both listeners are
-/// loopback-only and serve the overlay.html page that the counter already writes. The HTTPS URL is required by
+/// loopback-only and serve the compact stream overlay page that the counter writes. The HTTPS URL is required by
 /// TikTok Studio; it uses a public hostname that resolves to 127.0.0.1, so nothing leaves the PC.
 /// </summary>
 internal static class OverlayServer
@@ -1869,7 +1850,7 @@ internal static class OverlayServer
         {
             if (_url != null)
             {
-                return _url;
+                return _url + "/game";
             }
 
             var httpListener = TryListenAny(CandidatePorts);
@@ -1909,13 +1890,13 @@ internal static class OverlayServer
 
             if (httpListener != null)
             {
-                _ = Task.Run(() => AcceptLoopAsync(httpListener, store.OverlayPath, store.GameOverlayPath, null, stopper.Token));
+                _ = Task.Run(() => AcceptLoopAsync(httpListener, store.GameOverlayPath, null, stopper.Token));
             }
             if (tlsListener != null)
             {
-                _ = Task.Run(() => AcceptLoopAsync(tlsListener, store.OverlayPath, store.GameOverlayPath, certificate, stopper.Token));
+                _ = Task.Run(() => AcceptLoopAsync(tlsListener, store.GameOverlayPath, certificate, stopper.Token));
             }
-            return _url;
+            return _url + "/game";
         }
     }
 
@@ -1974,7 +1955,7 @@ internal static class OverlayServer
         }
     }
 
-    private static async Task AcceptLoopAsync(TcpListener listener, string overlayPath, string gameOverlayPath, OverlayCertificate? certificate, CancellationToken token)
+    private static async Task AcceptLoopAsync(TcpListener listener, string gameOverlayPath, OverlayCertificate? certificate, CancellationToken token)
     {
         while (!token.IsCancellationRequested)
         {
@@ -1995,11 +1976,11 @@ internal static class OverlayServer
             {
                 break;
             }
-            _ = HandleAsync(client, overlayPath, gameOverlayPath, certificate, token);
+            _ = HandleAsync(client, gameOverlayPath, certificate, token);
         }
     }
 
-    private static async Task HandleAsync(TcpClient client, string overlayPath, string gameOverlayPath, OverlayCertificate? certificate, CancellationToken token)
+    private static async Task HandleAsync(TcpClient client, string gameOverlayPath, OverlayCertificate? certificate, CancellationToken token)
     {
         using (client)
         {
@@ -2053,8 +2034,8 @@ internal static class OverlayServer
                     await WriteResponseAsync(stream, 204, "No Content", "text/plain", Array.Empty<byte>(), token);
                     return;
                 }
-                var isGame = path is "/overlay/game" or "/overlay/game.html" or "/game" or "/overlay-game";
-                if (!isGame && path is not ("/" or "/overlay" or "/overlay.html"))
+                // Root and /overlay are kept as legacy aliases for OBS sources created before 1.5.2.
+                if (path is not ("/" or "/overlay" or "/overlay.html" or "/overlay/game" or "/overlay/game.html" or "/game" or "/overlay-game"))
                 {
                     await WriteResponseAsync(stream, 404, "Not Found", "text/plain; charset=utf-8",
                         Encoding.UTF8.GetBytes("Not found"), token);
@@ -2064,7 +2045,7 @@ internal static class OverlayServer
                 byte[] body;
                 try
                 {
-                    body = await File.ReadAllBytesAsync(isGame ? gameOverlayPath : overlayPath, token);
+                    body = await File.ReadAllBytesAsync(gameOverlayPath, token);
                 }
                 catch
                 {

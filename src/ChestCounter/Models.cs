@@ -227,7 +227,6 @@ public sealed class Store
 
     public string DataPath => Path.Combine(Folder, "data.json");
     public string ReportPath => Path.Combine(Folder, "report.html");
-    public string OverlayPath => Path.Combine(Folder, "overlay.html");
     /// <summary>Compact overlay that mirrors the in-game window for OBS and TikTok Live Studio.</summary>
     public string GameOverlayPath => Path.Combine(Folder, "overlay-game.html");
     public string CsvPath => Path.Combine(Folder, "matches.csv");
