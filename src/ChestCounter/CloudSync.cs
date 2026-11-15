@@ -39,6 +39,11 @@ internal sealed class CloudService
     private CloudConfig _config;
     private CloudSession? _session;
     private CancellationTokenSource? _googleCancellation;
+    private CloudSession? _recoverySession;
+    private CancellationTokenSource? _recoveryCancellation;
+    private string _recoveryStage = "idle";
+    private string _recoveryEmail = "";
+    private string _recoveryError = "";
     private string _sync = "off";
     private string _error = "";
     private DateTime? _lastSyncUtc;
@@ -74,6 +79,10 @@ internal sealed class CloudService
     public string Error => _error;
     public DateTime? LastSyncUtc => _lastSyncUtc;
     public string DeviceId => _config.DeviceId;
+    public string RecoveryStage => _recoveryStage;
+    public string RecoveryEmail => _recoveryEmail;
+    public string RecoveryError => _recoveryError;
+    public bool RecoveryActive => _recoveryStage is "sent" or "ready";
 
     public CloudSnapshot Snapshot() => new(
         Configured,
@@ -85,7 +94,10 @@ internal sealed class CloudService
         _lastSyncUtc,
         _error,
         _busy,
-        CallbackUrl);
+        CallbackUrl,
+        _recoveryStage,
+        _recoveryEmail,
+        _recoveryError);
 
     /// <summary>Checks a saved session when the window opens, refreshing it if it has expired.</summary>
     public async Task InitializeAsync()
@@ -278,6 +290,239 @@ internal sealed class CloudService
     public void CancelGoogle()
     {
         try { _googleCancellation?.Cancel(); } catch { /* already closed */ }
+    }
+
+    /// <summary>
+    /// Sends a Supabase recovery email and listens for its PKCE callback on the same loopback port as
+    /// Google sign-in. The method returns once the email is sent; the callback is then handled in the
+    /// background so the login screen can show a waiting state.
+    /// </summary>
+    public async Task<CloudResult> RequestPasswordResetAsync(string email)
+    {
+        if (!Configured)
+        {
+            return CloudResult.Fail("Supabase n'est pas configuré.");
+        }
+        if (_busy || RecoveryActive)
+        {
+            return CloudResult.Fail("Une demande de réinitialisation est déjà en cours.");
+        }
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return CloudResult.Fail("Indique l'adresse e-mail de ton compte.");
+        }
+
+        _busy = true;
+        _recoveryError = "";
+        Changed?.Invoke();
+        TcpListener? listener = null;
+        try
+        {
+            listener = new TcpListener(IPAddress.Loopback, CallbackPort);
+            listener.Start();
+            var verifier = Base64Url(RandomNumberGenerator.GetBytes(32));
+            var challenge = Base64Url(SHA256.HashData(Encoding.ASCII.GetBytes(verifier)));
+            var recoverUrl = ApiUrl("/auth/v1/recover?redirect_to=" + Uri.EscapeDataString(CallbackUrl));
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, recoverUrl);
+            AddApiHeaders(request);
+            request.Content = JsonBody(new
+            {
+                email = email.Trim(),
+                code_challenge = challenge,
+                code_challenge_method = "s256",
+            });
+            using var response = await _http.SendAsync(request);
+            var body = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                return CloudResult.Fail(AuthError(body, response.StatusCode));
+            }
+
+            _recoveryEmail = email.Trim();
+            _recoveryStage = "sent";
+            _recoveryError = "";
+            _recoverySession = null;
+            _recoveryCancellation?.Cancel();
+            _recoveryCancellation?.Dispose();
+            _recoveryCancellation = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+
+            var ownedListener = listener;
+            listener = null;
+            _ = WaitForRecoveryAsync(ownedListener, verifier, _recoveryCancellation.Token);
+            return CloudResult.Ok("Si un compte existe avec cette adresse, un lien de réinitialisation vient d'être envoyé. Garde ChestCounter ouvert puis ouvre le lien.");
+        }
+        catch (SocketException)
+        {
+            return CloudResult.Fail("Le port de connexion 53682 est déjà utilisé. Ferme l'autre tentative puis réessaie.");
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            return CloudResult.Fail(NetworkError(ex));
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Réinitialisation du mot de passe", ex);
+            return CloudResult.Fail("Envoi impossible : " + ex.Message);
+        }
+        finally
+        {
+            try { listener?.Stop(); } catch { /* already stopped */ }
+            _busy = false;
+            Changed?.Invoke();
+        }
+    }
+
+    /// <summary>Updates the password with the temporary session returned by the recovery callback.</summary>
+    public async Task<CloudResult> CompletePasswordResetAsync(string password)
+    {
+        if (_recoverySession == null || _recoveryStage != "ready")
+        {
+            return CloudResult.Fail("Le lien de réinitialisation n'est plus valide. Recommence la demande.");
+        }
+        if ((password ?? "").Length < 6)
+        {
+            return CloudResult.Fail("Le mot de passe doit contenir au moins 6 caractères.");
+        }
+        if (_busy)
+        {
+            return CloudResult.Fail("Une opération est déjà en cours.");
+        }
+
+        var recoverySession = _recoverySession!;
+        _busy = true;
+        Changed?.Invoke();
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Put, ApiUrl("/auth/v1/user"));
+            AddApiHeaders(request, recoverySession.AccessToken);
+            request.Content = JsonBody(new { password });
+            using var response = await _http.SendAsync(request);
+            var body = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = AuthError(body, response.StatusCode);
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _recoverySession = null;
+                    _recoveryStage = "idle";
+                    _recoveryError = error;
+                }
+                return CloudResult.Fail(error);
+            }
+
+            if (_recoveryStage != "ready" || _recoverySession != recoverySession)
+            {
+                return CloudResult.Ok("Mot de passe mis à jour. Reconnecte-toi avec ton nouveau mot de passe.");
+            }
+
+            recoverySession.Provider = "password";
+            _session = recoverySession;
+            _recoverySession = null;
+            _recoveryStage = "idle";
+            _recoveryEmail = "";
+            _recoveryError = "";
+            _error = "";
+            _sync = "idle";
+            SaveSession();
+            return CloudResult.Ok("Mot de passe mis à jour. Tu es connecté.");
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            return CloudResult.Fail(NetworkError(ex));
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Mise à jour du mot de passe", ex);
+            return CloudResult.Fail("Mise à jour impossible : " + ex.Message);
+        }
+        finally
+        {
+            _busy = false;
+            Changed?.Invoke();
+        }
+    }
+
+    public void CancelRecovery()
+    {
+        try { _recoveryCancellation?.Cancel(); } catch { /* already closed */ }
+        _recoverySession = null;
+        _recoveryStage = "idle";
+        _recoveryEmail = "";
+        _recoveryError = "";
+        Changed?.Invoke();
+    }
+
+    private async Task WaitForRecoveryAsync(TcpListener listener, string verifier, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var code = await WaitForCallbackAsync(listener, cancellationToken,
+                "Lien de réinitialisation vérifié. Reviens dans ChestCounterFortnite pour choisir un nouveau mot de passe.");
+            if (string.IsNullOrEmpty(code))
+            {
+                if (_recoveryStage == "sent")
+                {
+                    _recoveryStage = "idle";
+                    _recoveryError = "Le lien n'a pas pu être validé. Recommence la demande.";
+                }
+                return;
+            }
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, ApiUrl("/auth/v1/token?grant_type=pkce"));
+            AddApiHeaders(request);
+            request.Content = JsonBody(new { auth_code = code, code_verifier = verifier });
+            using var response = await _http.SendAsync(request, cancellationToken);
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                _recoveryStage = "idle";
+                _recoveryError = AuthError(body, response.StatusCode);
+                return;
+            }
+
+            using var document = JsonDocument.Parse(body);
+            var session = ReadSession(document.RootElement, "recovery");
+            if (session == null)
+            {
+                _recoveryStage = "idle";
+                _recoveryError = "Supabase n'a pas renvoyé de session de réinitialisation.";
+                return;
+            }
+
+            if (_recoveryStage != "sent")
+            {
+                return;
+            }
+            _recoverySession = session;
+            _recoveryStage = "ready";
+            _recoveryError = "";
+        }
+        catch (OperationCanceledException)
+        {
+            if (_recoveryStage == "sent")
+            {
+                _recoveryStage = "idle";
+                _recoveryError = "Le lien a expiré. Recommence la demande.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Retour de réinitialisation", ex);
+            if (_recoveryStage == "sent")
+            {
+                _recoveryStage = "idle";
+                _recoveryError = "Le retour depuis l'e-mail a échoué : " + ex.Message;
+            }
+        }
+        finally
+        {
+            try { listener.Stop(); } catch { /* already stopped */ }
+            var cancellation = _recoveryCancellation;
+            _recoveryCancellation = null;
+            cancellation?.Dispose();
+            Changed?.Invoke();
+        }
     }
 
     public Task SignOutAsync()
@@ -639,7 +884,8 @@ internal sealed class CloudService
         }
     }
 
-    private async Task<string?> WaitForCallbackAsync(TcpListener listener, CancellationToken cancellationToken)
+    private async Task<string?> WaitForCallbackAsync(TcpListener listener, CancellationToken cancellationToken,
+        string successMessage = "Connexion réussie. Tu peux fermer cette fenêtre et revenir à ChestCounterFortnite.")
     {
         for (var attempt = 0; attempt < 6; attempt++)
         {
@@ -673,8 +919,7 @@ internal sealed class CloudService
             }
             if (query.TryGetValue("code", out var code) && !string.IsNullOrWhiteSpace(code))
             {
-                await WriteBrowserResponseAsync(stream, 200,
-                    "Connexion réussie. Tu peux fermer cette fenêtre et revenir à ChestCounterFortnite.");
+                await WriteBrowserResponseAsync(stream, 200, successMessage);
                 return code;
             }
 
@@ -711,11 +956,11 @@ internal sealed class CloudService
         return result;
     }
 
-    private bool ApplySession(JsonElement root, string provider, CloudSession? fallback = null)
+    private static CloudSession? ReadSession(JsonElement root, string provider, CloudSession? fallback = null)
     {
         if (!root.TryGetProperty("access_token", out var access) || access.ValueKind != JsonValueKind.String)
         {
-            return false;
+            return null;
         }
         var refresh = root.TryGetProperty("refresh_token", out var refreshElement) ? refreshElement.GetString() ?? "" : "";
         if (refresh.Length == 0 && fallback != null)
@@ -724,7 +969,7 @@ internal sealed class CloudService
         }
         if (refresh.Length == 0)
         {
-            return false;
+            return null;
         }
         var expiresIn = root.TryGetProperty("expires_in", out var expiresElement) && expiresElement.TryGetInt32(out var seconds)
             ? Math.Max(60, seconds)
@@ -763,10 +1008,10 @@ internal sealed class CloudService
         if (userId.Length == 0)
         {
             // The access token is the source of truth; without a user id the REST row cannot be scoped.
-            return false;
+            return null;
         }
 
-        _session = new CloudSession
+        return new CloudSession
         {
             AccessToken = access.GetString() ?? "",
             RefreshToken = refresh,
@@ -776,6 +1021,16 @@ internal sealed class CloudService
             Name = name,
             Provider = provider,
         };
+    }
+
+    private bool ApplySession(JsonElement root, string provider, CloudSession? fallback = null)
+    {
+        var session = ReadSession(root, provider, fallback);
+        if (session == null)
+        {
+            return false;
+        }
+        _session = session;
         SaveSession();
         return true;
     }
@@ -1007,5 +1262,8 @@ internal sealed record CloudSnapshot(
     string Sync,
     DateTime? LastSyncUtc,
     string Error,
-    bool Busy,
-    string CallbackUrl);
+            bool Busy,
+        string CallbackUrl,
+        string RecoveryStage,
+        string RecoveryEmail,
+        string RecoveryError);

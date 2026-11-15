@@ -1,3 +1,25 @@
+**1.5.3 — Connexion au compte obligatoire**
+
+**Français**
+**Nouveautés**
+- **Option locale retirée** : le bouton « Plus tard, rester en local » a été supprimé. La connexion au compte est désormais nécessaire pour utiliser le compteur.
+- **Mot de passe oublié** : un lien sur l'écran de connexion envoie un e-mail Supabase ; le retour dans l'application permet de choisir un nouveau mot de passe sans quitter ChestCounter.
+- **Reste inchangé** : overlay, rapports, historique local et synchronisation du compte.
+
+**English**
+**What's new**
+- **Local option removed**: the “Not now, stay local” button is gone. Signing in is now required to use the counter.
+- **Forgot password**: a link on the sign-in screen sends a Supabase email; the return to the app lets you choose a new password without leaving ChestCounter.
+- **Unchanged**: overlay, reports, local history and account sync.
+
+**Español**
+**Novedades**
+- **Opción local eliminada**: se ha quitado el botón «Más tarde, seguir en local». Ahora es necesario iniciar sesión para usar el contador.
+- **Contraseña olvidada**: un enlace en la pantalla de inicio de sesión envía un correo de Supabase; al volver a la aplicación puedes elegir una nueva contraseña sin salir de ChestCounter.
+- **Sin cambios**: overlay, informes, historial local y sincronización de la cuenta.
+
+---
+
 **1.5.2 — Un seul overlay de stream**
 
 **Français**

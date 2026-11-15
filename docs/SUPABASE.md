@@ -1,6 +1,6 @@
 # Compte et synchronisation Supabase
 
-La connexion est **optionnelle** : sans compte, ChestCounterFortnite continue de fonctionner exactement comme avant, avec son historique local. Une fois connecté, l'historique et les statistiques sont associés au compte et récupérés sur les autres PC.
+La connexion est **nécessaire** pour utiliser ChestCounterFortnite. Une fois connecté, l'historique et les statistiques sont associés au compte et récupérés sur les autres PC ; les données restent aussi enregistrées localement.
 
 ## 1. Créer le projet
 
@@ -18,7 +18,19 @@ Dans **Authentication → Providers → Email**, laisse Email activé.
 
 Si **Confirm email** est activé, après une inscription l'application affiche « Vérifie ta boîte mail ». Clique sur le lien reçu, puis reviens dans l'application et connecte-toi.
 
-## 3. Connexion Google
+## 3. Mot de passe oublié
+
+Depuis l'écran de connexion, clique sur **Mot de passe oublié ?**, puis indique l'adresse du compte. Supabase envoie un lien de réinitialisation ; l'application reste ouverte et attend le retour sur le même callback local que Google.
+
+1. Ouvre le lien reçu **sur le même PC**, dans le navigateur. Le lien revient vers `http://127.0.0.1:53682/auth/callback`.
+2. L'application vérifie le code PKCE et affiche le formulaire **Nouveau mot de passe**.
+3. Choisis un mot de passe d'au moins 6 caractères, confirme-le, puis clique sur **Mettre à jour le mot de passe**. La session est alors ouverte et la synchronisation reprend.
+
+Garde ChestCounterFortnite ouvert pendant l'opération : le petit serveur local doit être disponible pour recevoir le lien. Si l'application est fermée, le lien ne peut pas aboutir ; recommence la demande. Aucune URL de redirection supplémentaire n'est nécessaire, `http://127.0.0.1:53682/auth/callback` suffit pour la connexion et pour la réinitialisation.
+
+Le message affiché après l'envoi est volontairement générique : il ne révèle pas si une adresse possède un compte. Si l'e-mail n'arrive pas, vérifie les indésirables, le quota d'e-mails de Supabase et la configuration SMTP du projet.
+
+## 4. Connexion Google
 
 1. Dans **Authentication → Providers → Google**, active le fournisseur.
 2. Dans [Google Cloud Console](https://console.cloud.google.com/apis/credentials), crée un **ID client OAuth** de type *Application Web*.
@@ -31,7 +43,7 @@ Si **Confirm email** est activé, après une inscription l'application affiche �
    Remplace `<project-ref>` par la référence du projet Supabase visible dans son URL.
 4. Copie le **Client ID** et le **Client Secret** dans la configuration Google de Supabase, puis enregistre.
 
-## 4. Autoriser le retour vers l'application
+## 5. Autoriser le retour vers l'application
 
 Dans **Authentication → URL Configuration** :
 
@@ -42,9 +54,9 @@ Dans **Authentication → URL Configuration** :
   http://127.0.0.1:53682/auth/callback
   ```
 
-C'est l'adresse du petit serveur local qui reçoit le retour de Google. Le port est fixe ; s'il est déjà occupé, ferme l'autre tentative et réessaie.
+C'est l'adresse du petit serveur local qui reçoit le retour de Google et le lien de réinitialisation du mot de passe. Le port est fixe ; s'il est déjà occupé, ferme l'autre tentative et réessaie.
 
-## 5. Configurer l'application
+## 6. Configurer l'application
 
 Au premier lancement, la page de connexion s'ouvre. Clique sur **Configurer Supabase**, colle l'URL du projet et la clé publique, puis **Enregistrer**. Les valeurs sont conservées dans :
 
@@ -71,5 +83,8 @@ La clé publique peut être utilisée dans une application de bureau ; les droit
 | `E-mail ou mot de passe incorrect` | Mot de passe, ou confirmation de l'adresse e-mail. |
 | `Invalid login credentials` côté Supabase | Provider Email activé et compte confirmé. |
 | La fenêtre Google reste ouverte | L'URL de redirection autorisée doit être exactement `http://127.0.0.1:53682/auth/callback`. |
+| Aucun e-mail de réinitialisation | Vérifie les indésirables, le quota d'e-mails Supabase et la configuration SMTP. Le message affiché ne confirme pas l'existence du compte. |
+| Le lien de réinitialisation ne revient pas dans l'application | Ouvre-le sur le même PC et garde ChestCounterFortnite ouvert ; le callback local doit pouvoir écouter sur le port 53682. |
+| `Le lien de réinitialisation n'est plus valide` | Le lien a expiré ou a déjà été utilisé. Recommence la demande depuis **Mot de passe oublié ?**. |
 | `Le port de connexion 53682 est déjà utilisé` | Ferme l'onglet ou l'instance qui utilise ce port, puis réessaie. |
 | `new row violates row-level security policy` | Le SQL `supabase.sql` n'a pas été exécuté, ou la session n'est pas valide. |

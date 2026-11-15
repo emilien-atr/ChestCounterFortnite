@@ -101,7 +101,6 @@ internal sealed class AppWindow : Form
     private DateTime? _fortniteClosedAt;
     private bool _webReady;
     private bool _webInitialized;
-    private bool _authSkipped;
     private DateTime _nextCloudSync = DateTime.UtcNow.AddSeconds(6);
     private string? _lastState;
 
@@ -396,13 +395,23 @@ internal sealed class AppWindow : Form
                 case "authGoogle":
                     _ = AuthGoogleAsync();
                     break;
-                case "authSkip":
-                    _authSkipped = true;
-                    _cloud.CancelGoogle();
+                case "authForgotPassword":
+                    if (root.TryGetProperty("email", out var resetEmailElement))
+                    {
+                        _ = AuthForgotPasswordAsync(resetEmailElement.GetString() ?? "");
+                    }
+                    break;
+                case "authCompleteReset":
+                    if (root.TryGetProperty("password", out var newPasswordElement))
+                    {
+                        _ = AuthCompleteResetAsync(newPasswordElement.GetString() ?? "");
+                    }
+                    break;
+                case "authCancelReset":
+                    _cloud.CancelRecovery();
                     PushState(force: true);
                     break;
                 case "authLogin":
-                    _authSkipped = false;
                     PushState(force: true);
                     break;
                 case "authLogout":
@@ -415,7 +424,6 @@ internal sealed class AppWindow : Form
                     }
                     else
                     {
-                        _authSkipped = false;
                         PushState(force: true);
                     }
                     break;
@@ -424,7 +432,6 @@ internal sealed class AppWindow : Form
                     {
                         var configured = _cloud.Configure(urlElement.GetString() ?? "", keyElement.GetString() ?? "");
                         PostAuthResult(configured.Succeeded, configured.Message);
-                        _authSkipped = false;
                         if (_cloud.SignedIn)
                         {
                             TriggerCloudSync();
@@ -1486,7 +1493,7 @@ internal sealed class AppWindow : Form
         {
             configured = cloud.Configured,
             signedIn = cloud.SignedIn,
-            required = !_auto && !_authSkipped && !cloud.SignedIn,
+            required = !_auto && (!cloud.SignedIn || cloud.RecoveryStage is "sent" or "ready"),
             email = cloud.Email,
             name = cloud.Name,
             provider = cloud.Provider,
@@ -1496,6 +1503,12 @@ internal sealed class AppWindow : Form
             busy = cloud.Busy,
             callback = cloud.CallbackUrl,
             userId = _cloud.UserId ?? "",
+            recovery = new
+            {
+                stage = cloud.RecoveryStage,
+                email = cloud.RecoveryEmail,
+                error = cloud.RecoveryError,
+            },
         };
     }
 
@@ -1571,7 +1584,6 @@ internal sealed class AppWindow : Form
                 PostAuthResult(result.Succeeded, result.Message);
                 if (result.Succeeded && _cloud.SignedIn)
                 {
-                    _authSkipped = false;
                     TriggerCloudSync();
                 }
                 PushState(force: true);
@@ -1596,7 +1608,6 @@ internal sealed class AppWindow : Form
                 PostAuthResult(result.Succeeded, result.Message);
                 if (result.Succeeded && _cloud.SignedIn)
                 {
-                    _authSkipped = false;
                     TriggerCloudSync();
                 }
                 PushState(force: true);
@@ -1608,6 +1619,61 @@ internal sealed class AppWindow : Form
             PostAuthResult(false, L.T("Connexion Google impossible pour le moment.",
                 "Could not sign in with Google right now.",
                 "No se puede iniciar sesión con Google ahora mismo."));
+        }
+    }
+
+    private async Task AuthForgotPasswordAsync(string email)
+    {
+        try
+        {
+            var result = await _cloud.RequestPasswordResetAsync(email);
+            RunOnUi(() =>
+            {
+                PostAuthResult(result.Succeeded, result.Message);
+                PushState(force: true);
+            });
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Réinitialisation du mot de passe", ex);
+            RunOnUi(() =>
+            {
+                PostAuthResult(false, L.T("Envoi impossible pour le moment.",
+                    "Could not send the email right now.",
+                    "No se puede enviar el correo ahora mismo."));
+                PushState(force: true);
+            });
+        }
+    }
+
+    private async Task AuthCompleteResetAsync(string password)
+    {
+        try
+        {
+            var result = await _cloud.CompletePasswordResetAsync(password);
+            RunOnUi(() =>
+            {
+                PostAuthResult(result.Succeeded, result.Message);
+                if (result.Succeeded && _cloud.SignedIn)
+                {
+                    TriggerCloudSync();
+                    Toast(L.T("Mot de passe mis à jour. Tu es connecté.",
+                        "Password updated. You are signed in.",
+                        "Contraseña actualizada. Has iniciado sesión."), "ok");
+                }
+                PushState(force: true);
+            });
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Mise à jour du mot de passe", ex);
+            RunOnUi(() =>
+            {
+                PostAuthResult(false, L.T("Mise à jour impossible pour le moment.",
+                    "Could not update the password right now.",
+                    "No se puede actualizar la contraseña ahora mismo."));
+                PushState(force: true);
+            });
         }
     }
 
@@ -1623,7 +1689,6 @@ internal sealed class AppWindow : Form
         }
         RunOnUi(() =>
         {
-            _authSkipped = false;
             _nextCloudSync = DateTime.UtcNow.AddSeconds(10);
             PushState(force: true);
             Toast(L.T("Tu es déconnecté. Tes données restent sur ce PC.",
@@ -1706,6 +1771,7 @@ internal sealed class AppWindow : Form
         _allowClose = true;
         _closing = true;
         _cloud.CancelGoogle();
+        _cloud.CancelRecovery();
         _timer.Stop();
         DiscordPresence.Stop();
         _watcher?.Dispose();
