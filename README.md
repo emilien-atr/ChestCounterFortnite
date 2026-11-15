@@ -19,8 +19,8 @@ Historique, statistiques et overlays OBS/TikTok, avec synchronisation optionnell
 ## En bref
 
 - Compte les coffres à partir des **rediffusions Fortnite**, quelques secondes après chaque partie.
-- Affiche la **carte violette** en jeu et fournit **deux overlays de stream** pour OBS et TikTok Live Studio.
-- Les overlays **s’adaptent automatiquement à la taille de la source** : aucune taille fixe à régler.
+- Affiche la **carte violette** en jeu et fournit un **overlay de stream compact** pour OBS et TikTok Live Studio.
+- L’overlay **s’adapte automatiquement à la taille de la source** : aucune taille fixe à régler.
 - **Compte optionnel** : connecte-toi par e-mail ou avec Google pour retrouver ton historique et tes totaux sur tes autres PC.
 - Rapports web, historique, archives ZIP, activité Discord et mises à jour automatiques.
 - Français, anglais et espagnol.
@@ -39,13 +39,10 @@ La connexion est **optionnelle** : « Plus tard, rester en local » permet d’u
 
 ## Overlay de stream
 
-| Carte complète | Overlay de jeu |
-|:---:|:---:|
-| <img src="docs/overlay-fr.png" alt="Carte complète pour OBS et TikTok" width="460"> | <img src="docs/overlay-game-fr.png" alt="Overlay de jeu compact" width="360"> |
+<img src="docs/overlay-game-fr.png" alt="Overlay de jeu compact" width="760">
 
-- **Carte complète** : total, partie en cours ou dernière partie et les 10 récompenses Treasure Hunt.
 - **Overlay de jeu** : version compacte pour le stream, avec le total et le badge LIVE.
-- Les deux s’adaptent à la source, sans redimensionnement manuel.
+- Il s’adapte à la source, sans redimensionnement manuel.
 
 Dans OBS, ajoute une source **Navigateur**. Dans TikTok Live Studio, utilise une source **Lien** et colle le **lien HTTPS** affiché dans **Réglages → OBS / TikTok Live Studio**. Garde le compteur ouvert pendant le live.
 
