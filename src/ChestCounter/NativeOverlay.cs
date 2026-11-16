@@ -66,6 +66,8 @@ public static class NativeOverlay
     private static volatile string _style = "classic";
     private static IntPtr _fontHudBig, _fontHudSmall;
     private static int _hudBigH, _hudSmallH;
+    private static System.Drawing.Bitmap? _chestBitmap;
+    private static bool _chestBitmapLoaded;
 
     /// <summary>Pixels of this color are fully transparent (styles without a background). Almost black, so that the
     /// anti-aliased edge of the black outline around the text blends into it without any colored fringe.</summary>
@@ -597,9 +599,9 @@ public static class NativeOverlay
 
             // Header, with the little chest from the report.
             var iconW = S(18);
-            var iconH = S(14);
+            var iconH = S(16);
             var chestGold = Blend(Rgb(246, 183, 60), Rgb(255, 215, 112), 0.08 + 0.3 * pulse);
-            Chest(hdc, x, y + Math.Max(0, (_headerH - iconH) / 2), iconW, iconH, chestGold, chestGold, Rgb(59, 130, 246), Rgb(26, 16, 48));
+            ChestIcon(hdc, x, y + Math.Max(0, (_headerH - iconH) / 2), iconW, iconH, chestGold);
             Text(hdc, _fontHeader, Rgb(185, 169, 212), Header, x + iconW + S(6), y, right, y + _headerH);
             if (v.Badge != null)
             {
@@ -632,9 +634,8 @@ public static class NativeOverlay
                 foreach (var row in v.Rows)
                 {
                     var rowIconW = S(18);
-                    var rowIconH = S(14);
-                    Chest(hdc, x, y + Math.Max(0, (_rowH - rowIconH) / 2), rowIconW, rowIconH,
-                        chestGold, chestGold, Rgb(59, 130, 246), Rgb(26, 16, 48));
+                    var rowIconH = S(16);
+                    ChestIcon(hdc, x, y + Math.Max(0, (_rowH - rowIconH) / 2), rowIconW, rowIconH, chestGold);
                     var labelX = x + rowIconW + S(6);
                     Text(hdc, _fontLabel, Rgb(168, 155, 194), row.Label, labelX, y, labelX + _labelW, y + _rowH);
                     var vx = labelX + _labelW + S(12);
@@ -772,7 +773,58 @@ public static class NativeOverlay
         DrawTextW(hdc, text, -1, ref rc, DT_SINGLELINE | DT_NOPREFIX | DT_NOCLIP | align); // italic glyphs lean past the box
     }
 
-    /// <summary>A treasure chest made of three shapes: body, rounded lid, latch.</summary>
+    /// <summary>Draws the shared transparent chest artwork at the requested size.</summary>
+    private static void ChestIcon(IntPtr hdc, int x, int y, int w, int h, uint fallbackBody)
+    {
+        if (w <= 0 || h <= 0)
+        {
+            return;
+        }
+        var bitmap = ChestBitmap;
+        if (bitmap == null)
+        {
+            Chest(hdc, x, y, w, h, fallbackBody, fallbackBody, Rgb(59, 130, 246), Rgb(26, 16, 48));
+            return;
+        }
+        try
+        {
+            using var graphics = System.Drawing.Graphics.FromHdc(hdc);
+            graphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceOver;
+            graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+            graphics.DrawImage(bitmap, new System.Drawing.Rectangle(x, y, w, h));
+        }
+        catch
+        {
+            // GDI+ can be unavailable on a stripped-down Windows install: keep the overlay readable.
+            Chest(hdc, x, y, w, h, fallbackBody, fallbackBody, Rgb(59, 130, 246), Rgb(26, 16, 48));
+        }
+    }
+
+    private static System.Drawing.Bitmap? ChestBitmap
+    {
+        get
+        {
+            if (_chestBitmapLoaded)
+            {
+                return _chestBitmap;
+            }
+            _chestBitmapLoaded = true;
+            try
+            {
+                using var memory = new System.IO.MemoryStream(ChestArt.Bytes, writable: false);
+                _chestBitmap = new System.Drawing.Bitmap(memory);
+            }
+            catch
+            {
+                _chestBitmap = null;
+            }
+            return _chestBitmap;
+        }
+    }
+
+    /// <summary>A treasure chest made of three shapes: fallback when the PNG cannot be loaded.</summary>
     private static void Chest(IntPtr hdc, int x, int y, int w, int h, uint body, uint lid, uint latch, uint outline)
     {
         var pen = CreatePen(0, Math.Max(1, Sc(1.5)), outline);
@@ -896,7 +948,7 @@ public static class NativeOverlay
         var smallTop = pad + Math.Max(0, (lineH - _hudSmallH) / 2);
 
         // One horizontal row, like the game's own HUD.
-        Chest(hdc, x, pad + Math.Max(0, (lineH - ih) / 2), iw, ih, gold, Rgb(224, 165, 38), ink, ink);
+        ChestIcon(hdc, x, pad + Math.Max(0, (lineH - ih) / 2), iw, ih, gold);
         var totalX = x + iw + Sc(8);
         Outlined(hdc, _fontHudBig, live ? gold : white, totalText, totalX, pad, totalX + bigW + Sc(4), pad + lineH, DT_LEFT);
 

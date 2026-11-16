@@ -6,7 +6,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>ChestCounterFortnite</AssemblyName>
     <RootNamespace>ChestCounter</RootNamespace>
-    <Version>1.5.4</Version>
+    <Version>1.5.5</Version>
     <Product>ChestCounterFortnite</Product>
     <AssemblyTitle>ChestCounterFortnite</AssemblyTitle>
     <Company>Emilien</Company>
@@ -31,6 +31,8 @@
     <EmbeddedResource Include="Assets\PirataOne-latin.woff2" LogicalName="PirataOne.woff2" />
     <!-- What's new of this version, shown once after the update. -->
     <EmbeddedResource Include="..\..\RELEASE_NOTES.md" LogicalName="ReleaseNotes.md" />
+    <!-- The transparent chest artwork shared by the report, the native overlay and the web UI. -->
+    <EmbeddedResource Include="Assets\ChestArt.png" LogicalName="ChestArt.png" />
     <!-- Window design (HTML/CSS drawn by the embedded WebView2 runtime). -->
     <EmbeddedResource Include="Ui\app.html" LogicalName="app.html" />
   </ItemGroup>

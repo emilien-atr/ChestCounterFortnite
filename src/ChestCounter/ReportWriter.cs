@@ -258,7 +258,7 @@ public static class ReportWriter
         }
     }
 
-    private const string Logo = """<svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd166"/><stop offset="1" stop-color="#b56a10"/></linearGradient></defs><path d="M7 31V24c0-8 6-14 15-14h20c9 0 15 6 15 14v7Z" fill="url(#lg)" stroke="#3a1e08" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 25c2-6 6-9 11-10" fill="none" stroke="#fff3c4" stroke-width="2" stroke-linecap="round" opacity=".55"/><rect x="7" y="30" width="50" height="26" rx="5" fill="url(#lg)" stroke="#3a1e08" stroke-width="2.5"/><rect x="7" y="29" width="50" height="6" rx="3" fill="#7a4516"/><rect x="18" y="31" width="6" height="25" fill="#5c3310"/><rect x="40" y="31" width="6" height="25" fill="#5c3310"/><rect x="25" y="33" width="14" height="12" rx="2.5" fill="#ffefc4" stroke="#5c3310" stroke-width="1.5"/><circle cx="32" cy="38" r="1.8" fill="#3a1e08"/><path d="M32 40v4" stroke="#3a1e08" stroke-width="1.8" stroke-linecap="round"/></svg>""";
+    private static readonly string Logo = "<svg class=\"logo\" viewBox=\"0 0 64 64\" aria-hidden=\"true\"><image href=\"" + ChestArt.DataUri + "\" width=\"64\" height=\"64\" preserveAspectRatio=\"xMidYMid meet\"/></svg>";
     private const string TeamIcon = """<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2" fill="none" stroke="#a78bfa" stroke-width="2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6" fill="none" stroke="#a78bfa" stroke-width="2"/><circle cx="17" cy="9" r="2.6" fill="none" stroke="#a78bfa" stroke-width="2"/><path d="M16 14c3 0 5 2.2 5 5" fill="none" stroke="#a78bfa" stroke-width="2"/></svg>""";
     private const string FlagIcon = """<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="flex:none;margin-top:2px"><path d="M5 21V4M5 4h11l-2 4 2 4H5" fill="none" stroke="#ff8a6a" stroke-width="2" stroke-linejoin="round"/></svg>""";
 
@@ -572,28 +572,28 @@ public static class ReportWriter
             {{FontFace}}
             *{box-sizing:border-box}
             html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden}
-            body{display:flex;align-items:flex-start;justify-content:flex-start;padding:clamp(10px,2.2vh,26px) clamp(12px,2vw,32px);color:#f7e9b6;font-family:"Segoe UI",system-ui,sans-serif}
-            .card{position:relative;container-type:inline-size;width:min(92vw,960px);min-width:0;padding:clamp(12px,2.4vw,24px) clamp(16px,3.4vw,34px) clamp(14px,2.8vw,26px);overflow:hidden;border:1px solid rgba(243,189,82,.78);border-radius:clamp(14px,1.8vw,22px);
+            body{display:flex;align-items:flex-start;justify-content:flex-start;padding:clamp(8px,1.8vh,20px) clamp(10px,1.5vw,22px);color:#f7e9b6;font-family:"Segoe UI",system-ui,sans-serif}
+            .card{position:relative;container-type:inline-size;width:min(92vw,720px);min-width:0;padding:clamp(10px,2vw,20px) clamp(14px,2.8vw,26px) clamp(12px,2.2vw,20px);overflow:hidden;border:1px solid rgba(243,189,82,.78);border-radius:clamp(12px,1.6vw,20px);
               background:linear-gradient(145deg,#211532 0%,#100d1d 58%,#090b14 100%);
               box-shadow:0 0 0 2px rgba(243,189,82,.14),0 0 28px rgba(139,92,246,.28),0 16px 35px rgba(0,0,0,.55)}
             .card:before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(45% 90% at 4% 0%,rgba(243,189,82,.12),transparent 70%),radial-gradient(35% 80% at 100% 0%,rgba(138,92,255,.2),transparent 70%)}
             .top{position:relative;display:flex;align-items:center;gap:clamp(7px,1.2vw,12px);min-height:clamp(18px,2.4vw,28px)}
             .brand{display:inline-flex;align-items:center;gap:clamp(5px,1vw,10px);color:#f3bd52;font-size:clamp(9px,1.55cqw,16px);font-weight:800;letter-spacing:.16em}
-            .brand svg{width:clamp(18px,3.1cqw,30px);height:clamp(18px,3.1cqw,30px);filter:drop-shadow(0 0 6px rgba(243,189,82,.4))}
+            .brand .chest{width:clamp(18px,3.1cqw,28px);height:clamp(18px,3.1cqw,28px);object-fit:contain;filter:drop-shadow(0 0 6px rgba(243,189,82,.4))}
             .brand small{color:#9d95af;font-size:clamp(7px,1.05cqw,11px);font-weight:600;letter-spacing:.12em}
             .live{margin-left:auto;display:inline-flex;align-items:center;gap:clamp(4px,.8cqw,8px);padding:clamp(3px,.65cqw,6px) clamp(6px,1.35cqw,12px);border:1px solid rgba(255,95,167,.55);border-radius:999px;background:rgba(255,79,163,.13);color:#ff9ac5;font-size:clamp(7px,1.4cqw,14px);font-weight:800;letter-spacing:.14em}
             .live i{width:clamp(4px,.85cqw,8px);height:clamp(4px,.85cqw,8px);border-radius:50%;background:#ff5fa7;box-shadow:0 0 0 3px rgba(255,95,167,.12)}
-            .numbers{position:relative;display:grid;grid-template-columns:1.22fr 1px 1fr;gap:clamp(12px,3.4cqw,34px);align-items:end;margin-top:clamp(8px,1.7cqw,16px)}
+            .numbers{position:relative;display:grid;grid-template-columns:1.22fr 1px 1fr;gap:clamp(10px,2.8cqw,28px);align-items:end;margin-top:clamp(6px,1.4cqw,12px)}
             .stat{min-width:0;display:flex;flex-direction:column;gap:3px}
             .label{color:#d6b86f;font-size:clamp(8px,1.45cqw,15px);font-weight:750;letter-spacing:.15em;white-space:nowrap}
-            .value{font-family:"Bahnschrift","Arial Black",sans-serif;font-size:clamp(34px,9.2cqw,92px);font-weight:800;font-variant-numeric:tabular-nums;line-height:.92;letter-spacing:-.01em;color:#ffd45e;text-shadow:0 2px 0 #5b2a00,0 0 18px rgba(255,177,36,.3);white-space:nowrap}
-            .stat:last-child .value{font-size:clamp(26px,7cqw,70px)}
-            .sep{width:1px;height:clamp(46px,9cqw,86px);align-self:center;background:linear-gradient(180deg,transparent,rgba(243,189,82,.65) 18%,rgba(243,189,82,.65) 82%,transparent)}
+            .value{font-family:"Bahnschrift","Arial Black",sans-serif;font-size:clamp(30px,8.8cqw,82px);font-weight:800;font-variant-numeric:tabular-nums;line-height:.92;letter-spacing:-.01em;color:#ffd45e;text-shadow:0 2px 0 #5b2a00,0 0 18px rgba(255,177,36,.3);white-space:nowrap}
+            .stat:last-child .value{font-size:clamp(24px,6.6cqw,62px)}
+            .sep{width:1px;height:clamp(42px,8cqw,76px);align-self:center;background:linear-gradient(180deg,transparent,rgba(243,189,82,.65) 18%,rgba(243,189,82,.65) 82%,transparent)}
             @media (max-width:520px){body{padding:12px}.card{width:100%;padding:12px 16px 14px}.numbers{gap:14px}.value{font-size:36px}.stat:last-child .value{font-size:28px} }
             </style></head><body>
             <section class="card">
               <div class="top">
-                <span class="brand"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 9.5 12 4l8 5.5V20H4V9.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 20v-5h7v5M9 10h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>{{L.T("COFFRES", "CHESTS", "COFRES")}} <small>CHEST COUNTER</small></span>
+                <span class="brand"><img class="chest" src="{{ChestArt.DataUri}}" alt="">{{L.T("COFFRES", "CHESTS", "COFRES")}} <small>CHEST COUNTER</small></span>
                 {{live}}
               </div>
               <div class="numbers">

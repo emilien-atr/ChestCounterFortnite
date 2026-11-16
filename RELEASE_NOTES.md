@@ -1,3 +1,25 @@
+**1.5.5 — Nouveau coffre, overlay plus compact**
+
+**Français**
+**Nouveautés**
+- **Nouveau coffre** : le coffre doré au crâne remplace l'ancien logo dans la fenêtre, l'overlay en jeu, le rapport, l'icône du programme et celle du site.
+- **Overlay de stream plus compact** : la largeur maximale passe de 960 à 720 px, avec des chiffres et des marges ajustés pour rester bien lisibles.
+- **Détourage transparent** : le fond vert de l'image a été retiré ; il ne reste que le coffre, ses chaînes et ses pierres, sans herbe ni décor.
+
+**English**
+**What's new**
+- **New chest**: the golden skull chest replaces the old logo in the window, the in-game overlay, the report, the program icon and the website icon.
+- **More compact stream overlay**: the maximum width goes from 960 to 720 px, with adjusted figures and margins that stay easy to read.
+- **Transparent cut-out**: the green background is gone; only the chest, its chains and its gems remain, with no grass or scenery.
+
+**Español**
+**Novedades**
+- **Nuevo cofre**: el cofre dorado con calavera sustituye al antiguo logo en la ventana, el overlay del juego, el informe, el icono del programa y el del sitio.
+- **Overlay de stream más compacto**: el ancho máximo pasa de 960 a 720 px, con cifras y márgenes ajustados para seguir siendo legibles.
+- **Recorte transparente**: se ha eliminado el fondo verde; solo quedan el cofre, sus cadenas y sus gemas, sin hierba ni decorado.
+
+---
+
 **1.5.4 — Configuration Supabase intégrée**
 
 **Français**

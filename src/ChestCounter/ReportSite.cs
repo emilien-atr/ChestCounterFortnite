@@ -382,30 +382,16 @@ public static class ReportSite
         <script>try{var t=localStorage.getItem("ccf-theme");if(t==="light")document.documentElement.dataset.theme="light"}catch(e){}</script>
         """;
 
-    private const string Sprite = """
+    private static readonly string Sprite = """
         <svg class="sprite" aria-hidden="true" focusable="false">
           <defs>
             <linearGradient id="ccfGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset=".45" stop-color="#f6b73c"/><stop offset="1" stop-color="#b45309"/></linearGradient>
             <linearGradient id="ccfBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#93c5fd"/><stop offset="1" stop-color="#2563eb"/></linearGradient>
             <symbol id="ccf-chest" viewBox="0 0 64 64">
-              <path d="M7 31V24c0-8 6-14 15-14h20c9 0 15 6 15 14v7Z" fill="url(#ccfGold)" stroke="#3a1e08" stroke-width="2.5" stroke-linejoin="round"/>
-              <path d="M12 25c2-6 6-9 11-10" fill="none" stroke="#fff3c4" stroke-width="2" stroke-linecap="round" opacity=".55"/>
-              <rect x="7" y="30" width="50" height="26" rx="5" fill="url(#ccfGold)" stroke="#3a1e08" stroke-width="2.5"/>
-              <rect x="7" y="29" width="50" height="6" rx="3" fill="#7a4516"/>
-              <rect x="18" y="31" width="6" height="25" fill="#5c3310"/>
-              <rect x="40" y="31" width="6" height="25" fill="#5c3310"/>
-              <rect x="25" y="33" width="14" height="12" rx="2.5" fill="#ffefc4" stroke="#5c3310" stroke-width="1.5"/>
-              <circle cx="32" cy="38" r="1.8" fill="#3a1e08"/>
-              <path d="M32 40v4" stroke="#3a1e08" stroke-width="1.8" stroke-linecap="round"/>
+              <image href="__CHEST_DATA__" width="64" height="64" preserveAspectRatio="xMidYMid meet"/>
             </symbol>
             <symbol id="ccf-mini" viewBox="0 0 32 32">
-              <path d="M4 15v-3c0-4 3-7 8-7h8c5 0 8 3 8 7v3Z" fill="currentColor" stroke="#3a1e08" stroke-width="1.2" stroke-linejoin="round"/>
-              <rect x="4" y="14" width="24" height="13" rx="3" fill="currentColor" stroke="#3a1e08" stroke-width="1.2"/>
-              <rect x="9" y="14" width="3" height="13" fill="#5c3310"/>
-              <rect x="20" y="14" width="3" height="13" fill="#5c3310"/>
-              <rect x="13" y="16" width="6" height="6" rx="1" fill="#ffefc4"/>
-              <circle cx="16" cy="18" r=".8" fill="#3a1e08"/>
-              <path d="M16 19v1.6" stroke="#3a1e08" stroke-width=".9" stroke-linecap="round"/>
+              <image href="__CHEST_DATA__" width="32" height="32" preserveAspectRatio="xMidYMid meet"/>
             </symbol>
             <symbol id="ic-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/><path d="M10 21v-6h4v6"/></symbol>
             <symbol id="ic-chart" viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-7"/></symbol>
@@ -423,7 +409,7 @@ public static class ReportSite
             <symbol id="ic-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 6.7"/><path d="M20 5v6h-6"/></symbol>
           </defs>
         </svg>
-        """;
+        """.Replace("__CHEST_DATA__", ChestArt.DataUri);
 
     private const string CastleArt = """
         <svg class="castle" viewBox="0 0 264 320" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
@@ -452,7 +438,7 @@ public static class ReportSite
         </svg>
         """;
 
-    private const string HeroArt = """
+    private static readonly string HeroArt = """
         <svg class="hero-art" viewBox="0 0 700 360" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
           <defs>
             <radialGradient id="hGlow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fbbf24" stop-opacity=".5"/><stop offset=".45" stop-color="#a855f7" stop-opacity=".3"/><stop offset="1" stop-color="#a855f7" stop-opacity="0"/></radialGradient>
@@ -471,30 +457,15 @@ public static class ReportSite
             <path d="M615 330l15-38 15 38zM632 314h10v46h-10z"/>
             <path d="M660 340l12-30 12 30zM675 328h8v32h-8z"/>
           </g>
-          <g transform="translate(300 52) scale(1.06)">
-            <ellipse cx="150" cy="272" rx="152" ry="24" fill="#0b0416" opacity=".75" filter="url(#hSoft)"/>
-            <path d="M22 120 Q22 78 62 78 H238 Q278 78 278 120 V250 Q278 268 258 268 H42 Q22 268 22 250Z" fill="url(#hGoldDark)" stroke="#552604" stroke-width="5"/>
-            <path d="M22 132 V108 Q22 52 84 52 H216 Q278 52 278 108 V132 Z" fill="url(#hGold)" stroke="#552604" stroke-width="5"/>
-            <path d="M50 102 Q64 66 112 63" fill="none" stroke="#fff3c4" stroke-width="8" stroke-linecap="round" opacity=".55"/>
-            <path d="M22 158 H278 V250 Q278 268 258 268 H42 Q22 268 22 250Z" fill="#7c3a0a" opacity=".32"/>
-            <rect x="64" y="52" width="32" height="216" rx="7" fill="url(#hBlue)" stroke="#1e3a8a" stroke-width="4"/>
-            <rect x="204" y="52" width="32" height="216" rx="7" fill="url(#hBlue)" stroke="#1e3a8a" stroke-width="4"/>
-            <rect x="22" y="112" width="256" height="28" fill="url(#hBlue)" stroke="#1e3a8a" stroke-width="4"/>
-            <rect x="119" y="142" width="62" height="68" rx="12" fill="url(#hGold)" stroke="#7c2d12" stroke-width="5"/>
-            <circle cx="150" cy="168" r="9" fill="#5b1e08"/>
-            <path d="M150 173v20" stroke="#5b1e08" stroke-width="7" stroke-linecap="round"/>
-            <circle cx="44" cy="92" r="5" fill="#ffe8b0"/><circle cx="256" cy="92" r="5" fill="#ffe8b0"/>
-            <circle cx="44" cy="246" r="5" fill="#ffe8b0"/><circle cx="256" cy="246" r="5" fill="#ffe8b0"/>
-            <rect x="27" y="123" width="246" height="8" fill="#ffe08a" opacity=".8" filter="url(#hBlur)"/>
-            <rect x="40" y="86" width="46" height="7" rx="3" fill="#fff3c4" opacity=".35"/>
-          </g>
+          <ellipse cx="455" cy="298" rx="154" ry="24" fill="#0b0416" opacity=".72" filter="url(#hSoft)"/>
+          <image href="__CHEST_DATA__" x="300" y="38" width="300" height="272" preserveAspectRatio="xMidYMid meet"/>
           <g fill="#ffe9a8">
             <path d="M286 112l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" opacity=".8"/>
             <path d="M604 118l1.5 4.5 4.5 1.5-4.5 1.5-1.5 4.5-1.5-4.5-4.5-1.5 4.5-1.5z" opacity=".65"/>
             <circle cx="254" cy="170" r="2.5" opacity=".5"/><circle cx="574" cy="86" r="2" opacity=".5"/><circle cx="630" cy="210" r="2.5" opacity=".4"/>
           </g>
         </svg>
-        """;
+        """.Replace("__CHEST_DATA__", ChestArt.DataUri);
 
     private const string BalloonArt = """
         <svg class="balloon" viewBox="0 0 300 220" aria-hidden="true">

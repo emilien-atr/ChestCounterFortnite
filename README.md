@@ -56,14 +56,11 @@ Dans OBS, ajoute une source **Navigateur**. Dans TikTok Live Studio, utilise une
 
 Tout est enregistré dans `%APPDATA%\ChestCounterFortnite`. Les replays restent sur ton disque ; avec un compte, seul l’historique est synchronisé. Aucune donnée de jeu n’est envoyée sans connexion.
 
-## Nouveautés 1.5.4
+## Nouveautés 1.5.5
 
-- **Configuration invisible** : l’URL et la clé publique du projet sont intégrées à l’application ; les utilisateurs ne peuvent plus les voir ni les modifier.
-- **Fichier local nettoyé** : `supabase.json` ne contient plus l’URL ni la clé ; seul l’identifiant de l’appareil reste. La session reste dans `supabase-session.json`.
-- **Connexion obligatoire** : l’option « rester en local » a été retirée.
-- **Mot de passe oublié** : envoi d’un lien Supabase et retour direct dans l’application.
-- **Overlay de stream compact** : un seul overlay de jeu, auto-adapté à la source OBS/TikTok.
-- **Raccourci Bureau** : créé automatiquement au premier lancement, sans manipulation.
+- **Nouveau coffre** : le coffre doré au crâne remplace l’ancien logo dans la fenêtre, l’overlay en jeu, le rapport, l’icône du programme et celle du site.
+- **Overlay de stream plus compact** : la largeur maximale passe de 960 à 720 px, avec des chiffres et des marges ajustés pour rester lisibles.
+- **Détourage transparent** : le fond vert a été retiré ; il ne reste que le coffre, ses chaînes et ses pierres, sans herbe ni décor.
 
 <details>
 <summary><b>Compiler depuis les sources</b></summary>
