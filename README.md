@@ -8,6 +8,8 @@
 
 Historique, statistiques et overlays OBS/TikTok, avec synchronisation entre tes PC.
 
+**Site officiel : [chest.emilien-it.fr](https://chest.emilien-it.fr/)**
+
 [![Télécharger](https://img.shields.io/badge/T%C3%A9l%C3%A9charger-la%20derni%C3%A8re%20version-E8B04B?style=for-the-badge)](https://github.com/emilien-atr/ChestCounterFortnite/releases/latest)
 [![Windows 10 / 11](https://img.shields.io/badge/Windows-10%20%7C%2011-3A7BD5?style=flat-square)](#)
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-555?style=flat-square)](LICENSE)
