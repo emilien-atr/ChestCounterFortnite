@@ -3,6 +3,17 @@ using System.Diagnostics;
 using System.Text;
 using ChestCounter;
 
+// --uninstall-cleanup: called by the installer before removing the files. Removes the startup entry and the standby.
+if (args.Contains("--uninstall-cleanup"))
+{
+    if (OperatingSystem.IsWindows())
+    {
+        FortniteWatch.StopStandby();
+        FortniteWatch.Apply(false, Store.DefaultFolder());
+    }
+    return 0;
+}
+
 // --standby: the invisible process that waits for Fortnite to start ("open with Fortnite"). No console, nothing else.
 if (args.Contains("--standby"))
 {
@@ -157,13 +168,6 @@ var previousLanguage = reset ? store.LoadConfig()?.Language : null;
 config ??= new Config();
 // Installed builds follow the GitHub releases automatically, including configs saved by older versions.
 config.UpdateMode = "auto";
-
-// First launch after a new install or an update: create the desktop shortcut once.
-if (OperatingSystem.IsWindows() && guiMode && AppInfo.ExePath is { } shortcutExe
-    && (firstRun || config.LastVersion != AppInfo.VersionText))
-{
-    DesktopShortcut.TryCreate(shortcutExe);
-}
 
 // Language: --lang, else the saved choice, else asked once (Windows language when nobody can answer).
 if (langArg != null)

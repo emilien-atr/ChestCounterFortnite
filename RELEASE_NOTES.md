@@ -1,3 +1,28 @@
+**1.6.0 — Installateur Windows séparé**
+
+**Français**
+**Nouveautés**
+- **Installateur séparé** : `ChestCounterFortnite-Setup.exe` installe l’application pour ton compte dans `%LOCALAPPDATA%\Programs\ChestCounterFortnite`, sans droits administrateur.
+- **Raccourcis gérés par l’installation** : le menu Démarrer et le raccourci Bureau sont créés par l’installateur ; l’application ne s’auto-installe plus au premier lancement.
+- **Désinstallation propre** : ChestCounter apparaît dans « Applications installées ». Les données de `%APPDATA%\ChestCounterFortnite` et les replays sont conservés.
+- **Mises à jour conservées** : l’auto-update continue de remplacer le binaire installé. Le site propose maintenant l’installateur, plus l’exe portable.
+
+**English**
+**What's new**
+- **Separate installer**: `ChestCounterFortnite-Setup.exe` installs the app for your account in `%LOCALAPPDATA%\Programs\ChestCounterFortnite`, without administrator rights.
+- **Installer-managed shortcuts**: the Start menu and desktop shortcuts are created by the installer; the app no longer self-installs on first launch.
+- **Clean uninstall**: ChestCounter appears in “Installed apps”. Data in `%APPDATA%\ChestCounterFortnite` and replays are preserved.
+- **Updates preserved**: the auto-updater still replaces the installed binary. The website now offers the installer, not the portable exe.
+
+**Español**
+**Novedades**
+- **Instalador separado**: `ChestCounterFortnite-Setup.exe` instala la aplicación para tu cuenta en `%LOCALAPPDATA%\Programs\ChestCounterFortnite`, sin permisos de administrador.
+- **Accesos gestionados por el instalador**: el menú Inicio y el acceso directo del escritorio los crea el instalador; la aplicación ya no se autoinstala en el primer inicio.
+- **Desinstalación limpia**: ChestCounter aparece en «Aplicaciones instaladas». Los datos de `%APPDATA%\ChestCounterFortnite` y las repeticiones se conservan.
+- **Actualizaciones conservadas**: el auto-update sigue reemplazando el binario instalado. La web ofrece ahora el instalador, no el exe portátil.
+
+---
+
 **1.5.5 — Nouveau coffre, overlay plus compact**
 
 **Français**
@@ -57,7 +82,7 @@
 - **Local option removed**: the “Not now, stay local” button is gone. Signing in is now required to use the counter.
 - **Started with Fortnite**: the sign-in screen also appears when the counter starts automatically with the game; the app returns to the notification area after signing in.
 - **Forgot password**: a link on the sign-in screen sends a Supabase email; the return to the app lets you choose a new password without leaving ChestCounter.
-- **Desktop shortcut**: created automatically on the first launch of the app.
+- **Desktop shortcut**: created automatically on the first launch of the application.
 - **Unchanged**: overlay, reports, local history and account sync.
 
 **Español**
@@ -92,4 +117,4 @@
 
 ---
 
-Windows peut afficher « Windows a protégé votre ordinateur » (exe non signé) : **Informations complémentaires → Exécuter quand même**. Téléchargement : https://github.com/emilien-atr/ChestCounterFortnite/releases/latest
+Windows peut afficher « Windows a protégé votre ordinateur » (installateur non signé) : **Informations complémentaires → Exécuter quand même**. Téléchargement : https://github.com/emilien-atr/ChestCounterFortnite/releases/latest

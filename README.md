@@ -27,11 +27,11 @@ Historique, statistiques et overlays OBS/TikTok, avec synchronisation entre tes 
 
 ## Installation
 
-1. Télécharge la [dernière version](https://github.com/emilien-atr/ChestCounterFortnite/releases/latest).
-2. Active les rediffusions dans **Fortnite → Paramètres → Jeu → Rediffusions**, puis clique sur **Appliquer**.
-3. Lance `ChestCounterFortnite.exe`. Windows peut afficher un avertissement car l’exécutable n’est pas signé : **Informations complémentaires → Exécuter quand même**.
+1. Télécharge l’[installateur de la dernière version](https://github.com/emilien-atr/ChestCounterFortnite/releases/latest).
+2. Lance `ChestCounterFortnite-Setup.exe` et suis l’assistant. L’installation se fait pour ton compte, dans `%LOCALAPPDATA%\Programs\ChestCounterFortnite`, sans droits administrateur.
+3. Active les rediffusions dans **Fortnite → Paramètres → Jeu → Rediffusions**, puis clique sur **Appliquer**.
 
-Au premier lancement, l’application crée automatiquement un raccourci **ChestCounterFortnite** sur le Bureau.
+L’installateur crée le raccourci **ChestCounterFortnite** sur le Bureau et dans le menu Démarrer. Windows peut afficher un avertissement SmartScreen car l’installateur n’est pas signé : **Informations complémentaires → Exécuter quand même**. Les données de l’application restent dans `%APPDATA%\ChestCounterFortnite` et sont conservées à la désinstallation.
 
 ## Compte et synchronisation
 
@@ -56,20 +56,23 @@ Dans OBS, ajoute une source **Navigateur**. Dans TikTok Live Studio, utilise une
 
 Tout est enregistré dans `%APPDATA%\ChestCounterFortnite`. Les replays restent sur ton disque ; avec un compte, seul l’historique est synchronisé. Aucune donnée de jeu n’est envoyée sans connexion.
 
-## Nouveautés 1.5.5
+## Nouveautés 1.6.0
 
-- **Nouveau coffre** : le coffre doré au crâne remplace l’ancien logo dans la fenêtre, l’overlay en jeu, le rapport, l’icône du programme et celle du site.
-- **Overlay de stream plus compact** : la largeur maximale passe de 960 à 720 px, avec des chiffres et des marges ajustés pour rester lisibles.
-- **Détourage transparent** : le fond vert a été retiré ; il ne reste que le coffre, ses chaînes et ses pierres, sans herbe ni décor.
+- **Installateur séparé** : `ChestCounterFortnite-Setup.exe` installe l’application pour l’utilisateur, crée les raccourcis et s’inscrit dans « Applications installées » pour la désinstallation.
+- **Fini l’auto-installation portable** : l’application ne crée plus de raccourci Bureau à son premier lancement ; c’est l’installateur qui s’en charge.
+- **Mises à jour conservées** : l’auto-update remplace toujours le binaire installé, sans repasser par l’installateur. Les données et les replays restent locaux.
 
 <details>
 <summary><b>Compiler depuis les sources</b></summary>
 
-Prérequis : **.NET 10 SDK** et Windows 10/11.
+Prérequis : **.NET 10 SDK**, **Inno Setup 6** et Windows 10/11.
 
 ```bat
 dotnet publish src/ChestCounter/ChestCounter.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o dist
+"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=1.6.0 installer\ChestCounter.iss
 ```
+
+L’installateur est écrit dans `dist-installer\ChestCounterFortnite-Setup.exe`.
 
 </details>
 
