@@ -111,6 +111,12 @@ for (var i = 0; i < args.Length; i++)
     }
 }
 
+// Old portable builds must migrate through the installer. Installed builds have unins000.exe next to the exe.
+if (guiMode && !PortableGate.IsInstalled())
+{
+    return PortableGate.Enforce();
+}
+
 dataDir ??= Store.DefaultFolder();
 var store = new Store(dataDir);
 ErrorLog.FilePath = store.ErrorLogPath;

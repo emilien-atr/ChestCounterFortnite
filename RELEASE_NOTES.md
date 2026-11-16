@@ -1,3 +1,25 @@
+**1.6.1 — Migration forcée vers l’installateur**
+
+**Français**
+**Nouveautés**
+- **Anciennes versions portables bloquées** : un exe portable encore lancé ne démarre plus normalement ; il ouvre automatiquement l’installateur officiel et installe la dernière version.
+- **Installations propres** : les versions installées via le setup continuent de fonctionner et gardent leurs raccourcis, leur désinstallation et leurs données.
+- **Même logique de mise à jour** : le binaire interne de l’auto-update reste utilisé pour les installations existantes, mais une copie portable est redirigée vers le setup.
+
+**English**
+**What's new**
+- **Old portable builds blocked**: a portable exe that is still launched no longer starts normally; it opens the official installer and installs the latest version.
+- **Clean installs**: builds installed with the setup keep working and retain their shortcuts, uninstall entry and data.
+- **Same update flow**: the internal auto-update payload is still used for existing installs, while a portable copy is redirected to the setup.
+
+**Español**
+**Novedades**
+- **Versiones portátiles antiguas bloqueadas**: un exe portátil que todavía se abra ya no arranca normalmente; abre el instalador oficial e instala la última versión.
+- **Instalaciones limpias**: las versiones instaladas con el setup siguen funcionando y conservan sus accesos, su desinstalación y sus datos.
+- **Misma lógica de actualización**: el binario interno del auto-update se sigue usando para las instalaciones existentes, mientras que una copia portátil se redirige al setup.
+
+---
+
 **1.6.0 — Installateur Windows séparé**
 
 **Français**

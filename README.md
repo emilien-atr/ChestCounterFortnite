@@ -56,8 +56,9 @@ Dans OBS, ajoute une source **Navigateur**. Dans TikTok Live Studio, utilise une
 
 Tout est enregistré dans `%APPDATA%\ChestCounterFortnite`. Les replays restent sur ton disque ; avec un compte, seul l’historique est synchronisé. Aucune donnée de jeu n’est envoyée sans connexion.
 
-## Nouveautés 1.6.0
+## Nouveautés 1.6.1
 
+- **Anciennes versions portables bloquées** : un exe portable encore lancé ne démarre plus normalement ; il ouvre automatiquement l’installateur officiel pour passer à la dernière version.
 - **Installateur séparé** : `ChestCounterFortnite-Setup.exe` installe l’application pour l’utilisateur, crée les raccourcis et s’inscrit dans « Applications installées » pour la désinstallation.
 - **Fini l’auto-installation portable** : l’application ne crée plus de raccourci Bureau à son premier lancement ; c’est l’installateur qui s’en charge.
 - **Mises à jour conservées** : l’auto-update remplace toujours le binaire installé, sans repasser par l’installateur. Les données et les replays restent locaux.
@@ -69,10 +70,10 @@ Prérequis : **.NET 10 SDK**, **Inno Setup 6** et Windows 10/11.
 
 ```bat
 dotnet publish src/ChestCounter/ChestCounter.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o dist
-"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=1.6.0 installer\ChestCounter.iss
+"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=1.6.1 installer\ChestCounter.iss
 ```
 
-L’installateur est écrit dans `dist-installer\ChestCounterFortnite-Setup.exe`.
+L’installateur est écrit dans `dist-installer\ChestCounterFortnite-Setup.exe`. Une copie portable placée hors d’une installation créée par le setup est redirigée vers cet installateur au lancement.
 
 </details>
 
